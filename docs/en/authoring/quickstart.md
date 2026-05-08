@@ -99,7 +99,7 @@ AgentWorkbench
   RuntimeStatusStrip
   Composer
   WorkbenchPane
-    ArtifactCanvas
+    ArtifactWorkspace
     EvidencePanel
 ```
 
@@ -145,6 +145,6 @@ A minimal implementation is acceptable when:
 - A tool call is visible outside final answer text.
 - A final event does not duplicate streamed text.
 - A pending approval blocks progress and resumes through a controlled action response.
-- A generated artifact opens in the artifact surface.
+- A generated artifact opens in the Artifact Workspace.
 - Evidence export runs as background work and links back to the same run/session.
 - Opening an old session does not wait for full timeline or all artifact contents.

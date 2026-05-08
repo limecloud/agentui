@@ -23,7 +23,7 @@ features:
   - title: Progressive hydration
     details: "Old sessions should show a shell and recent messages before loading timelines, tools, artifacts, and evidence details."
   - title: Surface separation
-    details: "Composer, Runtime Status, Tool UI, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs each answer a different user question."
+    details: "Composer, Runtime Status, Tool UI, Task Capsule, Artifact Workspace, Timeline/Evidence, and Session/Tabs each answer a different user question."
   - title: Product-native
     details: "The contract fits inside existing products; no standalone UI bundle or manifest is required."
 ---
@@ -47,7 +47,7 @@ The standard is useful when an agent product must show more than a plain transcr
 | What did I ask and what is the final answer? | Conversation / Message Parts |
 | Is the agent alive, waiting, calling tools, or blocked? | Runtime Status / Tool UI |
 | What is queued, running, needs input, or failed? | Task Capsule / Session Tabs |
-| Where is the deliverable and can I edit it? | Artifact / Canvas |
+| Where is the deliverable and can I edit it? | Artifact Workspace |
 | Can I verify, review, replay, or hand off the result? | Timeline / Evidence |
 
 ## Core rules

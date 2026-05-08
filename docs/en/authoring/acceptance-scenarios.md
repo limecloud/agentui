@@ -64,14 +64,15 @@ Pass condition: high-risk or blocked work has explicit, auditable user control.
 
 Pass condition: the user can distinguish “run this next” from “change what is happening now.”
 
-## 7. Artifact handoff
+## 7. Artifact workspace
 
-1. Runtime emits artifact created/changed with stable artifact id.
+1. Runtime emits artifact created/updated with stable artifact id.
 2. Conversation shows a compact artifact card or reference.
-3. Artifact surface opens preview/editor/diff using artifact service data.
-4. Edits or exports go through artifact APIs.
+3. Artifact Workspace opens preview/editor/diff/version/export areas using artifact service data.
+4. Edits, exports, forks, or handoffs go through artifact APIs or controlled runtime actions.
+5. Failed saves preserve the last confirmed version and keep unsaved local edits visible.
 
-Pass condition: deliverables leave the chat body and become editable artifacts.
+Pass condition: deliverables leave the chat body and become editable, versioned, exportable artifacts.
 
 ## 8. Evidence export
 

@@ -10,6 +10,8 @@ const enNav = [
     text: 'Version',
     items: [
       { text: 'latest', link: '/en/specification' },
+      { text: 'v0.4.0 overview', link: '/en/versions/v0.4.0/overview' },
+      { text: 'v0.4.0', link: '/en/versions/v0.4.0/specification' },
       { text: 'v0.3.0 overview', link: '/en/versions/v0.3.0/overview' },
       { text: 'v0.3.0', link: '/en/versions/v0.3.0/specification' },
       { text: 'v0.2.0 overview', link: '/en/versions/v0.2.0/overview' },
@@ -28,6 +30,8 @@ const zhNav = [
     text: '版本',
     items: [
       { text: 'latest', link: '/zh/specification' },
+      { text: 'v0.4.0 概览', link: '/zh/versions/v0.4.0/overview' },
+      { text: 'v0.4.0', link: '/zh/versions/v0.4.0/specification' },
       { text: 'v0.3.0 概览', link: '/zh/versions/v0.3.0/overview' },
       { text: 'v0.3.0', link: '/zh/versions/v0.3.0/specification' },
       { text: 'v0.2.0 概览', link: '/zh/versions/v0.2.0/overview' },
@@ -64,7 +68,7 @@ const enSidebar = [
       { text: 'Tool UI', link: '/en/surfaces/tool-ui' },
       { text: 'Task capsule', link: '/en/surfaces/task-capsule' },
       { text: 'Human-in-the-loop', link: '/en/surfaces/human-in-the-loop' },
-      { text: 'Artifact and canvas', link: '/en/surfaces/artifact-canvas' },
+      { text: 'Artifact Workspace', link: '/en/surfaces/artifact-canvas' },
       { text: 'Timeline and evidence', link: '/en/surfaces/timeline-evidence' },
       { text: 'Session and tabs', link: '/en/surfaces/session-tabs' }
     ]
@@ -103,6 +107,9 @@ const enSidebar = [
   {
     text: 'Versions',
     items: [
+      { text: 'v0.4.0 overview', link: '/en/versions/v0.4.0/overview' },
+      { text: 'v0.4.0 specification', link: '/en/versions/v0.4.0/specification' },
+      { text: 'v0.4.0 changelog', link: '/en/versions/v0.4.0/changelog' },
       { text: 'v0.3.0 overview', link: '/en/versions/v0.3.0/overview' },
       { text: 'v0.3.0 specification', link: '/en/versions/v0.3.0/specification' },
       { text: 'v0.3.0 changelog', link: '/en/versions/v0.3.0/changelog' },
@@ -142,7 +149,7 @@ const zhSidebar = [
       { text: 'Tool UI', link: '/zh/surfaces/tool-ui' },
       { text: 'Task capsule', link: '/zh/surfaces/task-capsule' },
       { text: 'Human-in-the-loop', link: '/zh/surfaces/human-in-the-loop' },
-      { text: 'Artifact 与 Canvas', link: '/zh/surfaces/artifact-canvas' },
+      { text: 'Artifact 工作区', link: '/zh/surfaces/artifact-canvas' },
       { text: 'Timeline 与 Evidence', link: '/zh/surfaces/timeline-evidence' },
       { text: 'Session 与 Tab', link: '/zh/surfaces/session-tabs' }
     ]
@@ -181,6 +188,9 @@ const zhSidebar = [
   {
     text: '版本',
     items: [
+      { text: 'v0.4.0 概览', link: '/zh/versions/v0.4.0/overview' },
+      { text: 'v0.4.0 规范', link: '/zh/versions/v0.4.0/specification' },
+      { text: 'v0.4.0 变更记录', link: '/zh/versions/v0.4.0/changelog' },
       { text: 'v0.3.0 概览', link: '/zh/versions/v0.3.0/overview' },
       { text: 'v0.3.0 规范', link: '/zh/versions/v0.3.0/specification' },
       { text: 'v0.3.0 变更记录', link: '/zh/versions/v0.3.0/changelog' },

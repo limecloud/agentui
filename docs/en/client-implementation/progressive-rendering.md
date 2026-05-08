@@ -36,7 +36,7 @@ Do not merge every event into one Markdown string.
 | runtime status | Process or Task | Show before or between text updates. |
 | tool call | Process | Show compact step with details on demand. |
 | queued input | Task | Show as queue or capsule state. |
-| artifact reference | Artifact | Show summary card and open in artifact surface. |
+| artifact reference | Artifact | Show summary card and open in Artifact Workspace. |
 | evidence reference | Evidence | Show source, verification, or replay entry. |
 
 ## Hydrate history progressively

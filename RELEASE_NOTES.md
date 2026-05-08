@@ -1,26 +1,33 @@
-# Agent UI v0.3.0
+# Agent UI v0.4.0
 
-Agent UI v0.3.0 reframes the standard around the full agent product ecosystem. It removes the misleading impression that Agent UI is mainly a boundary with two adjacent standards and makes tools, skills/workflows, context, artifacts, evidence, permissions, sessions, runtimes, models, and design systems first-class neighboring systems.
+Agent UI v0.4.0 makes Artifact Workspace a first-class surface in the standard. The release keeps Artifact inside Agent UI, but draws a hard boundary: Agent UI owns artifact interaction semantics; artifact services own content, storage, version persistence, export bytes, and write authority; evidence systems own verification, replay, and review facts.
 
 ## Highlights
 
-- Adds a new `Ecosystem boundaries` reference page under `/reference/ecosystem-boundaries`.
-- Defines Agent UI's responsibility across runtimes, model/provider streams, tools/connectors, skills/workflows, memory/knowledge/context stores, artifact services, evidence/observability, permission/policy, session/storage, and design systems.
-- Removes the old Skills/Knowledge-centered boundary page source files from the documentation tree.
-- Updates the README, overview, definition, and specification pages to describe Agent UI as the projection layer from adjacent system facts to user interaction semantics.
-- Keeps the runtime-first v0.2 surfaces and contracts intact: event projection, message parts, tool UI, HITL, artifacts/canvas, timeline/evidence, sessions/tabs, hydration, queue/steer, and performance budgets.
+- Expands the former artifact canvas guidance into `Artifact Workspace`.
+- Defines the artifact workspace interaction contract: artifact facts, cards, preview, edit/canvas, version rail, diff/review, export/handoff, source links, and evidence links.
+- Adds specific artifact event classes: `artifact.created`, `artifact.updated`, `artifact.preview.ready`, `artifact.version.created`, `artifact.diff.ready`, `artifact.export.started`, `artifact.export.completed`, `artifact.failed`, and `artifact.deleted`.
+- Keeps `artifact.changed` as a collapsed adapter event for clients that cannot emit the finer-grained artifact lifecycle yet.
+- Updates runtime projection, runtime standard, message parts, quickstart, examples, glossary, acceptance scenarios, and research references around artifact-first delivery.
 
 ## Compatibility
 
-- v0.3.0 does not change the runtime event schema introduced in v0.2.0.
-- Existing v0.2.x implementors should treat this as a scope and documentation correction.
-- New readers should start from runtime facts and ecosystem boundaries rather than from any single adjacent standard.
+- Existing v0.2/v0.3 clients can keep projecting `artifact.changed` while they migrate to the new specific artifact events.
+- The release does not turn Agent UI into an artifact storage protocol.
+- Implementors should expose stable artifact references and interaction state instead of copying full artifact content into the conversation transcript.
+
+## Research Inputs
+
+- Claude Artifacts: substantial standalone content belongs in a dedicated artifact area rather than the main conversation stream.
+- Vercel AI SDK `UIMessage`: UI rendering should use typed message parts such as files, sources, tools, data, text, and reasoning.
+- assistant-ui: clients should render attachments, message parts, and tool UI through runtime adapters and typed renderers.
+- OpenAI Apps SDK: rich UI belongs behind structured tool/component boundaries, with component-only metadata kept out of the model-visible transcript.
 
 ## Validation
 
 - `npm run build`
 - `VITEPRESS_BASE="/agentui/" npm run build`
-- `npm pack --dry-run`
 - `npm audit --omit=dev`
-- Project-coupling and forbidden-term scan outside generated output.
-- Build output checks for Mermaid rendering, corrected logo path, new ecosystem-boundary route, and removal of the old boundary route.
+- `npm pack --dry-run`
+- Forbidden-term and project-coupling scan outside generated output.
+- Build output checks for Artifact Workspace routes, artifact export events, Mermaid rendering, and corrected GitHub Pages logo path.

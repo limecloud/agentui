@@ -36,7 +36,7 @@ Shell 不应该等待完整历史或所有次要面板。
 | runtime status | Process 或 Task | 在文本前或文本之间展示。 |
 | tool call | Process | 紧凑步骤，按需展开细节。 |
 | queued input | Task | 展示为 queue 或 capsule 状态。 |
-| artifact reference | Artifact | 展示摘要卡，并在 artifact surface 打开。 |
+| artifact reference | Artifact | 展示摘要卡，并在 Artifact 工作区打开。 |
 | evidence reference | Evidence | 展示 source、verification 或 replay 入口。 |
 
 ## 渐进恢复历史

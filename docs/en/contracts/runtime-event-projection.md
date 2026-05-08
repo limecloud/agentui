@@ -22,7 +22,12 @@ Agent UI clients should consume structured runtime facts and project them into s
 | `action.required` | request id, type, severity, schema | Human-in-the-loop, Task |
 | `action.resolved` | request id, response summary | Human-in-the-loop, Evidence |
 | `queue.changed` | queued ids, previews, order | Task Capsule, Composer |
-| `artifact.changed` | artifact id, kind, status, preview | Artifact |
+| `artifact.created` / `artifact.updated` | artifact id, kind, status, version | Artifact Workspace |
+| `artifact.preview.ready` | artifact id, preview ref or preview payload | Artifact Workspace |
+| `artifact.version.created` / `artifact.diff.ready` | artifact id, version id or diff ref | Artifact Workspace, Timeline |
+| `artifact.export.started` / `artifact.export.completed` | artifact id, export id/ref, status | Artifact Workspace, Evidence |
+| `artifact.failed` / `artifact.deleted` | artifact id, error or unavailable state | Artifact Workspace |
+| `artifact.changed` | collapsed artifact adapter event | Artifact Workspace |
 | `evidence.changed` | evidence id, status, refs | Evidence |
 | `turn.completed` | outcome, final refs | Conversation, Task |
 | `turn.failed` | error, retryability, diagnostic ref | Runtime Status, Task |
@@ -33,7 +38,7 @@ Agent UI clients should consume structured runtime facts and project them into s
 2. Reasoning events update process parts only unless explicitly exported as answer text.
 3. Tool events update process and timeline projections; full output is loaded on demand.
 4. Action events update task attention state and human-in-the-loop surfaces.
-5. Artifact events update artifact summaries and artifact surfaces.
+5. Artifact events update artifact summaries, artifact cards, workspace panels, version rails, diff actions, and export state.
 6. Evidence events update evidence surfaces and citation availability.
 7. Queue events update task capsules and composer state.
 8. Final events reconcile content; they do not blindly append duplicate text.
@@ -73,3 +78,4 @@ If an event lacks required fields, the UI SHOULD:
 3. A final event reconciles streamed answer content without duplication.
 4. An action request with severity appears in task capsules and approval UI.
 5. Missing artifact metadata renders as unknown rather than guessed from prose.
+6. An artifact export event updates export state without copying binary payload into message text.

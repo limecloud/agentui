@@ -4,7 +4,9 @@
   "title": "Agent UI event",
   "type": "object",
   "additionalProperties": true,
-  "required": ["type"],
+  "required": [
+    "type"
+  ],
   "properties": {
     "type": {
       "type": "string",
@@ -22,6 +24,15 @@
         "action.required",
         "action.resolved",
         "queue.changed",
+        "artifact.created",
+        "artifact.updated",
+        "artifact.preview.ready",
+        "artifact.version.created",
+        "artifact.diff.ready",
+        "artifact.export.started",
+        "artifact.export.completed",
+        "artifact.failed",
+        "artifact.deleted",
         "artifact.changed",
         "evidence.changed",
         "state.snapshot",
@@ -31,14 +42,92 @@
         "run.failed"
       ]
     },
-    "sessionId": { "type": "string", "minLength": 1 },
-    "runId": { "type": "string", "minLength": 1 },
-    "messageId": { "type": "string", "minLength": 1 },
-    "partId": { "type": "string", "minLength": 1 },
-    "toolCallId": { "type": "string", "minLength": 1 },
-    "actionId": { "type": "string", "minLength": 1 },
-    "artifactId": { "type": "string", "minLength": 1 },
-    "evidenceId": { "type": "string", "minLength": 1 },
-    "timestamp": { "type": "string" }
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "messageId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "partId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toolCallId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidenceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "artifactKind": {
+      "type": "string"
+    },
+    "artifactStatus": {
+      "type": "string",
+      "enum": [
+        "creating",
+        "ready",
+        "updating",
+        "failed",
+        "stale",
+        "superseded",
+        "deleted",
+        "unknown"
+      ]
+    },
+    "artifactVersionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactExportId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactReadRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactDiffRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactPreview": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "sourceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   }
 }

@@ -39,7 +39,7 @@ flowchart TB
   Projection --> Conversation[Conversation / Message Parts]
   Projection --> Process[Runtime Status / Tool UI]
   Projection --> Task[Task Capsule / Session Tabs]
-  Projection --> ArtifactUI[Artifact / Canvas]
+  Projection --> ArtifactUI[Artifact 工作区]
   Projection --> EvidenceUI[Timeline / Evidence]
 
   Conversation --> Actions[Controlled user actions]
@@ -59,7 +59,7 @@ Projection store 可以保存 selected tab、collapsed sections、visible window
 | Owner | 示例 | Writer | UI 使用 |
 | --- | --- | --- | --- |
 | Runtime facts | session id、turn id、lifecycle status、text deltas、tool calls、queue state、action requests | Agent runtime 或 protocol adapter | Conversation、Process、Task |
-| Artifact facts | artifact id、kind、path、version、preview、diff、metadata | Artifact service | Artifact / Canvas |
+| Artifact facts | artifact id、kind、read ref、version、preview、diff、metadata、export state | Artifact service | Artifact 工作区 |
 | Evidence facts | trace、citation、verification、replay id、review decision、audit record | Evidence 或 review service | Timeline / Evidence |
 | UI projection | visible message window、collapsed tool count、selected tab、local draft、display label | UI controller | 仅渲染 |
 
@@ -78,7 +78,7 @@ Agent UI 使用通用 event class 名称，方便客户端把 AI SDK UI、OpenAI
 | `tool.started` / `tool.args` / `tool.progress` / `tool.result` | 渲染工具生命周期、输入、输出和大输出引用。 | Tool UI、Timeline |
 | `action.required` / `action.resolved` | 为审批、结构化输入、计划决策或修正暂停。 | Human-in-the-loop、Task |
 | `queue.changed` | 展示排队 turn、steer intent、队列顺序和队列变更。 | Task Capsule、Composer |
-| `artifact.changed` | 把生成或编辑的交付物链接到 artifact surface。 | Artifact / Canvas |
+| `artifact.created` / `artifact.updated` / `artifact.preview.ready` / `artifact.version.created` / `artifact.diff.ready` / `artifact.export.started` / `artifact.export.completed` / `artifact.failed` / `artifact.deleted` | 把生成、编辑、预览、版本化、diff、导出、失败或删除的交付物链接到 Artifact 工作区。 | Artifact 工作区 |
 | `evidence.changed` | 链接 citations、traces、verification、replay 和 review。 | Timeline / Evidence |
 | `state.snapshot` / `state.delta` | 同步外部应用或 Agent 状态。 | Session Tabs、Task、自定义表面 |
 | `messages.snapshot` | 恢复或修复 conversation history。 | Message Parts、Session Tabs |
@@ -94,7 +94,21 @@ Agent UI 使用通用 event class 名称，方便客户端把 AI SDK UI、OpenAI
 | Tool UI | 哪个工具在运行，安全输入摘要是什么，输出预览和详情在哪里？ | 工具执行本身或带 secret 的原始 payload。 |
 | Human-in-the-loop | 用户需要批准、拒绝、编辑或回答什么？ | 没有 runtime 确认的权限状态。 |
 | Task Capsule | 跨 turn 和 subagent 有什么在运行、排队、阻塞、失败或需要注意？ | 完整 session history。 |
-| Artifact / Canvas | 交付物在哪里，如何 preview、edit、diff、save 或 export？ | 没有 artifact service 所有权的 artifact content。 |
+| Artifact 工作区 | 交付物在哪里，如何 preview、edit、diff、version、export、reuse 或 handoff？ | 没有 artifact service 所有权的 artifact content。 |
+
+## Artifact 工作区契约
+
+Artifact 工作区是 Agent UI 的核心表面。它标准化 durable deliverables 的交互语义，但内容存储和 bytes 仍属于 artifact service。
+
+兼容客户端 SHOULD 支持：
+
+1. Conversation 或 process surfaces 里的紧凑 artifact cards。
+2. 用于 preview、edit/canvas、diff/review、version history、export 和 handoff 的专用工作区。
+3. 明确的 `artifact.kind`、`artifact.status`、`artifact.version.id`、`artifact.preview`、`artifact.read_ref`、`artifact.diff_ref`、`artifact.source_refs` 和 `artifact.evidence_refs`。
+4. 可用时保留具体 artifact events，`artifact.changed` 只作为折叠后的 adapter event。
+5. Message text 与 artifact body 分离。
+
+UI MUST NOT 从 assistant prose 推断 saved state、export success、version identity 或 artifact kind。
 | Timeline / Evidence | 发生了什么，哪些事实支撑结果，如何 replay 或 review？ | 不是 evidence system 产生的 verification verdict。 |
 | Session / Tabs | 哪些 session/thread active、hydrated、stale、unread、running 或 pinned？ | 非活跃 session 的完整 detail。 |
 

@@ -19,7 +19,7 @@ UI-owned state derived from facts, such as selected tab, collapsed tool rows, vi
 
 ## Surface
 
-A user-visible region that answers one class of question. Standard surfaces include Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs.
+A user-visible region that answers one class of question. Standard surfaces include Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact Workspace, Timeline/Evidence, and Session/Tabs.
 
 ## Message part
 

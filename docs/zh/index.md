@@ -23,7 +23,7 @@ features:
   - title: 渐进恢复
     details: "旧会话应先显示 shell 和最近消息，再按需加载 timeline、tool、artifact 和 evidence 详情。"
   - title: 表面分离
-    details: "Composer、Runtime Status、Tool UI、Task Capsule、Artifact/Canvas、Timeline/Evidence、Session/Tabs 分别回答不同用户问题。"
+    details: "Composer、Runtime Status、Tool UI、Task Capsule、Artifact 工作区、Timeline/Evidence、Session/Tabs 分别回答不同用户问题。"
   - title: 产品内生
     details: "契约可以直接落在既有产品里；不要求独立 UI bundle 或 manifest。"
 ---
@@ -47,7 +47,7 @@ agent events + session snapshots + artifact facts + evidence facts
 | 我问了什么，最终回答是什么？ | Conversation / Message Parts |
 | Agent 是否还活着、等待中、调用工具或被阻塞？ | Runtime Status / Tool UI |
 | 什么在排队、运行、等待输入或失败？ | Task Capsule / Session Tabs |
-| 交付物在哪里，能否继续编辑？ | Artifact / Canvas |
+| 交付物在哪里，能否继续编辑？ | Artifact 工作区 |
 | 结果能否验证、评审、重放或交接？ | Timeline / Evidence |
 
 ## 核心规则

@@ -17,7 +17,7 @@ Agent UI sits between runtime facts and product interaction. It does not own exe
 ## What v0.2 defines
 
 - A runtime event projection contract for lifecycle, text, reasoning, tool, action, queue, artifact, evidence, and session events.
-- Nine standard surfaces: Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs.
+- Nine standard surfaces: Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact Workspace, Timeline/Evidence, and Session/Tabs.
 - A client implementation model for session hydration, progressive rendering, queue vs steer, durable snapshots, and controlled writes.
 - Performance metrics for first status, first text, delta backlog, history hydration, timeline load, and artifact/evidence offload.
 - Acceptance scenarios that prove behavior instead of checking whether a component or file exists.
@@ -28,7 +28,7 @@ Agent UI sits between runtime facts and product interaction. It does not own exe
 agent runtime events + durable snapshots
   -> projection reducer
   -> UI projection store
-  -> Conversation / Process / Task / Artifact / Evidence surfaces
+  -> Conversation / Process / Task / Artifact Workspace / Evidence surfaces
   -> controlled runtime, artifact, and evidence actions
 ```
 

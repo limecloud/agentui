@@ -26,7 +26,7 @@ Agent UI 定义结构化 Agent 工作如何在 AI 客户端里变得可见、可
 | `conversation` | 我和 Agent 说了什么，最终回答是什么？ | 消息、输入区、最终答复、分支控制。 | 用户输入和助手 text parts。 |
 | `process` | Agent 现在在做什么？ | 状态条、推理摘要、工具步骤、时间线。 | runtime status、reasoning、tool events、errors。 |
 | `task` | 哪些工作在运行、排队、阻塞或等我处理？ | task capsule、queue panel、approval card、subagent strip。 | queue、turn、task、action-required records。 |
-| `artifact` | 交付物在哪里，如何继续编辑？ | canvas、preview、diff、file card、workbench。 | artifact graph、file store、generated object metadata。 |
+| `artifact` | 交付物在哪里，如何继续工作？ | Artifact 工作区、preview、editor/canvas、diff、version rail、export。 | artifact service、file store、generated object metadata。 |
 | `evidence` | 结果能否信任、重放或审计？ | sources、evidence pack、verification、review decision。 | trace、source map、validation、replay、audit records。 |
 
 这些层可以在同一页面渲染，也可以分布在多个面板。标准约束的是职责分离，不是固定布局。

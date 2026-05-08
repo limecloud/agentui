@@ -18,7 +18,7 @@ BasicAgentWorkbench
     RuntimeStatusStrip
     Composer
   WorkbenchPane
-    ArtifactCanvas
+    ArtifactWorkspace
     EvidencePanel
   ProcessDrawer
     ToolTimeline

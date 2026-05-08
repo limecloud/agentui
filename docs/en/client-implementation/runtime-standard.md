@@ -28,7 +28,7 @@ Start from real product/runtime facts, not from a standalone manifest file.
 | --- | --- | --- |
 | Event stream | lifecycle, text, reasoning, tool, action, queue, artifact, evidence events | Register listeners before submitting work. |
 | Session snapshot | recent messages, thread/run status, queue, pending requests, history cursor | Used for old-session recovery and stream repair. |
-| Artifact service | artifact id, kind, preview, path/ref, version, diff, save/export status | Full content loads on demand. |
+| Artifact service | artifact id, kind, preview, read ref, version, diff, save/export/handoff status | Full content loads on demand. |
 | Evidence service | trace, source/citation, verification, review, replay, handoff | Evidence should be durable and auditable. |
 | Application state | selected workspace, active tab, file attachments, model/mode selections | Keep separate from runtime facts. |
 
@@ -46,7 +46,8 @@ Common mappings:
 | Tool lifecycle events and structured tool results | `tool.started`, `tool.args`, `tool.progress`, `tool.result` |
 | Interrupt outcomes, widget/tool requests, or custom approval events | `action.required`, `action.resolved` |
 | Runtime queue snapshot or busy-session submission mode | `queue.changed` |
-| Artifact write/snapshot/diff events | `artifact.changed` |
+| Artifact created/updated/preview/version/diff/export events | `artifact.created`, `artifact.updated`, `artifact.preview.ready`, `artifact.version.created`, `artifact.diff.ready`, `artifact.export.started`, `artifact.export.completed` |
+| Collapsed artifact adapter events | `artifact.changed` |
 | Evidence, review, replay, trace, or source-map events | `evidence.changed` |
 | Durable thread state, external app state, or message repair | `state.snapshot`, `state.delta`, `messages.snapshot` |
 
@@ -76,7 +77,7 @@ Render by surface responsibility:
 | Tool UI | Compress input/output, redact secrets, offload large payloads, and link detail views. |
 | Human-in-the-loop | Show explicit approve/reject/edit/input controls with stable request ids. |
 | Task Capsule | Summarize running, queued, needs-input, plan-ready, failed, cancelled, and subagent states. |
-| Artifact / Canvas | Open deliverables in a dedicated surface with preview, edit, diff, save, and export paths. |
+| Artifact Workspace | Open deliverables in a dedicated surface with cards, preview, edit/canvas, versions, diff/review, export, handoff, and source/evidence links. |
 | Timeline / Evidence | Show process history, citations, verification, review, replay, and handoff on demand. |
 | Session / Tabs | Keep inactive sessions lightweight with snapshots and lazy hydration. |
 

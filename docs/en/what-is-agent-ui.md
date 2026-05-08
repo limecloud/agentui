@@ -26,7 +26,7 @@ Do not use it to store model prompts, tool protocols, business facts, executable
 | `conversation` | What did I ask and what was the final answer? | Messages, composer, final response, branch controls. | User input and assistant text parts. |
 | `process` | What is the agent doing now? | Status strip, thinking summary, tool step, timeline. | Runtime status, reasoning, tool events, errors. |
 | `task` | What work is running, queued, blocked, or awaiting me? | Task capsule, queue panel, approval card, subagent strip. | Queue, turn, task, and action-required records. |
-| `artifact` | Where is the deliverable and how can I edit it? | Canvas, preview, diff, file card, workbench. | Artifact graph, file store, generated object metadata. |
+| `artifact` | Where is the deliverable and how can I keep working on it? | Artifact Workspace, preview, editor/canvas, diff, version rail, export. | Artifact service, file store, generated object metadata. |
 | `evidence` | Can I trust, replay, or audit the result? | Sources, evidence pack, verification, review decision. | Trace, source map, validation, replay, audit records. |
 
 The layers can be rendered in one page or across multiple panes. The contract is separation of responsibility, not a mandated layout.

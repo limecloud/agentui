@@ -19,7 +19,7 @@ Message rendering MUST preserve typed parts. Agent UI clients should not flatten
 | `tool_call` | Process | Show compact step with input summary. |
 | `tool_result` | Process | Show preview, summary, or detail drawer. |
 | `action_required` | Task | Show explicit CTA and pending state. |
-| `artifact_ref` | Artifact | Show summary card and open in artifact surface. |
+| `artifact_ref` | Artifact | Show summary card and open in Artifact Workspace. |
 | `evidence_ref` | Evidence | Show source, verification, or replay entry. |
 | `error` | Process or Task | Show recoverable diagnostic and next action. |
 
@@ -70,5 +70,5 @@ If a client supports retry, regenerate, or branch:
 1. Reasoning text never appears inside final answer text unless explicitly exported as an answer.
 2. Tool output is inspectable but collapsed outside the final answer by default.
 3. `action_required` renders as a CTA, not as plain Markdown.
-4. `artifact_ref` opens a dedicated artifact surface.
+4. `artifact_ref` opens a dedicated Artifact Workspace.
 5. Final payload reconciliation does not duplicate streamed text.

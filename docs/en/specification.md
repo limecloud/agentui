@@ -39,7 +39,7 @@ flowchart TB
   Projection --> Conversation[Conversation / Message Parts]
   Projection --> Process[Runtime Status / Tool UI]
   Projection --> Task[Task Capsule / Session Tabs]
-  Projection --> ArtifactUI[Artifact / Canvas]
+  Projection --> ArtifactUI[Artifact Workspace]
   Projection --> EvidenceUI[Timeline / Evidence]
 
   Conversation --> Actions[Controlled user actions]
@@ -59,7 +59,7 @@ A compatible implementation SHOULD keep these owners separate:
 | Owner | Examples | Writer | UI usage |
 | --- | --- | --- | --- |
 | Runtime facts | session id, turn id, lifecycle status, text deltas, tool calls, queue state, action requests | Agent runtime or protocol adapter | Conversation, Process, Task |
-| Artifact facts | artifact id, kind, path, version, preview, diff, metadata | Artifact service | Artifact / Canvas |
+| Artifact facts | artifact id, kind, read ref, version, preview, diff, metadata, export state | Artifact service | Artifact Workspace |
 | Evidence facts | trace, citation, verification, replay id, review decision, audit record | Evidence or review service | Timeline / Evidence |
 | UI projection | visible message window, collapsed tool count, selected tab, local draft, display label | UI controller | Rendering only |
 
@@ -78,7 +78,7 @@ Agent UI uses generic event class names so clients can adapt AI SDK UI, OpenAI A
 | `tool.started` / `tool.args` / `tool.progress` / `tool.result` | Render tool lifecycle, inputs, outputs, and large-output references. | Tool UI, Timeline |
 | `action.required` / `action.resolved` | Pause for approval, structured input, plan decision, or correction. | Human-in-the-loop, Task |
 | `queue.changed` | Display queued turns, steer intent, queue order, and queue mutations. | Task Capsule, Composer |
-| `artifact.changed` | Link generated or edited deliverables to artifact surfaces. | Artifact / Canvas |
+| `artifact.created` / `artifact.updated` / `artifact.preview.ready` / `artifact.version.created` / `artifact.diff.ready` / `artifact.export.started` / `artifact.export.completed` / `artifact.failed` / `artifact.deleted` | Link generated, edited, previewed, versioned, diffed, exported, failed, or removed deliverables to Artifact Workspace. | Artifact Workspace |
 | `evidence.changed` | Link citations, traces, verification, replay, and review. | Timeline / Evidence |
 | `state.snapshot` / `state.delta` | Synchronize external application or agent state. | Session Tabs, Task, custom surfaces |
 | `messages.snapshot` | Hydrate or repair conversation history. | Message Parts, Session Tabs |
@@ -94,7 +94,21 @@ Agent UI uses generic event class names so clients can adapt AI SDK UI, OpenAI A
 | Tool UI | Which tool is running, with what safe input summary, output preview, and detail link? | Tool execution or raw secret-bearing payloads. |
 | Human-in-the-loop | What does the user need to approve, reject, edit, or answer? | Permission state without runtime confirmation. |
 | Task Capsule | What is running, queued, blocked, failed, or needs attention across turns and subagents? | Complete session history. |
-| Artifact / Canvas | Where is the deliverable, how can it be previewed, edited, diffed, saved, or exported? | Artifact content without artifact service ownership. |
+| Artifact Workspace | Where is the deliverable, how can it be previewed, edited, diffed, versioned, exported, reused, or handed off? | Artifact content without artifact service ownership. |
+
+## Artifact Workspace contract
+
+Artifact Workspace is a core Agent UI surface. It standardizes interaction semantics for durable deliverables while leaving content storage and bytes to the artifact service.
+
+Compatible clients SHOULD support:
+
+1. Compact artifact cards in conversation or process surfaces.
+2. A dedicated workspace for preview, edit/canvas, diff/review, version history, export, and handoff.
+3. Explicit `artifact.kind`, `artifact.status`, `artifact.version.id`, `artifact.preview`, `artifact.read_ref`, `artifact.diff_ref`, `artifact.source_refs`, and `artifact.evidence_refs`.
+4. Specific artifact events when available, with `artifact.changed` allowed as a collapsed adapter event.
+5. Separation between message text and artifact body.
+
+The UI MUST NOT infer saved state, export success, version identity, or artifact kind from assistant prose.
 | Timeline / Evidence | What happened, what supports the result, and how can it be replayed or reviewed? | Verification verdicts not produced by evidence systems. |
 | Session / Tabs | Which sessions or threads are active, hydrated, stale, unread, running, or pinned? | Full detail for inactive sessions. |
 

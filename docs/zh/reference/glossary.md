@@ -19,7 +19,7 @@ description: Agent UI 核心术语。
 
 ## Surface
 
-回答一类用户问题的用户可见区域。标准 surfaces 包括 Composer、Message Parts、Runtime Status、Tool UI、Human-in-the-loop、Task Capsule、Artifact/Canvas、Timeline/Evidence 和 Session/Tabs。
+回答一类用户问题的用户可见区域。标准 surfaces 包括 Composer、Message Parts、Runtime Status、Tool UI、Human-in-the-loop、Task Capsule、Artifact 工作区、Timeline/Evidence 和 Session/Tabs。
 
 ## Message part
 

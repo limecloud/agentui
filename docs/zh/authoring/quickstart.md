@@ -99,7 +99,7 @@ AgentWorkbench
   RuntimeStatusStrip
   Composer
   WorkbenchPane
-    ArtifactCanvas
+    ArtifactWorkspace
     EvidencePanel
 ```
 
@@ -145,6 +145,6 @@ const actions = {
 - Tool call 显示在最终回答正文之外。
 - Final event 不重复已流式输出的文本。
 - Pending approval 阻塞进度，并通过受控 action response 恢复。
-- 生成的 artifact 打开在 artifact surface。
+- 生成的 artifact 打开在 Artifact 工作区。
 - Evidence export 作为后台任务运行，并链接回同一 run/session。
 - 打开旧 session 不等待完整 timeline 或所有 artifact content。
