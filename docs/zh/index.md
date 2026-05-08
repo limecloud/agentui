@@ -1,10 +1,12 @@
 ---
 layout: home
+title: Agent UI
+description: 面向 Agent 产品的 runtime-first UI 契约。
 
 hero:
   name: Agent UI
   text: 面向 Agent 产品的 runtime-first UI 契约。
-  tagline: "把 Agent 事件投影成可控制的对话、过程、任务、产物和证据表面。"
+  tagline: "把 Agent 事实投影成可控制的对话、过程、任务、产物、证据与会话表面。"
   actions:
     - theme: brand
       text: 阅读规范
@@ -12,68 +14,54 @@ hero:
     - theme: alt
       text: 实现快速开始
       link: /zh/authoring/quickstart
+    - theme: alt
+      text: 标准生态
+      link: /zh/reference/agent-ecosystem
+    - theme: alt
+      text: LLM 完整上下文
+      link: /llms-full.txt
 
 features:
-  - title: 运行时投影
-    details: "Agent UI 从 typed events 和 durable snapshots 出发，而不是从 Markdown manifest 或视觉皮肤出发。"
-  - title: 消息分型
-    details: "Text、reasoning、tool calls、action requests、artifacts 和 evidence 分离，最终回答保持干净。"
-  - title: 用户控制
-    details: "审批、中断、排队、转向、产物编辑和证据导出都是一等受控写入。"
-  - title: 渐进恢复
-    details: "旧会话应先显示 shell 和最近消息，再按需加载 timeline、tool、artifact 和 evidence 详情。"
+  - title: Runtime 投影
+    details: "Agent UI 从 typed runtime events、durable snapshots、artifact facts 与 evidence facts 出发。"
   - title: 表面分离
-    details: "Composer、Runtime Status、Tool UI、Task Capsule、Artifact 工作区、Timeline/Evidence、Session/Tabs 分别回答不同用户问题。"
+    details: "Composer、消息、状态、工具、任务、产物、时间线、证据与会话分别回答不同用户问题。"
+  - title: 受控写入
+    details: "审批、中断、队列动作、转向、产物编辑与证据导出必须写回拥有这些事实的系统。"
+  - title: 干净最终回答
+    details: "文本、reasoning、tool、action、artifact 与 evidence 分离，避免最终回答变成过程日志。"
+  - title: 渐进恢复
+    details: "旧会话可先显示壳与最近消息，再加载完整 timeline、tool detail、artifact 与 evidence。"
   - title: 产品内生
-    details: "契约可以直接落在既有产品里；不要求独立 UI bundle 或 manifest。"
+    details: "标准不要求独立 UI bundle、design system、CSS 框架或 manifest pack 格式。"
 ---
 
-## 运行时形态
+## Agent UI 定义什么
 
-Agent UI 定义 Agent runtime 与产品界面之间的投影层。
-
-```text
-agent events + session snapshots + artifact facts + evidence facts
-  -> projection reducer
-  -> UI projection state
-  -> user-visible surfaces
-  -> controlled write actions
-```
-
-当 Agent 产品不只是展示纯 transcript 时，这个标准才有价值：
-
-| 用户问题 | 表面 |
+| 契约 | 回答的问题 |
 | --- | --- |
-| 我问了什么，最终回答是什么？ | Conversation / Message Parts |
-| Agent 是否还活着、等待中、调用工具或被阻塞？ | Runtime Status / Tool UI |
-| 什么在排队、运行、等待输入或失败？ | Task Capsule / Session Tabs |
-| 交付物在哪里，能否继续编辑？ | Artifact 工作区 |
-| 结果能否验证、评审、重放或交接？ | Timeline / Evidence |
+| 投影模型 | Runtime facts 如何变成用户可见 UI state，同时不变成事实权威？ |
+| 消息分型 | text、reasoning、tool、action、artifact 与 evidence 如何分离渲染？ |
+| 标准表面 | 哪些表面分别回答 conversation、process、task、artifact、evidence 与 session 问题？ |
+| 用户动作 | 哪些按钮、审批、中断、编辑、导出和队列控制是受控写入？ |
+| Hydration | 哪些内容应立即出现，哪些内容可以渐进加载？ |
+| 验收 | 哪些行为级场景能证明 UI 兼容？ |
 
-## 核心规则
+## 快速入口
 
-兼容客户端 SHOULD：
+- [什么是 Agent UI？](./what-is-agent-ui.md)
+- [最新规范](./specification.md)
+- [实现快速开始](./authoring/quickstart.md)
+- [Runtime event projection](./contracts/runtime-event-projection.md)
+- [Artifact Workspace](./surfaces/artifact-canvas.md)
+- [Agent 标准生态](./reference/agent-ecosystem.md)
 
-- 消费结构化事件，而不是从正文猜状态。
-- 分离 runtime facts、artifact facts、evidence facts 和 UI projection state。
-- 对最终文本做 reconcile，避免流式内容完成后重复追加。
-- 除非明确导出，否则 reasoning 和 process detail 不进入最终回答正文。
-- 把 tool input/output 渲染为可压缩、可检查的过程 UI，并对大输出做 offload。
-- 信息缺失时诚实显示 `unknown`、`unavailable`、`stale`、`blocked` 或 `needs-input`。
-- 所有会改变状态的用户动作都必须通过 runtime、artifact 或 evidence API 写入。
+## 面向 AI 客户端
 
-## 生态边界
-
-Agent UI 不拥有完整 Agent 技术栈。Runtime 拥有权威 events 和 snapshots。工具与工作流系统拥有执行。上下文与策略系统拥有事实、记忆、权限和信任边界。产物与证据服务拥有持久文件、trace、verification 和 audit records。Design system 拥有视觉组件。
-
-Agent UI 拥有的是投影层：把这些系统产生的事实转成用户可见表面、受控动作、恢复状态和行为级验收检查。
+- [llms.txt](/llms.txt)：简洁导航索引。
+- [llms-full.txt](/llms-full.txt)：当前英文核心文档合集。
+- [llm.txt](/llm.txt) 与 [llm-full.txt](/llm-full.txt)：兼容别名。
 
 ## Agent 标准生态
 
-Agent 产品需要多个标准协同：Knowledge 负责 source-grounded context，Runtime 负责 execution facts，UI 负责 interaction surfaces，Evidence 负责 trust、review、replay 与 export。
-
-- [Agent 标准生态](./reference/agent-ecosystem.md)
-- [Agent Knowledge](https://limecloud.github.io/agentknowledge/)
-- [Agent UI](https://limecloud.github.io/agentui/)
-- [Agent Runtime](https://limecloud.github.io/agentruntime/)
-- [Agent Evidence](https://limecloud.github.io/agentevidence/)
+UI 负责投影层。Runtime 负责执行事实，Artifact 系统负责交付物，Evidence 负责信任记录，Knowledge 负责 source-grounded context。
