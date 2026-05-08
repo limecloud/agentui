@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v0.4.4 - 2026-05-08
+
+### Fixed
+
+- Fixed localized home page LLM entrypoint links for GitHub Pages repository-base deployments.
+- Fixed documentation logo asset paths for repository-base deployments.
+
+### Changed
+
+- Updated package and version navigation to 0.4.4.
+
 ## v0.4.3 - 2026-05-08
 
 ### Fixed
