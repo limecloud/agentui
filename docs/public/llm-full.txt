@@ -1,0 +1,2171 @@
+# Agent UI full documentation for LLMs
+
+Source root: https://limecloud.github.io/agentui
+
+Agent UI is a portable, runtime-first standard for agent interaction surfaces. It defines how clients project runtime facts into composer, message parts, status, tool UI, task capsules, human-in-the-loop controls, artifact workspaces, timeline evidence, and session surfaces without becoming the execution authority.
+
+This file concatenates the current English documentation most useful for model context. Each section includes its source URL. Version snapshots and translated pages are linked from `llms.txt` but are not repeated here unless they are the latest release summary.
+
+# What is Agent UI?
+Source: https://limecloud.github.io/agentui/en/what-is-agent-ui
+
+# What is Agent UI?
+
+Agent UI defines how structured agent work becomes visible and controllable in an AI client. It interoperates with runtimes, model streams, tools, workflows, context stores, permission systems, artifact services, evidence stores, sessions, and the host product interface.
+
+Use Agent UI when an agent product needs stable UI semantics for:
+
+- chat and final answers
+- streaming status and tool progress
+- queued, steered, or background tasks
+- human approval, structured input, and interruption
+- generated artifacts and editable canvases
+- citations, evidence, review, and replay
+- handoff between agents, users, sessions, and clients
+
+Do not use it to store model prompts, tool protocols, business facts, executable workflows, artifact contents, evidence records, or permission policy. Those belong to adjacent runtime, workflow, context, artifact, evidence, or policy systems.
+
+## Surface layers
+
+| Layer | User question | Common surfaces | Runtime source |
+| --- | --- | --- | --- |
+| `conversation` | What did I ask and what was the final answer? | Messages, composer, final response, branch controls. | User input and assistant text parts. |
+| `process` | What is the agent doing now? | Status strip, thinking summary, tool step, timeline. | Runtime status, reasoning, tool events, errors. |
+| `task` | What work is running, queued, blocked, or awaiting me? | Task capsule, queue panel, approval card, subagent strip. | Queue, turn, task, and action-required records. |
+| `artifact` | Where is the deliverable and how can I keep working on it? | Artifact Workspace, preview, editor/canvas, diff, version rail, export. | Artifact service, file store, generated object metadata. |
+| `evidence` | Can I trust, replay, or audit the result? | Sources, evidence pack, verification, review decision. | Trace, source map, validation, replay, audit records. |
+
+The layers can be rendered in one page or across multiple panes. The contract is separation of responsibility, not a mandated layout.
+
+## Projection model
+
+```text
+runtime facts + task facts + artifact facts + evidence facts
+  -> UI projection model
+  -> surfaces and controlled user actions
+```
+
+A UI projection may cache titles, labels, collapsed summaries, scroll windows, open panels, and local drafts. It must not become the owner of runtime identity, tool result, artifact contents, evidence verdict, or permission grant.
+
+## Why a standard?
+
+Agent products repeatedly solve the same UI problems: streams arrive before final answers, tools produce large outputs, users need to approve actions, generated files need editing, and audits need evidence. Without shared terms, clients blend all of this into one message column.
+
+Agent UI gives product teams and client implementors a small vocabulary for those decisions so products can interoperate without copying a visual skin or inventing a parallel runtime.
+
+# Specification
+Source: https://limecloud.github.io/agentui/en/specification
+
+# Specification
+
+Agent UI v0.2 is a runtime-first standard for agent interaction surfaces. The core contract is the projection boundary between agent facts and user-visible UI.
+
+Agent UI defines how runtime, tool, workflow, context, permission, artifact, evidence, and session facts become visible, controllable, resumable, editable, and auditable without turning the UI into the authority for those facts.
+
+## Scope
+
+Agent UI standardizes these implementation concerns:
+
+1. Event classes and durable snapshots a client can project.
+2. Surface responsibilities and fallback states.
+3. User actions that write through controlled APIs.
+4. Hydration, progressive rendering, queue/steer, and performance budgets.
+5. Acceptance scenarios for real agent workbenches.
+
+Agent UI does **not** standardize a model protocol, tool registry, artifact store, CSS system, component library, or visual skin.
+
+## Projection architecture
+
+```mermaid
+flowchart TB
+  Runtime[Agent runtime] --> Events[Typed event stream]
+  Runtime --> Snapshots[Durable session snapshots]
+  Runtime --> Artifacts[Artifact service]
+  Runtime --> Evidence[Evidence / replay / review service]
+
+  Events --> Reducer[Projection reducer]
+  Snapshots --> Reducer
+  Artifacts --> Reducer
+  Evidence --> Reducer
+
+  Reducer --> Projection[UI projection store]
+  Projection --> Conversation[Conversation / Message Parts]
+  Projection --> Process[Runtime Status / Tool UI]
+  Projection --> Task[Task Capsule / Session Tabs]
+  Projection --> ArtifactUI[Artifact Workspace]
+  Projection --> EvidenceUI[Timeline / Evidence]
+
+  Conversation --> Actions[Controlled user actions]
+  Process --> Actions
+  Task --> Actions
+  ArtifactUI --> Actions
+  EvidenceUI --> Actions
+  Actions --> Runtime
+```
+
+The projection store may hold UI-only state such as selected tab, collapsed sections, visible window, focused artifact, or local draft. It must not become authoritative for runtime identity, tool output, artifact content, permission state, or evidence verdicts.
+
+## Required fact owners
+
+A compatible implementation SHOULD keep these owners separate:
+
+| Owner | Examples | Writer | UI usage |
+| --- | --- | --- | --- |
+| Runtime facts | session id, turn id, lifecycle status, text deltas, tool calls, queue state, action requests | Agent runtime or protocol adapter | Conversation, Process, Task |
+| Artifact facts | artifact id, kind, read ref, version, preview, diff, metadata, export state | Artifact service | Artifact Workspace |
+| Evidence facts | trace, citation, verification, replay id, review decision, audit record | Evidence or review service | Timeline / Evidence |
+| UI projection | visible message window, collapsed tool count, selected tab, local draft, display label | UI controller | Rendering only |
+
+Projection state may reference facts by id. It should not copy large payloads or derive success from prose.
+
+## Standard event classes
+
+Agent UI uses generic event class names so clients can adapt AI SDK UI, OpenAI Apps SDK, custom desktop runtimes, event-stream runtimes, or other sources into the same projection model.
+
+| Event class | Purpose | Primary surface |
+| --- | --- | --- |
+| `run.started` | Establish run, turn, or task boundary. | Runtime Status, Task |
+| `run.status` | Show submitted, routing, preparing, streaming, retrying, cancelled, failed, or completed state. | Runtime Status |
+| `text.delta` / `text.final` | Stream and reconcile final answer text. | Message Parts |
+| `reasoning.delta` / `reasoning.summary` | Show thinking or reasoning outside final answer text. | Process |
+| `tool.started` / `tool.args` / `tool.progress` / `tool.result` | Render tool lifecycle, inputs, outputs, and large-output references. | Tool UI, Timeline |
+| `action.required` / `action.resolved` | Pause for approval, structured input, plan decision, or correction. | Human-in-the-loop, Task |
+| `queue.changed` | Display queued turns, steer intent, queue order, and queue mutations. | Task Capsule, Composer |
+| `artifact.created` / `artifact.updated` / `artifact.preview.ready` / `artifact.version.created` / `artifact.diff.ready` / `artifact.export.started` / `artifact.export.completed` / `artifact.failed` / `artifact.deleted` | Link generated, edited, previewed, versioned, diffed, exported, failed, or removed deliverables to Artifact Workspace. | Artifact Workspace |
+| `evidence.changed` | Link citations, traces, verification, replay, and review. | Timeline / Evidence |
+| `state.snapshot` / `state.delta` | Synchronize external application or agent state. | Session Tabs, Task, custom surfaces |
+| `messages.snapshot` | Hydrate or repair conversation history. | Message Parts, Session Tabs |
+| `run.finished` / `run.failed` | Reconcile completion, interrupt, cancellation, or failure. | Runtime Status, Task, Evidence |
+
+## Standard surfaces
+
+| Surface | User question | Must not own |
+| --- | --- | --- |
+| Composer | What am I about to send, with which context, mode, attachments, and queue/steer intent? | Runtime queue facts or permission grants. |
+| Message Parts | What did the user and assistant say, and which parts are final answer vs process? | Tool output, reasoning, or artifacts as plain final text. |
+| Runtime Status | Is the agent accepted, routing, waiting, streaming, blocked, retrying, cancelled, failed, or done? | Provider truth beyond runtime facts. |
+| Tool UI | Which tool is running, with what safe input summary, output preview, and detail link? | Tool execution or raw secret-bearing payloads. |
+| Human-in-the-loop | What does the user need to approve, reject, edit, or answer? | Permission state without runtime confirmation. |
+| Task Capsule | What is running, queued, blocked, failed, or needs attention across turns and subagents? | Complete session history. |
+| Artifact Workspace | Where is the deliverable, how can it be previewed, edited, diffed, versioned, exported, reused, or handed off? | Artifact content without artifact service ownership. |
+
+## Artifact Workspace contract
+
+Artifact Workspace is a core Agent UI surface. It standardizes interaction semantics for durable deliverables while leaving content storage and bytes to the artifact service.
+
+Compatible clients SHOULD support:
+
+1. Compact artifact cards in conversation or process surfaces.
+2. A dedicated workspace for preview, edit/canvas, diff/review, version history, export, and handoff.
+3. Explicit `artifact.kind`, `artifact.status`, `artifact.version.id`, `artifact.preview`, `artifact.read_ref`, `artifact.diff_ref`, `artifact.source_refs`, and `artifact.evidence_refs`.
+4. Specific artifact events when available, with `artifact.changed` allowed as a collapsed adapter event.
+5. Separation between message text and artifact body.
+
+The UI MUST NOT infer saved state, export success, version identity, or artifact kind from assistant prose.
+| Timeline / Evidence | What happened, what supports the result, and how can it be replayed or reviewed? | Verification verdicts not produced by evidence systems. |
+| Session / Tabs | Which sessions or threads are active, hydrated, stale, unread, running, or pinned? | Full detail for inactive sessions. |
+
+## Controlled write actions
+
+UI actions that change state MUST write through the owning system:
+
+| UI action | Required fact | Write boundary |
+| --- | --- | --- |
+| Send prompt | session/thread id, draft, context refs, mode | Runtime submit API |
+| Queue input | active run or busy session, draft, queue policy | Runtime queue API |
+| Steer current run | active run id, steering payload, policy | Runtime steer or resume API |
+| Interrupt | run id, turn id, task id, or session id | Runtime interrupt API |
+| Approve/reject | action request id, decision, optional payload | Runtime action response API |
+| Edit artifact | artifact id, version, patch/content | Artifact service |
+| Export evidence | session/run/task id | Evidence export API |
+| Open older history | session id, cursor/window | Session history API |
+
+If a write fails, the UI should keep existing facts, mark the attempted action as failed, and provide a recoverable path.
+
+## Hydration and progressive rendering
+
+Old sessions and long runs must not block on full detail. A compatible implementation SHOULD load in this order:
+
+1. Shell, title, tab, lightweight runtime snapshot.
+2. Recent message window.
+3. Current run status, pending action, and queue summary.
+4. Timeline summary and compact tool/artifact references.
+5. Full tool output, artifact content, evidence payload, and older history only on demand.
+
+`historyLimit`, cursor-based pagination, idle timeline construction, and large output offload are part of the UI contract because they directly change whether an agent workspace remains usable.
+
+## Fallback states
+
+When facts are absent or delayed, show honest state:
+
+- `loading`: request started, fact not available yet.
+- `unknown`: client cannot know the state from available facts.
+- `unavailable`: producer does not provide this fact.
+- `stale`: snapshot may be outdated.
+- `blocked`: runtime cannot proceed without another fact or action.
+- `needs-input`: user action is required.
+- `failed`: owning system reported failure.
+- `disputed`: evidence/review state conflicts.
+
+A compatible UI MUST NOT infer artifact kind, permission grant, success, verification pass, or user approval from ordinary message text.
+
+## Validation
+
+A validator SHOULD check behavior and contracts, not only files:
+
+- Event adapter maps lifecycle, text, reasoning, tool, action, queue, artifact, evidence, and session events into typed projection state.
+- Final text reconciliation prevents duplicate streamed/final output.
+- Reasoning, tool output, runtime status, artifacts, and evidence do not pollute final answer text.
+- Missing facts render honest fallback states.
+- User actions write through controlled runtime/artifact/evidence APIs.
+- Old sessions hydrate progressively with bounded history and on-demand details.
+- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, and old-session recovery.
+
+# Composer surface
+Source: https://limecloud.github.io/agentui/en/surfaces/composer
+
+# Composer surface
+
+The Composer surface is the user's control point before and during agent execution. It is not just a text box. It exposes the target, context, execution mode, permission boundary, and follow-up behavior for a task.
+
+## Purpose
+
+A composer SHOULD answer:
+
+1. What will the agent work on?
+2. Which context will enter the turn?
+3. What execution mode or permission boundary applies?
+4. If a task is already running, will this input queue the next turn or steer the current one?
+5. Can the user recover drafts, attachments, and pending input after navigation?
+
+## Standard inputs
+
+| Input | Meaning | UI guidance |
+| --- | --- | --- |
+| `prompt.text` | User-authored instruction. | Preserve multiline editing, paste bursts, and IME behavior. |
+| `context.refs` | Files, pages, artifacts, sessions, tasks, or selected text. | Render as removable chips with stable labels. |
+| `attachments` | Images, documents, audio, screenshots, or structured files. | Show type, size, upload state, and failure. |
+| `execution.mode` | Plan, act, safe, research, write, review, or custom mode. | Use compact mode chips; avoid hidden defaults for high-risk work. |
+| `permission.policy` | Read-only, ask-before-write, network allowed, shell allowed, etc. | Surface high-risk capabilities before submit. |
+| `model.route` | Model, provider, effort, or cost policy when user-visible. | Keep optional and compact; do not block common tasks. |
+| `context.budget` | Token, memory, or workspace budget. | Use low-noise budget indicators; warn before truncation. |
+| `draft.state` | Unsaved, queued, steering, submitted, or failed draft. | Preserve across session switches and failed submits. |
+
+## Queue vs steer
+
+When a task is running, additional input MUST have explicit semantics.
+
+| Mode | Meaning | Required UI behavior |
+| --- | --- | --- |
+| `queue` | Send this input after the current turn completes. | Show queue position, preview, edit/remove actions. |
+| `steer` | Deliver this input to the currently running turn. | Show that it affects current work; keep pending steer visible until accepted or rejected. |
+| `new-task` | Start independent work. | Create or select a separate task/session surface. |
+| `blocked` | Input cannot be accepted now. | Explain why and preserve the draft. |
+
+A client SHOULD NOT silently guess between queue and steer after the user presses Enter. Pick a default, label it, and provide an escape hatch.
+
+## Slash commands and mentions
+
+Slash commands, mentions, and context chips are structured context selectors, not plain text decoration.
+
+- Slash commands SHOULD map to capability, template, mode, or workflow identifiers.
+- Mentions SHOULD resolve to stable references such as file id, artifact id, task id, URL, or selected range.
+- Unresolved mentions MUST remain visibly unresolved and should not be sent as authoritative context.
+- Autocomplete popups SHOULD be keyboard navigable and should not steal focus from IME composition.
+
+## Draft recovery
+
+A robust composer SHOULD preserve:
+
+- current text draft
+- queued draft
+- pending steer preview
+- attachments and upload states
+- selected context refs
+- mode and permission chips
+- failed-submit diagnostic
+
+At minimum, switching sessions or opening an artifact SHOULD NOT discard a draft without an explicit user action.
+
+## Acceptance scenarios
+
+1. Submitting a prompt shows a pending user message or draft preview immediately.
+2. Adding a file mention creates a removable context chip with a stable label.
+3. While a turn is running, a follow-up clearly enters queue or steer mode.
+4. A queued item can be edited or removed before it starts.
+5. A failed submit preserves the prompt, attachments, and selected mode.
+6. A high-risk permission change is visible before submission.
+
+# Message parts surface
+Source: https://limecloud.github.io/agentui/en/surfaces/message-parts
+
+# Message parts surface
+
+Message rendering MUST preserve typed parts. Agent UI clients should not flatten every runtime event into one Markdown string.
+
+## Standard parts
+
+| Part | Surface | Default behavior |
+| --- | --- | --- |
+| `user_text` | Conversation | Show immediately and preserve author identity. |
+| `assistant_text` | Conversation | Render as final answer text. |
+| `reasoning_summary` | Process | Collapse or summarize by default. |
+| `reasoning_detail` | Process | Show only when policy and user setting allow it. |
+| `runtime_status` | Process or Task | Display as compact status, not as message prose. |
+| `tool_call` | Process | Show compact step with input summary. |
+| `tool_result` | Process | Show preview, summary, or detail drawer. |
+| `action_required` | Task | Show explicit CTA and pending state. |
+| `artifact_ref` | Artifact | Show summary card and open in Artifact Workspace. |
+| `evidence_ref` | Evidence | Show source, verification, or replay entry. |
+| `error` | Process or Task | Show recoverable diagnostic and next action. |
+
+## Final answer boundary
+
+The final answer SHOULD contain what the user needs to read or act on. It SHOULD NOT contain raw tool logs, queue events, unfiltered reasoning, runtime tracing, or evidence payloads.
+
+Allowed in final answer:
+
+- concise explanation
+- user-facing conclusion
+- links or references to artifacts
+- citations backed by evidence facts
+- next steps that are part of the answer
+
+Not allowed by default:
+
+- raw JSON tool output
+- repeated streamed final text
+- hidden reasoning markers
+- provider debug logs
+- approval payloads
+- full evidence packs
+
+## Reconciliation
+
+Some runtimes stream deltas and later emit final content. The UI MUST reconcile final content instead of blindly appending it.
+
+Recommended rules:
+
+1. Append only typed `assistant_text` deltas to answer text.
+2. Store `reasoning`, `tool`, `status`, `action`, and `artifact` in their own parts.
+3. On final payload, compare with streamed answer and replace or mark reconciliation if necessary.
+4. Never use final payload to duplicate the already-rendered answer.
+5. Keep reconciliation deterministic and testable.
+
+## Branch and retry
+
+If a client supports retry, regenerate, or branch:
+
+- Branches SHOULD preserve user message, selected context, mode, and artifacts.
+- Each assistant branch SHOULD keep its own process and evidence references.
+- Retrying a failed tool SHOULD create a new process item or attempt record.
+- The UI SHOULD show which branch produced which artifact.
+
+## Acceptance scenarios
+
+1. Reasoning text never appears inside final answer text unless explicitly exported as an answer.
+2. Tool output is inspectable but collapsed outside the final answer by default.
+3. `action_required` renders as a CTA, not as plain Markdown.
+4. `artifact_ref` opens a dedicated Artifact Workspace.
+5. Final payload reconciliation does not duplicate streamed text.
+
+# Runtime status surface
+Source: https://limecloud.github.io/agentui/en/surfaces/runtime-status
+
+# Runtime status surface
+
+Runtime Status makes agent execution legible before, during, and after streamed answer text. Its goal is credible feedback, not decorative activity.
+
+## Standard states
+
+| State | Meaning | Attention level | Default UI |
+| --- | --- | --- | --- |
+| `submitted` | Client accepted user input. | Low | Pending message or placeholder. |
+| `binding` | Event listener or stream binding is being prepared. | Debug | Hidden unless diagnosing. |
+| `queued` | Work is waiting behind another task. | Medium | Task capsule with queue position. |
+| `routing` | Runtime is selecting model, tool, or route. | Low | Compact phase label. |
+| `preparing` | Runtime is building context or request. | Low | Stable status row. |
+| `waiting_provider` | Provider request started; no model event yet. | Medium after threshold | Status row with elapsed time. |
+| `streaming` | Answer text or process events are arriving. | Low | Subtle streaming indicator. |
+| `tool_running` | A tool, command, browser, or external action is active. | Medium | Tool step summary and optional interrupt. |
+| `action_required` | User input or approval is required. | High | CTA card and task capsule. |
+| `retrying` | Runtime is retrying a recoverable failure. | Medium | Retry count and reason. |
+| `failed` | Turn or task failed. | High | Recoverable error card. |
+| `cancelled` | User or runtime cancelled work. | Low | Quiet terminal state. |
+| `completed` | Work completed. | Low | Collapse status to summary or hide. |
+
+## First-response rule
+
+A client SHOULD show a credible state before first answer text. If the runtime cannot provide a stage yet, show `submitted` or `preparing`; do not leave the user facing a frozen surface.
+
+A status is credible when it is tied to a real client or runtime milestone:
+
+- input accepted
+- stream listener bound
+- turn accepted
+- queued
+- runtime started
+- provider request started
+- first provider event received
+- first text delta received
+
+## Stable status row
+
+The status row SHOULD avoid layout jumps. Recommended content:
+
+- short state label
+- elapsed time after a threshold
+- active tool or queue summary
+- interrupt or cancel hint when available
+- at most two lines of detail before overflow into a process surface
+
+## Attention rules
+
+Only these states SHOULD aggressively draw attention:
+
+- `action_required`
+- `failed`
+- `permission_required`
+- `plan_ready`
+- `stale_without_activity` after a meaningful threshold
+
+Normal `routing`, `preparing`, `streaming`, and `tool_running` states should remain visible but calm.
+
+## Diagnostics
+
+A status surface SHOULD preserve diagnostics for slow paths:
+
+| Metric | Meaning |
+| --- | --- |
+| `submit_to_status_ms` | User submit to first credible status. |
+| `submit_to_first_event_ms` | User submit to first runtime event. |
+| `submit_to_first_text_ms` | User submit to first answer text. |
+| `first_text_to_paint_ms` | Rendering delay after first text. |
+| `last_event_age_ms` | Time since last runtime event. |
+
+Diagnostics can be hidden in normal UI, but they should be available to developers and evidence surfaces.
+
+# Tool UI surface
+Source: https://limecloud.github.io/agentui/en/surfaces/tool-ui
+
+# Tool UI surface
+
+Tool UI turns external work into understandable process evidence without polluting the final answer.
+
+## Tool step anatomy
+
+A tool step SHOULD expose:
+
+| Field | Purpose |
+| --- | --- |
+| `tool.id` | Stable id for linking, retry, evidence, and logs. |
+| `tool.kind` | Command, browser, file, API, search, database, custom. |
+| `status` | Pending, running, succeeded, failed, cancelled, timed out. |
+| `input.summary` | Safe, compact input preview. |
+| `output.preview` | Human-readable result preview. |
+| `output.ref` | Pointer to full output when too large. |
+| `duration` | Timing summary. |
+| `risk` | Permission or sensitivity category when relevant. |
+| `source_refs` | Sources or artifacts produced by the tool. |
+
+## Input rendering
+
+Tool input often contains secrets, long JSON, file paths, or irrelevant defaults. Clients SHOULD:
+
+- show the smallest meaningful input fields
+- redact secrets and credentials
+- collapse long JSON by default
+- keep raw input available only in trusted diagnostic views
+- explain omitted fields with count or size
+
+## Output rendering
+
+| Output shape | Recommended rendering |
+| --- | --- |
+| Empty output | Show `No output` with exit/status information. |
+| Short text | Inline preview inside process step. |
+| Large text | Summary, byte/token count, and open-details action. |
+| JSON object | Render important keys first; allow raw view. |
+| Image or media | Thumbnail or placeholder with open action. |
+| File change | Diff or artifact reference. |
+| Source list | Evidence/source surface entry. |
+| Error | Failure summary, stderr preview, retry or diagnostic action. |
+
+## Large output rule
+
+Large tool output SHOULD NOT be inserted into the final answer or message body. Use an offloaded reference and a detail surface.
+
+Recommended thresholds are product-specific, but an implementation SHOULD define when to:
+
+- truncate input
+- summarize output
+- offload full output
+- warn about context impact
+- require explicit expansion
+
+## Retry and replay
+
+If retry is supported:
+
+- Show whether the tool is safe to retry.
+- Preserve each attempt with its own status and output reference.
+- Do not overwrite failed attempt evidence.
+- Require confirmation for high-risk or non-idempotent tools.
+
+## Acceptance scenarios
+
+1. A tool with no output shows an explicit empty state.
+2. A tool with large output shows a summary and detail action, not full output in the answer.
+3. A failed tool preserves stderr or diagnostic preview.
+4. A generated file becomes an artifact reference.
+5. Tool evidence remains linkable from timeline and evidence surfaces.
+
+# Task capsule surface
+Source: https://limecloud.github.io/agentui/en/surfaces/task-capsule
+
+# Task capsule surface
+
+Task capsules compress agent work into a stable attention layer. They are especially useful for long-running tasks, queues, background agents, and sessions that should not fully render while inactive.
+
+## Standard task states
+
+| State | Meaning | Attention | Required affordance |
+| --- | --- | --- | --- |
+| `running` | Work is active. | Low | Open details, interrupt when supported. |
+| `queued` | Work is waiting. | Medium | Show position, preview, edit/remove when supported. |
+| `steering` | Input is being delivered to current work. | Medium | Show pending steer preview. |
+| `needs_input` | User must provide information. | High | Clear CTA and oldest age. |
+| `plan_ready` | A plan awaits approval or edit. | High | Approve, reject, edit, inspect. |
+| `permission_required` | A risky action needs permission. | High | Approve/reject with scope and risk summary. |
+| `failed` | Work failed but may be recoverable. | High | Retry, inspect diagnostic, export evidence. |
+| `cancelled` | Work stopped intentionally. | Low | Quiet summary. |
+| `completed` | Work finished. | Low | Summary and artifact/evidence links. |
+| `stale` | No activity beyond threshold. | Medium | Inspect, interrupt, or resume. |
+
+## Attention rules
+
+1. Normal running work should be visible but calm.
+2. `needs_input`, `plan_ready`, `permission_required`, and `failed` may use stronger visual priority.
+3. Completed tasks should collapse automatically unless they produced important artifacts or evidence.
+4. Capsules should open details without navigating away from the user's current context.
+5. Multiple capsules should aggregate by session, workspace, or task group when screen space is limited.
+
+## Capsule content
+
+A capsule SHOULD include:
+
+- short label
+- state
+- count or queue position when relevant
+- latest meaningful activity
+- primary CTA only for attention states
+- link to process, artifact, or evidence details
+
+Avoid putting full tool output, logs, or long plan text inside the capsule.
+
+## Session interaction
+
+Task capsules can keep inactive sessions cheap:
+
+- active session may render full conversation and process surfaces
+- recent session may keep a snapshot and active capsule
+- suspended session may keep only title, summary, and task states
+- discarded session may keep restore metadata and artifact/evidence index
+
+This makes task state visible without forcing every session to hydrate full history.
+
+## Acceptance scenarios
+
+1. Two running tasks appear as compact capsules without flooding conversation.
+2. A `needs_input` task is visually higher priority than a normal running task.
+3. A queued turn shows preview and remove action before it starts.
+4. Clicking a capsule opens task details in context.
+5. Closing or suspending an inactive session releases heavy process rendering while preserving capsule state.
+
+# Human-in-the-loop surface
+Source: https://limecloud.github.io/agentui/en/surfaces/human-in-the-loop
+
+# Human-in-the-loop surface
+
+As agents gain execution power, user intervention must be modeled as structured state, not as ordinary assistant prose.
+
+## Standard request types
+
+| Type | Use when | Required UI |
+| --- | --- | --- |
+| `approval` | User must approve or reject a proposed action. | Approve/reject controls and scope summary. |
+| `permission` | Runtime needs elevated capability. | Risk, target, duration, and consequence. |
+| `plan_review` | Agent produced a plan before execution. | Approve, reject, edit, request changes. |
+| `elicitation` | Agent needs missing user input. | Form, options, or free text with clear prompt. |
+| `credential_needed` | User must configure credentials. | Safe route to settings; preserve current task. |
+| `cost_confirmation` | Task may spend notable money, tokens, or time. | Estimate, limit, and cancel path. |
+| `handoff_acceptance` | User or another agent must accept transferred work. | Summary, artifacts, evidence, accept/decline. |
+
+## Request contract
+
+A human-in-the-loop request SHOULD include:
+
+- stable request id
+- task or turn id
+- request type
+- title and concise explanation
+- risk or severity
+- available responses
+- expiration or stale policy
+- audit summary after response
+- replay or evidence reference when relevant
+
+A client MUST NOT treat a Markdown sentence as sufficient permission for a high-risk action.
+
+## Plan UI
+
+Plan approval should be a stateful object:
+
+- proposed steps
+- scope and expected outputs
+- risk/cost summary
+- approve/reject/edit controls
+- saved plan or artifact reference when applicable
+- rejection reason or change request
+- audit summary after decision
+
+If a plan is rejected, preserve the plan and the reason so the agent can revise without losing context.
+
+## Completion behavior
+
+After a request is resolved:
+
+- remove it from pending attention surfaces
+- keep a compact audit summary
+- link the response to process and evidence surfaces
+- avoid leaving stale sticky cards in the main conversation
+
+## Acceptance scenarios
+
+1. A high-risk action renders as approval UI with scope and consequence.
+2. Approving or rejecting writes through a controlled runtime action.
+3. A resolved request collapses to summary and stops appearing as pending.
+4. A rejected plan preserves the reason and can be revised.
+5. A credentials-needed state preserves the user's draft and task context.
+
+# Artifact Workspace
+Source: https://limecloud.github.io/agentui/en/surfaces/artifact-canvas
+
+# Artifact Workspace
+
+Agent UI treats durable deliverables as first-class artifacts, not oversized chat messages or passive attachments. The artifact workspace is the interaction surface where users inspect, edit, compare, export, reuse, and hand off agent-created work.
+
+Core rule:
+
+```text
+Conversation carries intent and explanation.
+Artifact Workspace carries delivery and continued work.
+```
+
+## Why this is core
+
+Agent products repeatedly produce substantial standalone content: documents, code, websites, diagrams, images, tables, reports, datasets, and interactive views. External implementations point in the same direction:
+
+- Claude Artifacts put substantial standalone content in a dedicated window separate from the main conversation.
+- AI SDK `UIMessage` separates text, reasoning, tool, file, source, and custom data parts for UI rendering.
+- assistant-ui separates attachments, runtime adapters, message parts, and custom tool UI rendering.
+- OpenAI Apps SDK separates structured tool data, narration, component-only metadata, and UI resources.
+
+Agent UI standardizes the interaction semantics across those patterns. It does not standardize the artifact store.
+
+## Artifact interaction contract
+
+An Artifact Workspace SHOULD consume explicit artifact facts:
+
+| Fact | Purpose |
+| --- | --- |
+| `artifact.id` | Stable linking across conversation, process, task, artifact workspace, and evidence. |
+| `artifact.kind` | `document`, `code`, `image`, `table`, `canvas`, `diff`, `report`, `dataset`, `browser_snapshot`, `bundle`, `custom`, or `unknown`. |
+| `artifact.title` | User-visible label. |
+| `artifact.status` | `creating`, `ready`, `updating`, `failed`, `stale`, `superseded`, `deleted`, or `unknown`. |
+| `artifact.version.id` | Version, revision, or checkpoint identity. |
+| `artifact.preview` | Lightweight preview, thumbnail, summary, manifest, or partial rows. |
+| `artifact.read_ref` | Path, URL, object id, or service reference for full content. |
+| `artifact.write_capabilities` | Whether the user can edit, fork, export, regenerate, or attach to the next turn. |
+| `artifact.diff_ref` | Diff or patch reference when available. |
+| `artifact.source_refs` | Tool, source, task, turn, message, or run references. |
+| `artifact.evidence_refs` | Evidence, verification, review, replay, or handoff references. |
+
+Do not infer artifact kind, saved status, version, or export success from ordinary answer text when explicit facts are missing.
+
+## Event projection
+
+Artifact events SHOULD be projected into artifact cards, workspace panels, timeline entries, and evidence links.
+
+| Event class | Required minimum | UI projection |
+| --- | --- | --- |
+| `artifact.created` | artifact id, kind or `unknown`, status | Create card and workspace entry. |
+| `artifact.updated` | artifact id, version or status | Update preview, freshness, and workspace state. |
+| `artifact.preview.ready` | artifact id, preview ref or preview data | Show lightweight preview without loading full content. |
+| `artifact.version.created` | artifact id, version id, source refs | Add version marker and compare target. |
+| `artifact.diff.ready` | artifact id, diff ref | Enable diff/review action. |
+| `artifact.export.started` | artifact id, export id | Show background export state. |
+| `artifact.export.completed` | artifact id, export ref | Show download/share/handoff action. |
+| `artifact.failed` | artifact id, error summary | Keep last confirmed version and show recovery path. |
+| `artifact.deleted` | artifact id | Mark unavailable without deleting history references. |
+
+A runtime adapter may collapse these into `artifact.changed`, but compatible clients SHOULD preserve the more specific event class when available.
+
+## Workspace regions
+
+An Artifact Workspace SHOULD have stable regions even if the visual layout differs:
+
+| Region | User question | Required behavior |
+| --- | --- | --- |
+| Card | What was produced? | Compact title, kind, status, preview, open action. |
+| Preview | Can I inspect it quickly? | Lightweight render that does not block streaming. |
+| Editor / Canvas | Can I continue working? | Controlled writes through artifact APIs or host store. |
+| Version rail | What changed over time? | Current version, source turn, previous versions, stale state. |
+| Diff / Review | What changed and is it acceptable? | Compare explicit versions or patches. |
+| Export / Handoff | Can I use it outside this run? | Export state, target, and evidence/handoff links. |
+| Source links | Where did it come from? | Links to turn, tool, source, task, and evidence. |
+
+## Placement rules
+
+| Content | Preferred placement |
+| --- | --- |
+| Short result | Conversation or inline preview. |
+| Long report | Artifact Workspace with conversation summary. |
+| Code or document patch | Artifact Workspace with diff/review. |
+| Image/video/audio | Artifact preview with open and export actions. |
+| Browser snapshot | Artifact with source, timestamp, and replay/evidence link when available. |
+| Generated dataset | Manifest, schema, sample rows, and full-content read ref. |
+| Interactive widget | Tool UI or Artifact Workspace depending on whether it is a transient result or reusable deliverable. |
+| Evidence pack | Evidence surface, linked from artifact when relevant. |
+
+## Editing and versioning
+
+Artifact edits SHOULD write through an artifact service, runtime action, or controlled host store. The UI SHOULD preserve:
+
+- last confirmed version
+- pending local edits
+- save status
+- diff or patch when applicable
+- source or generation turn
+- export or handoff state
+- evidence/review links
+
+If an edit fails, keep the last confirmed version and show unsaved changes separately. If a later runtime update supersedes the open version, show the conflict or stale state instead of silently replacing the user's draft.
+
+## Artifact cards
+
+Conversation and process surfaces may show compact artifact cards. A card SHOULD include:
+
+- title
+- kind
+- status
+- small preview or icon
+- open action
+- version or freshness when relevant
+- source/evidence indicator if available
+- export/handoff state when relevant
+
+The card is an entry point, not the artifact body.
+
+## Boundaries
+
+Agent UI owns artifact interaction semantics. The artifact service owns full content, storage, version persistence, export bytes, and write authority. Evidence systems own verification, replay, and review facts.
+
+Anti-patterns:
+
+- dumping a long artifact into assistant text
+- rendering binary files as empty generic file cards
+- duplicating the same artifact under path, basename, and absolute-path identities
+- marking an artifact saved before the owning service confirms it
+- losing local edits when the user opens another session or artifact
+- making the canvas state the only source of artifact truth
+
+## Acceptance scenarios
+
+1. A long generated report opens in Artifact Workspace; conversation only shows a summary and card.
+2. Artifact preview loads without blocking streamed answer text.
+3. Artifact kind comes from explicit metadata; missing kind shows `unknown`.
+4. Editing preserves version, pending edits, and unsaved state.
+5. A diff compares two explicit versions rather than two message strings.
+6. Export progress and completion are visible and recoverable.
+7. An artifact links back to the turn, tool, source, task, or evidence that produced it.
+8. Opening an old session shows artifact summaries before loading full content.
+
+# Timeline and evidence surface
+Source: https://limecloud.github.io/agentui/en/surfaces/timeline-evidence
+
+# Timeline and evidence surface
+
+Timeline and Evidence surfaces explain how agent work happened and whether it can be trusted. They should be available without overwhelming the primary conversation.
+
+## Timeline layers
+
+| Layer | Purpose | Default UI |
+| --- | --- | --- |
+| Inline process | Current turn status and key events. | Compact and live. |
+| Turn timeline | Tool calls, reasoning summaries, actions, artifacts. | Collapsed by default. |
+| Session timeline | Multi-turn history and incidents. | Lazy loaded or paged. |
+| Diagnostic log | Provider, routing, retries, performance. | Developer or support view. |
+| Evidence pack | Exportable audit artifact. | Background job and evidence panel. |
+| Replay case | Reproducible scenario or failure trace. | Debug or review entry. |
+
+Not every event belongs in the user-facing timeline. Store detailed facts, but project only the useful summary until the user asks for details.
+
+## Evidence facts
+
+Evidence surfaces SHOULD consume explicit evidence facts:
+
+- source id and title
+- source location or citation anchor
+- artifact id or task id
+- verification state
+- reviewer decision
+- replay reference
+- generated timestamp
+- provenance or tool reference
+- disputed or stale status
+
+If evidence is missing, show unavailable or unknown. Do not invent citations.
+
+## Review and replay
+
+Review decisions and replay cases are not the same as model output.
+
+- A review decision SHOULD represent a human or policy review result.
+- A replay case SHOULD capture enough context to reproduce a run or failure.
+- Evidence export SHOULD be a background task when it may be expensive.
+- UI status SHOULD come from evidence facts, not from optimistic front-end inference.
+
+## Source-linking
+
+Generated artifacts and final answers SHOULD link to evidence when available:
+
+```text
+final answer -> evidence refs
+artifact -> source refs
+process item -> tool refs
+review decision -> evidence pack
+replay case -> runtime trace
+```
+
+This lets users move from answer to source, from artifact to generating turn, and from failure to diagnostic trace.
+
+## Acceptance scenarios
+
+1. Timeline details are lazy-loaded for old sessions.
+2. Tool events, artifacts, and approvals remain linkable after completion.
+3. Citations appear only when source facts exist.
+4. Evidence export runs without blocking the active turn.
+5. Review and replay views use the same underlying evidence facts.
+
+# Session and tab surface
+Source: https://limecloud.github.io/agentui/en/surfaces/session-tabs
+
+# Session and tab surface
+
+Agent sessions are executable work units, not just chat transcripts. A client with multiple sessions should manage them like recoverable, resource-aware tabs.
+
+## Standard session states
+
+| State | Meaning | Resource behavior |
+| --- | --- | --- |
+| `active` | User is currently interacting with this session. | Full conversation, process, and composer may render. |
+| `recent` | Recently used and likely to be opened again. | Keep snapshot and lightweight task state. |
+| `pinned` | User marked as important. | Preserve summary and task state; avoid automatic discard. |
+| `suspended` | Not active; heavy UI is paused. | Keep title, preview, capsules, artifact index. |
+| `discarded` | Heavy state released. | Keep restore metadata and last known summary. |
+| `restoring` | Session is being rehydrated. | Show shell and snapshot first. |
+| `archived` | Hidden from default active lists. | Discoverable through search or archive view. |
+
+## Progressive restore
+
+Opening an existing session SHOULD follow this order:
+
+```text
+click session
+  -> create/activate shell
+  -> apply cached snapshot or skeleton
+  -> load bounded recent messages
+  -> paint stable recent conversation
+  -> hydrate queue/action/artifact summaries
+  -> load timeline details on idle or expand
+  -> page older history on request
+```
+
+A session surface SHOULD NOT block first paint on full history, full timeline, artifact previews, evidence export, or background session lists.
+
+## Snapshot content
+
+A lightweight snapshot MAY include:
+
+- session id
+- title
+- last message preview
+- last activity timestamp
+- active task state
+- queued count
+- pending action count
+- latest artifact summary
+- latest evidence or review state
+- unread or changed indicator
+
+Snapshots are projection state. They must be refreshed or marked stale when authoritative facts change.
+
+## Resource rules
+
+Clients SHOULD track and control:
+
+- active tab count
+- hydrated detail tab count
+- mounted message list count
+- mounted timeline item count
+- streaming buffer size
+- loaded artifact preview bytes
+- background restore count
+
+Inactive sessions should not continuously rebuild large timelines or parse large message histories.
+
+## Acceptance scenarios
+
+1. Opening an old session shows shell or cached preview before full detail loads.
+2. Switching between two old sessions does not let stale hydration overwrite the active session.
+3. Non-active sessions keep capsules but release heavy timeline rendering.
+4. Pinned sessions preserve important state under memory pressure.
+5. Loading older history is explicit and paged.
+
+# Runtime event projection contract
+Source: https://limecloud.github.io/agentui/en/contracts/runtime-event-projection
+
+# Runtime event projection contract
+
+Agent UI clients should consume structured runtime facts and project them into surfaces. They should not parse ordinary prose to infer state.
+
+## Event classes
+
+| Event class | Typical facts | Primary surface |
+| --- | --- | --- |
+| `turn.started` | turn id, session id, timestamp | Process, Task |
+| `runtime.status` | stage, detail, elapsed, provider state | Runtime Status |
+| `text.delta` | message id, text delta, part id | Conversation |
+| `text.final` | final text, content id | Conversation reconciliation |
+| `reasoning.delta` | summary or reasoning content | Process |
+| `tool.started` | tool id, kind, input summary | Tool UI, Timeline |
+| `tool.progress` | progress, partial output ref | Tool UI |
+| `tool.completed` | status, output ref, duration | Tool UI, Evidence |
+| `action.required` | request id, type, severity, schema | Human-in-the-loop, Task |
+| `action.resolved` | request id, response summary | Human-in-the-loop, Evidence |
+| `queue.changed` | queued ids, previews, order | Task Capsule, Composer |
+| `artifact.created` / `artifact.updated` | artifact id, kind, status, version | Artifact Workspace |
+| `artifact.preview.ready` | artifact id, preview ref or preview payload | Artifact Workspace |
+| `artifact.version.created` / `artifact.diff.ready` | artifact id, version id or diff ref | Artifact Workspace, Timeline |
+| `artifact.export.started` / `artifact.export.completed` | artifact id, export id/ref, status | Artifact Workspace, Evidence |
+| `artifact.failed` / `artifact.deleted` | artifact id, error or unavailable state | Artifact Workspace |
+| `artifact.changed` | collapsed artifact adapter event | Artifact Workspace |
+| `evidence.changed` | evidence id, status, refs | Evidence |
+| `turn.completed` | outcome, final refs | Conversation, Task |
+| `turn.failed` | error, retryability, diagnostic ref | Runtime Status, Task |
+
+## Projection rules
+
+1. Text events update conversation parts only.
+2. Reasoning events update process parts only unless explicitly exported as answer text.
+3. Tool events update process and timeline projections; full output is loaded on demand.
+4. Action events update task attention state and human-in-the-loop surfaces.
+5. Artifact events update artifact summaries, artifact cards, workspace panels, version rails, diff actions, and export state.
+6. Evidence events update evidence surfaces and citation availability.
+7. Queue events update task capsules and composer state.
+8. Final events reconcile content; they do not blindly append duplicate text.
+
+## Identity requirements
+
+Runtime facts SHOULD carry stable identifiers:
+
+- session id
+- thread or conversation id
+- turn id
+- message id
+- content part id
+- task id
+- queued turn id
+- action request id
+- tool call id
+- artifact id
+- evidence id
+
+The UI may generate temporary optimistic ids, but it must reconcile them with runtime ids when available.
+
+## Unknown and missing facts
+
+If an event lacks required fields, the UI SHOULD:
+
+- keep the raw event in diagnostics if safe
+- render an unknown or unavailable state
+- avoid guessing from text
+- avoid promoting incomplete facts to final evidence
+- preserve user control when possible
+
+## Acceptance scenarios
+
+1. Runtime status before first text renders outside conversation text.
+2. A tool event with `artifact.id` creates an artifact card linked to the tool step.
+3. A final event reconciles streamed answer content without duplication.
+4. An action request with severity appears in task capsules and approval UI.
+5. Missing artifact metadata renders as unknown rather than guessed from prose.
+6. An artifact export event updates export state without copying binary payload into message text.
+
+# Backend coordination contract
+Source: https://limecloud.github.io/agentui/en/contracts/backend-coordination
+
+# Backend coordination contract
+
+Agent UI cannot stay responsive if every surface depends on full session detail. Backends should provide layered projections, stable ids, and on-demand detail APIs.
+
+## Backend responsibilities
+
+| Capability | Backend responsibility | UI benefit |
+| --- | --- | --- |
+| Event stream | Emit typed status, text, reasoning, tool, action, queue, artifact, evidence events. | Streaming does not mix states into one text flow. |
+| Session summary | Return title, preview, activity, task counts, artifact summary. | Sidebar and tabs stay cheap. |
+| Window detail | Return recent messages and bounded process data. | Old sessions open quickly. |
+| Timeline pages | Return process details by cursor. | Long histories are inspectable without blocking. |
+| Tool output refs | Store large output out of message body. | Tool details load on demand. |
+| Artifact service | Persist artifact metadata, preview, versions, and content refs. | Artifacts leave chat and enter workbench. |
+| Evidence service | Export evidence, review, replay, and audit records. | Results are verifiable and reusable. |
+| Diagnostics | Emit compatible timing and resource metrics. | Slow paths can be located. |
+
+## Recommended API layers
+
+| Layer | Use | Contents |
+| --- | --- | --- |
+| `listSummary` | Navigation, sidebars, tabs, task strips. | id, title, preview, status, counts, last activity. |
+| `sessionSnapshot` | Fast restore and inactive tabs. | summary plus recent message preview and task capsule summary. |
+| `windowDetail` | Active session first paint. | recent N messages, minimal process refs, thread/task state, history cursor. |
+| `timelinePage` | User expands process history. | detailed process items by cursor and limit. |
+| `artifactPreview` | Artifact cards and workbench list. | metadata, small preview, status, version. |
+| `artifactContent` | Editing or full preview. | full content or chunked content. |
+| `evidenceJob` | Export or refresh evidence. | job state, output refs, warnings. |
+| `diagnostics` | Developer or support view. | timing, queue, stream, and resource metrics. |
+
+## Pagination and hydration
+
+Backends SHOULD prefer cursor-based pagination for mutable histories. Offset pagination may become unstable when new events are inserted.
+
+A window detail response SHOULD explicitly state:
+
+- history is truncated or complete
+- cursor for older history
+- number of messages, turns, and process items returned
+- whether timeline detail is included or deferred
+- whether artifact and evidence previews are included or deferred
+
+## Stable references
+
+The backend SHOULD normalize references so the UI can link surfaces:
+
+```text
+turn -> messages -> process items -> tools -> artifacts -> evidence
+```
+
+At minimum, artifacts and evidence should be linkable back to the task or turn that produced them.
+
+## Do not overload session detail
+
+Avoid making a single `getSession` equivalent return everything. Full detail calls that include all messages, all tools, all artifact content, and all evidence data make old sessions slow and encourage clients to block rendering.
+
+Prefer small summaries and explicit detail APIs.
+
+# Performance metrics contract
+Source: https://limecloud.github.io/agentui/en/contracts/performance-metrics
+
+# Performance metrics contract
+
+Agent UI performance is part of the user experience contract. Clients and runtimes should record enough metrics to explain perceived slowness without exposing sensitive payloads.
+
+## Submission and first response
+
+| Metric | Meaning |
+| --- | --- |
+| `composer.submit_ms` | User action timestamp. |
+| `listener.bound_ms` | Stream listener or event binding is ready. |
+| `submit.accepted_ms` | Runtime accepted the turn. |
+| `queue.wait_ms` | Time spent waiting in queue. |
+| `runtime.start_ms` | Runtime began execution. |
+| `provider.request_start_ms` | Provider or model request began. |
+| `first_event_ms` | First runtime event reached client. |
+| `first_runtime_status_ms` | First user-visible status. |
+| `first_text_delta_ms` | First answer text delta. |
+| `first_text_paint_ms` | First text visible to user. |
+
+These metrics separate client delay, runtime queueing, provider delay, bridge delay, and render delay.
+
+## Stream rendering
+
+| Metric | Meaning |
+| --- | --- |
+| `text_delta.queue_depth` | Number of unrendered text chunks. |
+| `text_delta.oldest_unrendered_age_ms` | Age of oldest unrendered chunk. |
+| `stream.render_mode` | Smooth, catch-up, paused, or fallback. |
+| `stream.mode_transition_count` | Number of mode switches. |
+| `stream.rapid_reentry_count` | Frequent catch-up re-entry indicator. |
+| `stream.flush_interval_ms` | Render flush cadence. |
+| `stream.buffer_chars` | Buffered text size. |
+
+A client can use these to decide when to switch from smooth streaming to catch-up rendering.
+
+## History and restore
+
+| Metric | Meaning |
+| --- | --- |
+| `session.click_to_shell_ms` | User opens session to shell paint. |
+| `session.snapshot_apply_ms` | Cached snapshot apply time. |
+| `session.detail_request_ms` | Window detail request duration. |
+| `session.messages_hydrate_ms` | Recent messages hydration duration. |
+| `message_list.first_stable_paint_ms` | First readable conversation paint. |
+| `timeline.idle_hydrate_ms` | Deferred timeline completion. |
+| `history.page_load_ms` | Older history page duration. |
+
+## Resource pressure
+
+| Metric | Meaning |
+| --- | --- |
+| `tabs.active_count` | Full active sessions. |
+| `tabs.hydrated_detail_count` | Sessions holding detailed state. |
+| `message_lists.mounted_count` | Mounted message lists. |
+| `timeline.items_mounted_count` | Rendered timeline items. |
+| `artifact.preview_loaded_bytes` | Loaded artifact preview bytes. |
+| `background.restore_count` | Concurrent restore operations. |
+| `deferred.timeline_pending_count` | Deferred timeline jobs. |
+
+## Acceptance thresholds
+
+This standard does not mandate universal numbers. An implementation SHOULD define product-specific targets for:
+
+- first visible status
+- first text paint
+- old session shell paint
+- old session recent message paint
+- maximum mounted inactive timelines
+- large tool output preview threshold
+- artifact preview budget
+
+Targets should be tested with representative histories and tool outputs, not only empty demo sessions.
+
+# Runtime standard
+Source: https://limecloud.github.io/agentui/en/client-implementation/runtime-standard
+
+# Runtime standard
+
+This guide describes how an agent client should implement Agent UI. The core integration is the same across desktop apps, IDEs, terminals, web apps, and embedded assistants: consume structured runtime facts, project them into UI state, and route user controls back through controlled APIs.
+
+## Core principle: projection, not ownership
+
+```text
+runtime facts
+  + artifact facts
+  + evidence facts
+  + optional application state
+  -> UI projection
+  -> user-visible surfaces and controlled actions
+```
+
+A compatible client MUST NOT let UI projection become the source of runtime identity, tool output, artifact contents, permission state, verification results, or approval state.
+
+## Step 1: Identify fact sources
+
+Start from real product/runtime facts, not from a standalone manifest file.
+
+| Source | Required examples | Notes |
+| --- | --- | --- |
+| Event stream | lifecycle, text, reasoning, tool, action, queue, artifact, evidence events | Register listeners before submitting work. |
+| Session snapshot | recent messages, thread/run status, queue, pending requests, history cursor | Used for old-session recovery and stream repair. |
+| Artifact service | artifact id, kind, preview, read ref, version, diff, save/export/handoff status | Full content loads on demand. |
+| Evidence service | trace, source/citation, verification, review, replay, handoff | Evidence should be durable and auditable. |
+| Application state | selected workspace, active tab, file attachments, model/mode selections | Keep separate from runtime facts. |
+
+## Step 2: Normalize event classes
+
+Create an adapter layer that maps your source protocol into generic Agent UI event classes.
+
+Common mappings:
+
+| Source idea | Agent UI class |
+| --- | --- |
+| Lifecycle start/finish/error events | `run.started`, `run.finished`, `run.failed` |
+| Text message events or AI SDK text parts | `text.delta`, `text.final` |
+| Reasoning/thinking events or AI SDK reasoning parts | `reasoning.delta`, `reasoning.summary` |
+| Tool lifecycle events and structured tool results | `tool.started`, `tool.args`, `tool.progress`, `tool.result` |
+| Interrupt outcomes, widget/tool requests, or custom approval events | `action.required`, `action.resolved` |
+| Runtime queue snapshot or busy-session submission mode | `queue.changed` |
+| Artifact created/updated/preview/version/diff/export events | `artifact.created`, `artifact.updated`, `artifact.preview.ready`, `artifact.version.created`, `artifact.diff.ready`, `artifact.export.started`, `artifact.export.completed` |
+| Collapsed artifact adapter events | `artifact.changed` |
+| Evidence, review, replay, trace, or source-map events | `evidence.changed` |
+| Durable thread state, external app state, or message repair | `state.snapshot`, `state.delta`, `messages.snapshot` |
+
+The adapter is a compatibility boundary. Do not spread source-specific event parsing across UI components.
+
+## Step 3: Maintain a projection store
+
+Recommended store responsibilities:
+
+- Keep a recent message window and hydration cursor.
+- Store run status, pending actions, queue summaries, and tool summaries by stable id.
+- Reference artifacts and evidence by id/ref instead of copying full payloads.
+- Track UI-only state such as selected tab, collapsed rows, focused artifact, and draft.
+- Preserve raw diagnostics only in safe debug channels.
+
+Projection state can be recreated from snapshots and events. If it cannot be recreated, it probably owns facts it should not own.
+
+## Step 4: Render surfaces from projection
+
+Render by surface responsibility:
+
+| Surface | Rendering rule |
+| --- | --- |
+| Composer | Show draft, context chips, attachments, model/mode, permission hints, and queue/steer mode. |
+| Message Parts | Render final answer text separately from reasoning, tools, actions, artifacts, and evidence. |
+| Runtime Status | Show accepted/routing/preparing before first text, then streaming/tool/blocked/retrying/failed/completed. |
+| Tool UI | Compress input/output, redact secrets, offload large payloads, and link detail views. |
+| Human-in-the-loop | Show explicit approve/reject/edit/input controls with stable request ids. |
+| Task Capsule | Summarize running, queued, needs-input, plan-ready, failed, cancelled, and subagent states. |
+| Artifact Workspace | Open deliverables in a dedicated surface with cards, preview, edit/canvas, versions, diff/review, export, handoff, and source/evidence links. |
+| Timeline / Evidence | Show process history, citations, verification, review, replay, and handoff on demand. |
+| Session / Tabs | Keep inactive sessions lightweight with snapshots and lazy hydration. |
+
+## Step 5: Wire controlled writes
+
+User controls write through owning services.
+
+| Control | API boundary |
+| --- | --- |
+| Send | Runtime submit API |
+| Queue | Runtime queue API |
+| Steer | Runtime steer/resume API |
+| Interrupt/cancel | Runtime interrupt API |
+| Approve/reject/respond | Runtime action response API |
+| Edit/save/export artifact | Artifact service |
+| Export/review/replay evidence | Evidence/review/replay service |
+| Load older history | Session history API |
+
+Every write should return a fact or updated snapshot. UI state should not declare success by itself.
+
+## Step 6: Hydrate progressively
+
+Old session open flow:
+
+```mermaid
+flowchart TB
+  Click[Open session] --> Shell[Render shell, tab, title]
+  Shell --> Snapshot{Cached snapshot?}
+  Snapshot -->|Yes| Apply[Apply recent preview and status]
+  Snapshot -->|No| Skeleton[Show skeleton]
+  Apply --> Window[Fetch recent message window]
+  Skeleton --> Window
+  Window --> Paint[Paint conversation]
+  Paint --> Summary[Fetch queue, pending action, runtime summary]
+  Summary --> Details[Load timeline/tool/artifact/evidence details on demand]
+  Details --> Older[Load older history by cursor]
+```
+
+Do not block shell rendering on full timeline, all tool outputs, all artifacts, or evidence export payloads.
+
+## Step 7: Instrument performance
+
+At minimum, measure:
+
+- send click -> listener bound
+- listener bound -> submit accepted
+- submit accepted -> first event
+- first event -> first runtime status
+- first status -> first text delta
+- first text delta -> first text paint
+- delta backlog depth and oldest unrendered age
+- old-session click -> shell paint
+- old-session click -> recent messages paint
+- detail success -> timeline idle complete
+- active mounted message lists, timeline rows, and hydrated tabs
+
+These metrics are part of the UI contract because they determine whether the interface is actually usable for long-running agents.
+
+# Progressive rendering
+Source: https://limecloud.github.io/agentui/en/client-implementation/progressive-rendering
+
+# Progressive rendering
+
+Agent work is often slow, streaming, and partially known. A compatible Agent UI should show useful state early without blocking on full history, heavy tool output, or artifact previews.
+
+## Rendering order
+
+Prefer this order for interactive work:
+
+```text
+user action
+  -> visible shell
+  -> optimistic user message or pending preview
+  -> early runtime status
+  -> first answer text or process update
+  -> tool and task details on demand
+  -> artifact preview when available
+  -> evidence and replay after completion or export
+```
+
+The shell should not wait for full history or every secondary panel.
+
+## Keep streams typed
+
+Do not merge every event into one Markdown string.
+
+| Stream part | Surface | Rule |
+| --- | --- | --- |
+| user text | Conversation | Show immediately after submit. |
+| assistant text | Conversation | Render as answer text. |
+| reasoning or thinking | Process | Summarize or collapse; do not mix into final answer. |
+| runtime status | Process or Task | Show before or between text updates. |
+| tool call | Process | Show compact step with details on demand. |
+| queued input | Task | Show as queue or capsule state. |
+| artifact reference | Artifact | Show summary card and open in Artifact Workspace. |
+| evidence reference | Evidence | Show source, verification, or replay entry. |
+
+## Hydrate history progressively
+
+When opening existing work:
+
+1. Show the shell and title first.
+2. Show cached or recent messages if available.
+3. Load a bounded recent history window.
+4. Defer timeline, large tool output, artifact previews, and evidence details.
+5. Ignore stale hydration results if the user switches away.
+
+This avoids blocking the main UI on expensive secondary data.
+
+## Collapse high-volume process data
+
+Process data should be searchable and inspectable, not always expanded.
+
+Default behavior:
+
+- active step expanded or summarized
+- completed tool steps collapsed
+- large outputs summarized with an open-details action
+- errors and needs-input states promoted
+- background work compressed into capsules
+
+## Avoid duplicate final text
+
+Many runtimes emit both streaming deltas and a final completion payload. The UI must reconcile final content instead of appending it blindly.
+
+Recommended behavior:
+
+- Build answer text from typed text deltas.
+- Use final content to reconcile, not duplicate.
+- Keep reasoning, tool output, and status in their own parts.
+- If the final payload conflicts with streamed text, prefer the runtime's explicit final answer and mark the reconciliation.
+
+## Latency signals
+
+Clients SHOULD record enough timing to debug perceived slowness:
+
+| Metric | Meaning |
+| --- | --- |
+| `submitToShellMs` | Time from user submit to visible conversation shell. |
+| `submitToStatusMs` | Time to first credible runtime status. |
+| `submitToFirstTextMs` | Time to first assistant answer text. |
+| `firstTextToPaintMs` | Rendering delay after first text delta. |
+| `historyClickToShellMs` | Time from opening old work to visible shell. |
+| `historyClickToRecentMessagesMs` | Time to useful recent content. |
+| `artifactReferenceToPreviewMs` | Time from artifact reference to preview availability. |
+
+Metrics are not part of the user-facing UI contract, but they make acceptance scenarios testable.
+
+## Acceptance scenarios
+
+A basic progressive rendering implementation should pass these scenarios:
+
+1. Submitting a short prompt shows the user message and a runtime status before first text.
+2. A tool-heavy task does not insert raw tool output into the final answer.
+3. A generated artifact appears as a card or preview outside the final answer body.
+4. Opening old work shows shell or recent content before full process history loads.
+5. Switching between two sessions does not let stale hydration overwrite the active view.
+6. A missing artifact kind is shown as unknown rather than guessed from message text.
+
+# Session hydration
+Source: https://limecloud.github.io/agentui/en/client-implementation/session-hydration
+
+# Session hydration
+
+Opening an existing session should be progressive. The user should see a stable shell and useful recent content before expensive process history, artifacts, or evidence load.
+
+## Recommended flow
+
+```text
+select session
+  -> activate tab shell
+  -> apply cached snapshot or skeleton
+  -> request window detail with bounded history
+  -> hydrate recent messages
+  -> paint stable conversation
+  -> hydrate queue/action/artifact summaries
+  -> defer timeline and tool detail
+  -> load older history only on request
+```
+
+## Hydration priorities
+
+| Priority | Load | Reason |
+| --- | --- | --- |
+| P0 | shell, title, composer availability | User needs orientation and control. |
+| P0 | recent messages or skeleton | Avoid blank workspace. |
+| P0 | active task and pending action summary | Attention states must be visible. |
+| P1 | artifact summary | Deliverables should be reachable. |
+| P1 | compact process summary | Show what happened without heavy timeline. |
+| P2 | detailed timeline pages | User expands process details. |
+| P2 | full tool output | User opens tool detail. |
+| P2 | evidence export or replay | User requests audit or review. |
+
+## Stale response protection
+
+Hydration responses can arrive out of order. Clients SHOULD tag each request with an activation token or version and ignore results that do not match the active session.
+
+Rules:
+
+- A background response for session A must not overwrite active session B.
+- A slower older request must not overwrite a newer snapshot.
+- Switching away should cancel or deprioritize heavy detail loading when possible.
+
+## Inactive sessions
+
+Inactive sessions SHOULD downgrade to snapshot state:
+
+- title
+- last message preview
+- task capsules
+- queued and pending counts
+- artifact summary
+- unread or changed state
+
+They SHOULD release heavy message windows, parsed Markdown, mounted timeline items, and full artifact previews unless pinned or explicitly kept warm.
+
+## Acceptance scenarios
+
+1. Opening an old session shows shell before detail completes.
+2. Recent messages render before full timeline detail.
+3. Switching A -> B -> A does not let B overwrite A or A overwrite B incorrectly.
+4. Inactive sessions keep task state but release heavy process renderers.
+5. Older history loads by explicit page or cursor action.
+
+# Queue and steer
+Source: https://limecloud.github.io/agentui/en/client-implementation/queue-and-steer
+
+# Queue and steer
+
+Users often want to add information while an agent is already working. A compatible UI must make the consequence explicit.
+
+## Modes
+
+| Mode | Semantics | UI consequence |
+| --- | --- | --- |
+| `queue` | Add a new turn after current work. | Queue capsule and editable preview. |
+| `steer` | Deliver input to the current running turn. | Pending steer preview on current task. |
+| `new-task` | Start separate work. | New task/session capsule or tab. |
+| `reject` | Runtime cannot accept input. | Preserve draft and show reason. |
+
+## Queue contract
+
+Queued input SHOULD have:
+
+- queued id
+- target session or task id
+- preview
+- creation time
+- position
+- mode
+- edit/remove capability when supported
+- state transitions: queued, started, removed, failed
+
+Queue events update Task and Composer surfaces. They should not create fake assistant messages.
+
+## Steer contract
+
+Steer input SHOULD have:
+
+- target turn id
+- user text or structured patch
+- pending state
+- accepted/rejected status
+- optional cancellation
+- visible relationship to the active task
+
+A client SHOULD label steer as affecting current work. It should not look like a normal queued follow-up.
+
+## Conflict handling
+
+If the runtime cannot apply a steer:
+
+- show rejected or unavailable state
+- preserve user input
+- offer queue or new-task fallback when possible
+- keep diagnostic reason in process surface
+
+## Acceptance scenarios
+
+1. Pressing send during a running turn does not silently choose hidden behavior.
+2. A queued follow-up shows position and can be removed before start.
+3. A steer preview remains visible until accepted or rejected.
+4. Queue mutation updates the task capsule without rehydrating full session history.
+5. Rejected steer preserves the draft and offers another path.
+
+# Implementation quickstart
+Source: https://limecloud.github.io/agentui/en/authoring/quickstart
+
+# Implementation quickstart
+
+This guide builds a minimal Agent UI implementation. There is no required standalone manifest. Start with the event stream and the UI projection store.
+
+## 1. Define the event adapter
+
+Normalize your runtime events into the standard event classes used by the UI.
+
+```ts
+type AgentUiEvent =
+  | { type: 'run.started'; sessionId: string; runId: string }
+  | { type: 'run.status'; runId: string; stage: RuntimeStage; detail?: string }
+  | { type: 'text.delta'; runId: string; messageId: string; delta: string }
+  | { type: 'text.final'; runId: string; messageId: string; text: string }
+  | { type: 'reasoning.delta'; runId: string; partId: string; delta: string }
+  | { type: 'tool.started'; runId: string; toolCallId: string; name: string; inputSummary?: unknown }
+  | { type: 'tool.result'; runId: string; toolCallId: string; status: 'ok' | 'error'; outputRef?: string }
+  | { type: 'action.required'; runId: string; actionId: string; schema?: unknown; severity?: string }
+  | { type: 'queue.changed'; sessionId: string; queued: QueuedTurnSummary[] }
+  | { type: 'artifact.changed'; runId: string; artifactId: string; kind?: string; preview?: string }
+  | { type: 'evidence.changed'; runId: string; evidenceId: string; status?: string }
+  | { type: 'run.finished'; runId: string; outcome: 'success' | 'interrupt' | 'cancelled' }
+  | { type: 'run.failed'; runId: string; error: string; retryable?: boolean }
+```
+
+Map from your source protocol without changing its ownership. For example, lifecycle events, AI SDK UI message parts, Apps SDK tool outputs, and desktop runtime events can all feed this adapter.
+
+## 2. Create a projection store
+
+Keep facts and projection separate.
+
+```ts
+type AgentUiProjection = {
+  activeSessionId: string | null
+  activeRunId: string | null
+  messages: Record<string, ProjectedMessage>
+  runs: Record<string, ProjectedRun>
+  tools: Record<string, ProjectedToolCall>
+  actions: Record<string, ProjectedActionRequest>
+  queues: Record<string, QueuedTurnSummary[]>
+  artifacts: Record<string, ProjectedArtifactRef>
+  evidence: Record<string, ProjectedEvidenceRef>
+  ui: {
+    selectedTabId: string | null
+    focusedArtifactId: string | null
+    collapsedToolCallIds: string[]
+    visibleMessageWindow: { cursor?: string; limit: number }
+  }
+}
+```
+
+`ui` state is projection-only. It may point at facts by id, but it must not become the owner of runtime status, artifact content, approval state, or evidence verdicts.
+
+## 3. Reduce events into message parts
+
+```ts
+function applyEvent(state: AgentUiProjection, event: AgentUiEvent) {
+  switch (event.type) {
+    case 'run.status':
+      state.runs[event.runId].stage = event.stage
+      state.runs[event.runId].statusDetail = event.detail
+      return
+    case 'text.delta':
+      appendTextPartDelta(state.messages[event.messageId], event.delta)
+      return
+    case 'text.final':
+      reconcileFinalText(state.messages[event.messageId], event.text)
+      return
+    case 'reasoning.delta':
+      appendReasoningDelta(state.runs[event.runId], event.partId, event.delta)
+      return
+    case 'tool.started':
+      state.tools[event.toolCallId] = { ...event, status: 'running' }
+      return
+    case 'tool.result':
+      state.tools[event.toolCallId] = { ...state.tools[event.toolCallId], ...event }
+      return
+  }
+}
+```
+
+The important rule is not the exact reducer shape. The important rule is separation: text updates text parts, reasoning updates process parts, tools update tool UI, artifacts update artifact references, and final text reconciles instead of appending duplicate output.
+
+## 4. Render the minimum workbench
+
+A useful first version has five visible regions:
+
+```text
+AgentWorkbench
+  SessionTabs
+  ConversationPane
+    MessageList
+    MessageParts
+  RuntimeStatusStrip
+  Composer
+  WorkbenchPane
+    ArtifactWorkspace
+    EvidencePanel
+```
+
+Start simple:
+
+- Message list renders user text and final assistant text.
+- Runtime strip shows accepted, routing, preparing, streaming, retrying, cancelled, failed, and completed.
+- Tool calls appear as compressed process rows with detail expansion.
+- Action requests render as approval/input cards with explicit submit and cancel paths.
+- Artifacts open in the workbench, not as giant chat messages.
+
+## 5. Wire controlled actions
+
+```ts
+const actions = {
+  sendPrompt: (draft: DraftInput) => runtime.submitTurn(draft),
+  queueInput: (draft: DraftInput) => runtime.queueTurn(draft),
+  steerRun: (runId: string, payload: SteeringInput) => runtime.steerRun(runId, payload),
+  interrupt: (runId: string) => runtime.interruptRun(runId),
+  respondAction: (actionId: string, response: unknown) => runtime.respondAction(actionId, response),
+  saveArtifact: (artifactId: string, patch: unknown) => artifactService.save(artifactId, patch),
+  exportEvidence: (runId: string) => evidenceService.export(runId)
+}
+```
+
+Do not mark approval, success, artifact save, or evidence pass in the UI until the owning API returns a fact confirming it.
+
+## 6. Add old-session hydration
+
+For old sessions, avoid full-detail blocking:
+
+1. Show shell, tab, title, and cached snapshot immediately.
+2. Fetch recent messages with a bounded limit.
+3. Fetch queue, pending action, and runtime status summary.
+4. Load timeline/tool/artifact/evidence detail only after paint or user expansion.
+5. Use a cursor for older history.
+
+## 7. Verify behavior
+
+A minimal implementation is acceptable when:
+
+- Status appears before first text when the runtime has accepted the run.
+- A tool call is visible outside final answer text.
+- A final event does not duplicate streamed text.
+- A pending approval blocks progress and resumes through a controlled action response.
+- A generated artifact opens in the Artifact Workspace.
+- Evidence export runs as background work and links back to the same run/session.
+- Opening an old session does not wait for full timeline or all artifact contents.
+
+# Best practices
+Source: https://limecloud.github.io/agentui/en/authoring/best-practices
+
+# Best practices
+
+Use this page as requirements for Agent UI implementations and reusable surface guidance.
+
+## Keep facts owned by their source
+
+Agent UI MUST NOT define new model events, artifact stores, evidence verdicts, permission grants, or task truth. It projects facts supplied by the runtime, artifact service, evidence service, or application state owner.
+
+Good wording:
+
+> Show `needs-input` when the runtime exposes a pending action request.
+
+Bad wording:
+
+> If the assistant says it needs approval, mark the task as blocked.
+
+## Start from event classes
+
+Before drawing components, define how the UI receives:
+
+- run lifecycle and status
+- text deltas and final text
+- reasoning or thinking parts
+- tool start/args/progress/result
+- action required/resolved
+- queue changed
+- artifact changed
+- evidence changed
+- session snapshot and history cursor
+
+A surface without event ownership usually becomes string parsing.
+
+## Separate final answer from process
+
+A common Agent UI failure is putting status, reasoning, tool output, and final answer text into one stream. Keep these separate:
+
+| Content | Preferred surface |
+| --- | --- |
+| Final answer | Message text part |
+| Reasoning or thinking | Collapsed process part |
+| Runtime status | Runtime strip or process row |
+| Tool call and result | Tool UI row + details |
+| Approval or input request | Human-in-the-loop card |
+| Artifact | Artifact card + workbench |
+| Evidence | Timeline/evidence panel |
+
+## Use stable ids everywhere
+
+Every projected object SHOULD have a stable id from the owning system:
+
+- session id
+- run or turn id
+- message id
+- message part id
+- tool call id
+- action request id
+- queued turn id
+- artifact id
+- evidence id
+- review/replay id
+
+Temporary optimistic ids are fine, but they must reconcile when runtime ids arrive.
+
+## Compress process by default
+
+Process UI should be useful without becoming a log dump.
+
+Good defaults:
+
+- show the current stage and elapsed time
+- show tool name, safe input summary, and status
+- hide raw long JSON unless expanded
+- show large output as an offload reference
+- summarize completed reasoning
+- keep errors recoverable with copyable diagnostics
+
+## Treat missing facts honestly
+
+Use explicit fallback states instead of guessing:
+
+- `loading`
+- `unknown`
+- `unavailable`
+- `stale`
+- `blocked`
+- `needs-input`
+- `failed`
+- `disputed`
+
+If artifact metadata is missing, say the artifact kind is unknown. If verification has not run, do not show passed.
+
+## Route user control through APIs
+
+Approvals, interrupts, queue changes, steering, artifact edits, evidence export, review decisions, and replay creation are controlled writes. The UI may initiate them, but it does not own the resulting fact.
+
+Every control should define:
+
+| Field | Question |
+| --- | --- |
+| Required fact | Which id or snapshot proves the action is valid? |
+| API boundary | Which service owns the write? |
+| Pending state | What is visible while waiting? |
+| Failure state | How does the user recover? |
+| Audit state | Where is the action recorded? |
+
+## Design for old sessions
+
+Long-running agents create history. Do not make old-session open depend on full detail.
+
+Recommended behavior:
+
+- render shell and tab first
+- apply cached snapshot if available
+- hydrate recent message window before timeline details
+- lazy-load tool output, artifact content, and evidence payloads
+- paginate older history by cursor
+- keep inactive tabs as snapshots, not full mounted workspaces
+
+## Measure visible latency
+
+A UI that is technically streaming can still feel frozen. Track:
+
+- first runtime status
+- first text delta
+- first text paint
+- delta backlog depth
+- oldest unrendered delta age
+- old-session shell paint
+- recent-message paint
+- timeline idle completion
+
+## Avoid visual lock-in
+
+Agent UI standardizes semantics, not style. Avoid requiring a color system, typography, framework, animation, or component library unless the guidance is explicitly scoped to one product.
+
+Good guidance:
+
+> The pending approval control must remain keyboard reachable and show scope, consequence, approve, and reject.
+
+Bad guidance:
+
+> Use a yellow card with this exact shadow and a specific React component.
+
+# Acceptance scenarios
+Source: https://limecloud.github.io/agentui/en/authoring/acceptance-scenarios
+
+# Acceptance scenarios
+
+Agent UI work is accepted by behavior, not by the existence of a component or document file. Use these scenarios for product QA, automated tests, or design review.
+
+## 1. Send and first status
+
+1. User sends a prompt.
+2. The UI creates the user message optimistically.
+3. Runtime listener is registered before submit.
+4. Runtime status appears before first answer text when the runtime accepts work.
+5. The composer exposes interrupt/cancel when supported.
+
+Pass condition: the user can tell the agent is alive before text streaming begins.
+
+## 2. Text/reasoning separation
+
+1. Runtime emits reasoning/thinking content and final answer text.
+2. Reasoning renders as process content, collapsed or summarized by default.
+3. Final answer renders as clean message text.
+4. Completed reasoning is not replayed as final answer text after hydration.
+
+Pass condition: no `<think>` text, raw reasoning log, or process status pollutes the final answer.
+
+## 3. Final reconciliation
+
+1. Runtime streams text deltas.
+2. Runtime later emits final answer content.
+3. The UI reconciles the final answer with streamed content.
+
+Pass condition: final text is not duplicated or appended twice.
+
+## 4. Tool call
+
+1. Runtime emits tool start with stable tool call id.
+2. UI shows a compressed tool row with safe input summary.
+3. Tool progress updates the row without entering final answer text.
+4. Tool result links to output details or offload reference.
+5. Errors render as recoverable tool failure UI.
+
+Pass condition: tool execution is visible, inspectable, and not mixed into final answer prose.
+
+## 5. Human-in-the-loop
+
+1. Runtime emits an action request with id, type, scope, and optional schema.
+2. UI promotes the request to an approval/input surface.
+3. User approves, rejects, edits, or answers.
+4. Response is sent through the runtime action response API.
+5. UI only marks the request resolved after runtime confirmation.
+
+Pass condition: high-risk or blocked work has explicit, auditable user control.
+
+## 6. Queue and steer
+
+1. A run is active.
+2. User enters another prompt.
+3. UI offers queue and steer as different modes.
+4. Queue creates or updates a queued turn summary.
+5. Steer targets the active run and shows pending steer state.
+
+Pass condition: the user can distinguish “run this next” from “change what is happening now.”
+
+## 7. Artifact workspace
+
+1. Runtime emits artifact created/updated with stable artifact id.
+2. Conversation shows a compact artifact card or reference.
+3. Artifact Workspace opens preview/editor/diff/version/export areas using artifact service data.
+4. Edits, exports, forks, or handoffs go through artifact APIs or controlled runtime actions.
+5. Failed saves preserve the last confirmed version and keep unsaved local edits visible.
+
+Pass condition: deliverables leave the chat body and become editable, versioned, exportable artifacts.
+
+## 8. Evidence export
+
+1. User or system triggers evidence export.
+2. UI shows background progress or task capsule.
+3. Evidence service returns durable references.
+4. Timeline/evidence surface links summary, trace, artifacts, verification, review, or replay.
+
+Pass condition: evidence is traceable to runtime facts and does not block chat streaming.
+
+## 9. Old-session recovery
+
+1. User opens an old session.
+2. Shell, tab, title, and cached snapshot appear immediately when available.
+3. Recent messages render before full timeline details.
+4. Queue/pending action/runtime summary hydrate next.
+5. Older messages, tool details, artifacts, and evidence load on demand.
+
+Pass condition: old sessions do not require full history or all artifacts before first paint.
+
+## 10. Missing facts
+
+1. Runtime omits artifact kind, verification status, or provider stage.
+2. UI shows `unknown`, `unavailable`, or `stale` rather than guessing.
+3. User controls remain safe and recoverable.
+
+Pass condition: UI never fabricates success, approval, artifact type, or evidence verdict.
+
+# Basic agent workbench
+Source: https://limecloud.github.io/agentui/en/examples/basic-agent-workbench
+
+# Basic agent workbench
+
+This example shows a minimal agent workbench that consumes runtime events and durable snapshots. It is not a reusable file bundle. The implementation can live inside an existing product codebase.
+
+## Layout
+
+```text
+BasicAgentWorkbench
+  SessionTabs
+  TaskCapsuleStrip
+  ConversationPane
+    MessageList
+    RuntimeStatusStrip
+    Composer
+  WorkbenchPane
+    ArtifactWorkspace
+    EvidencePanel
+  ProcessDrawer
+    ToolTimeline
+    Diagnostics
+```
+
+## Event adapter
+
+```ts
+function normalizeRuntimeEvent(event: RuntimeEvent): AgentUiEvent[] {
+  switch (event.kind) {
+    case 'turn_started':
+      return [{ type: 'run.started', sessionId: event.sessionId, runId: event.turnId }]
+    case 'runtime_status':
+      return [{ type: 'run.status', runId: event.turnId, stage: event.stage, detail: event.detail }]
+    case 'text_delta':
+      return [{ type: 'text.delta', runId: event.turnId, messageId: event.messageId, delta: event.text }]
+    case 'thinking_delta':
+      return [{ type: 'reasoning.delta', runId: event.turnId, partId: event.partId, delta: event.text }]
+    case 'tool_start':
+      return [{ type: 'tool.started', runId: event.turnId, toolCallId: event.toolCallId, name: event.name, inputSummary: event.inputSummary }]
+    case 'artifact_snapshot':
+      return [{ type: 'artifact.changed', runId: event.turnId, artifactId: event.artifactId, kind: event.kind, preview: event.preview }]
+    default:
+      return []
+  }
+}
+```
+
+## Surface behavior
+
+| Surface | Behavior |
+| --- | --- |
+| Session Tabs | Inactive sessions show title, last activity, running/queued/pending count, and stale marker. |
+| Task Capsule | Running is quiet; `needs-input`, `plan-ready`, and `failed` get attention. |
+| Message Parts | User text and assistant final text stay readable; reasoning and tools are separate parts. |
+| Runtime Status | `submitted`, `routing`, and `preparing` appear before first text. |
+| Tool Timeline | Tool rows show safe input summary, progress, result, and detail link. |
+| Artifact Canvas | Latest important artifact opens in a workbench surface. |
+| Evidence Panel | Evidence export is a background action with durable links. |
+
+## Send flow
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI
+  participant Runtime
+  participant Artifact
+  participant Evidence
+
+  User->>UI: Send prompt
+  UI->>Runtime: register listener
+  UI->>Runtime: submit turn
+  Runtime-->>UI: run.status preparing
+  Runtime-->>UI: text.delta
+  Runtime-->>UI: tool.started
+  Runtime-->>UI: artifact.changed
+  UI->>Artifact: load artifact preview
+  Runtime-->>UI: run.finished success
+  User->>UI: Export evidence
+  UI->>Evidence: export run evidence
+```
+
+## Acceptance
+
+The workbench is acceptable when:
+
+1. First runtime status appears before first text.
+2. Tool calls are visible but not injected into final answer text.
+3. Reasoning is collapsed or summarized by default.
+4. Generated artifacts open outside the message body.
+5. Queue and steer are visually different.
+6. Pending approval has an explicit controlled response path.
+7. Old sessions render recent messages before timeline details.
+8. Evidence export is linked to the same run/session facts.
+
+# Agent UI ecosystem boundaries
+Source: https://limecloud.github.io/agentui/en/reference/ecosystem-boundaries
+
+# Agent UI ecosystem boundaries
+
+Agent UI should not be framed as only a companion to one or two adjacent standards. It serves the full agent product loop: runtime, model output, tool execution, skills and workflows, human approval, artifacts, evidence, sessions, permissions, context, and the host product interface.
+
+This page answers one question: what belongs to Agent UI, and what is an external fact that Agent UI projects, references, or controls.
+
+## Core test
+
+```mermaid
+flowchart TB
+  Runtime[Agent runtime] --> Events[Typed events / snapshots]
+  Events --> Projection[UI projection]
+  Projection --> Surfaces[User-visible surfaces]
+
+  Tools[Tools and connectors] --> Runtime
+  Skills[Skills and workflows] --> Runtime
+  Context[Memory / knowledge / context stores] --> Runtime
+  Artifacts[Artifact services] --> Projection
+  Evidence[Evidence and trace stores] --> Projection
+  Policy[Permissions and policy] --> Projection
+
+  Surfaces --> Actions[Controlled user actions]
+  Actions --> Runtime
+  Actions --> Artifacts
+  Actions --> Evidence
+```
+
+Rules:
+
+- If it defines **how users see, control, resume, edit, or audit agent work**, it belongs to Agent UI.
+- If it defines **how an agent performs a workflow, calls a tool, or maintains work**, it belongs to a workflow or skill system.
+- If it defines **facts, sources, policy, memory, citations, or context boundaries**, it belongs to a memory, knowledge, or policy system.
+- If it defines **files, canvases, diffs, exports, or durable editable results**, it belongs to an artifact system.
+- If it defines **trace, review, replay, verification, or evidence packs**, it belongs to an evidence or observability system.
+- If it defines **model protocols, tool protocols, storage formats, or component styling**, it is not the core Agent UI standard; Agent UI only defines how those facts become interaction semantics.
+
+## Boundary table
+
+| Adjacent system | It owns | Agent UI owns | Common mistake |
+| --- | --- | --- | --- |
+| Agent runtime | Authoritative run, turn, task, event, and snapshot state. | Projection of runtime facts into status, messages, tasks, and controls. | UI guesses whether a run succeeded. |
+| Model / provider | Model input/output, stream deltas, finish reasons, usage. | Typed rendering of text, reasoning, tool requests, and errors. | Raw provider logs leak into the final answer. |
+| Tools / connectors | Tool execution, inputs, outputs, safety boundary, result data. | Tool progress, compressed summaries, detail entrypoints, recovery UI. | UI treats tool output as executable instruction. |
+| Skills / workflows | Executable procedures, scripts, templates, maintenance methods. | What the procedure is doing, waiting for, and allowing the user to do. | UI documentation becomes an execution manual. |
+| Memory / knowledge / context stores | Facts, sources, citations, policy, context, freshness. | Citation rendering, missing states, trust hints, source entrypoints. | UI invents citations or reinterprets context as instructions. |
+| Artifact services | Files, objects, canvases, diffs, versions, exports. | Artifact cards, previews, editing entrypoints, handoff state. | Large file content is dumped into chat text. |
+| Evidence / observability | Trace, review, replay, verification, audit records. | Timeline, evidence surface, export progress, audit entrypoints. | Evidence status becomes untraceable UI copy. |
+| Permission / policy | Permissions, risk level, approval result, execution scope. | Human-in-the-loop requests and approve/reject/edit controls. | UI marks approval before runtime confirmation. |
+| Session / storage | Session identity, history, snapshots, indexes. | Progressive hydration, tab state, recovery hints, loading windows. | Old sessions require full history and all artifacts before first paint. |
+| Design system | Visual components, tokens, layout rules, responsive behavior. | Surface semantics and behavior-level acceptance. | Agent UI is reduced to a component library or skin. |
+
+## What Agent UI actually standardizes
+
+Agent UI standardizes the **projection layer from runtime facts to user interaction semantics**:
+
+1. Which event classes compatible clients should recognize.
+2. Which surfaces answer which user questions.
+3. Which user actions must write through controlled APIs.
+4. How missing, failed, blocked, waiting, and old-session states are shown honestly.
+5. How reasoning, tool output, traces, artifacts, and final answers stay separated instead of collapsing into one text column.
+
+## Non-goals
+
+Agent UI does not own a full agent runtime, model protocol, tool registry, memory system, knowledge base, artifact store, evidence store, permission engine, CSS system, or component implementation. It only defines how compatible clients project facts from those systems into clear, controllable, resumable, and auditable interaction surfaces.
+
+# Research sources
+Source: https://limecloud.github.io/agentui/en/reference/research-sources
+
+# Research sources
+
+Agent UI is informed by existing agent UI protocols, SDKs, and product implementation patterns. The standard does not copy their APIs. It extracts stable UI requirements that appear across them.
+
+## Primary external references
+
+| Source | Relevant pattern | How Agent UI uses it |
+| --- | --- | --- |
+| [Vercel AI SDK UI](https://ai-sdk.dev/docs) | `UIMessage` parts, streaming text, reasoning/data/tool parts, tool state lifecycle, `useChat`. | Confirms message parts and tool lifecycle states should be first-class UI concepts. |
+| [assistant-ui](https://www.assistant-ui.com/docs) | Thread, ThreadList, composer, message part primitives, attachments, tool-call rendering, event-stream runtime adapter. | Confirms UI components need runtime adapters and scoped state access rather than global string parsing. |
+| [CopilotKit](https://docs.copilotkit.ai/) | Frontend tools, generative UI, shared state, human-in-the-loop, event-stream integrations. | Confirms user-facing tools and approval UI must be controlled runtime interactions. |
+| [OpenAI Apps SDK reference](https://developers.openai.com/apps-sdk/reference.md) | Tool descriptors, `structuredContent`, component resources, `_meta.ui.resourceUri`, widget bridge, tool input/output notifications. | Confirms rich UI should be attached to structured tool results and component boundaries, not inferred from prose. |
+| [OpenAI ChatKit guides](https://developers.openai.com/api/docs/guides/custom-chatkit.md) | Client tools, file store integration, long-running tool progress, widgets, thread metadata. | Confirms agent UI needs tool progress, file/artifact contracts, and thread state beyond plain chat text. |
+| [Claude Artifacts help](https://support.anthropic.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them) | Substantial standalone content is opened in a dedicated artifact area separate from the main conversation. | Confirms durable deliverables need an Artifact Workspace rather than remaining only as assistant text. |
+| [Vercel AI SDK `UIMessage`](https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message) | `UIMessage.parts` includes text, reasoning, tool, file, source, and typed data parts. | Confirms artifacts should be represented as typed references or files, not inferred from prose. |
+
+## Product implementation references
+
+Agent UI also folds in lessons from desktop agent workbench planning:
+
+- Conversation, process, task, artifact, and evidence should be separate layers.
+- Runtime status should appear before first text when the runtime has accepted work.
+- Queue and steer need different visual semantics.
+- Artifacts should leave the message body and enter an Artifact Workspace surface.
+- Artifact cards, previews, versions, diffs, exports, and handoff links are UI semantics; full content storage remains outside Agent UI.
+- Evidence export, review, and replay should consume the same runtime facts rather than UI guesses.
+- Old session hydration should be shell-first, recent-message-first, and timeline-on-demand.
+
+## Non-goals from research
+
+The standard intentionally does not mandate:
+
+- one protocol transport
+- one React component library
+- one visual style
+- one tool schema
+- one artifact file store
+- one vendor SDK
+
+A compatible client may use any of the referenced systems if it preserves the projection boundary.
+
+# Glossary
+Source: https://limecloud.github.io/agentui/en/reference/glossary
+
+# Glossary
+
+## Agent UI
+
+A runtime projection standard for turning structured agent facts into user-visible interaction surfaces and controlled actions.
+
+## Runtime fact
+
+A fact owned by an agent runtime or protocol adapter, such as run id, lifecycle state, text delta, tool call, queue state, or action request.
+
+## Projection state
+
+UI-owned state derived from facts, such as selected tab, collapsed tool rows, visible message window, focused artifact, or local draft. Projection state is not authoritative runtime truth.
+
+## Surface
+
+A user-visible region that answers one class of question. Standard surfaces include Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact Workspace, Timeline/Evidence, and Session/Tabs.
+
+## Message part
+
+A typed piece of message UI, such as final text, reasoning, tool call, action request, data, artifact reference, or evidence reference.
+
+## Runtime status
+
+A short visible state showing whether the agent is submitted, routing, preparing, streaming, calling tools, blocked, retrying, cancelled, failed, or completed.
+
+## Tool UI
+
+The surface for tool lifecycle, safe input summaries, progress, output previews, large output offload, and detail inspection.
+
+## Human-in-the-loop
+
+A state where the runtime requires user approval, structured input, plan decision, correction, or cancellation before it can continue.
+
+## Queue
+
+A user input scheduled to run after the active run finishes.
+
+## Steer
+
+A user input intended to affect the currently active run.
+
+## Artifact
+
+A generated or edited deliverable such as a document, file, diff, image, table, code object, canvas, or structured output.
+
+## Evidence
+
+Trace, citation, verification, replay, review, or audit information that supports or explains an agent run.

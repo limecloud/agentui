@@ -1,6 +1,6 @@
 {
   "name": "agentui-standard",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "Draft documentation for the Agent UI standard.",
   "homepage": "https://limecloud.github.io/agentui/",
@@ -19,6 +19,14 @@
     "node": ">=22.0.0"
   },
   "files": [
+    "llm.txt",
+    "llm-full.txt",
+    "llms.txt",
+    "llms-full.txt",
+    "docs/public/llm.txt",
+    "docs/public/llm-full.txt",
+    "docs/public/llms.txt",
+    "docs/public/llms-full.txt",
     "docs/public/schemas/",
     "docs/en/",
     "docs/zh/",

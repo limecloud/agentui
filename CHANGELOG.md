@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.4.1
+
+### Added
+
+- Added root and site-root `llms.txt` files for concise LLM navigation.
+- Added root and site-root `llms-full.txt` files with concatenated English core documentation and source URLs.
+- Added `llm.txt` and `llm-full.txt` compatibility aliases.
+- Added LLM entrypoint files to the package manifest.
+
+### Changed
+
+- Updated version navigation to include v0.4.1.
+
 ## v0.4.0
 
 ### Added

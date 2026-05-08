@@ -1,0 +1,61 @@
+# Agent UI
+
+> Agent UI is a portable, runtime-first standard for agent interaction surfaces. It defines how clients project runtime facts into composer, message parts, status, tool UI, task capsules, human-in-the-loop controls, artifact workspaces, timeline evidence, and session surfaces without becoming the execution authority.
+
+Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when a single prompt needs the current core documentation in one markdown file.
+
+## Full context
+
+- [llms-full.txt](https://limecloud.github.io/agentui/llms-full.txt): Concatenated current English documentation with source URLs.
+
+## Primary docs
+
+- [What is Agent UI?](https://limecloud.github.io/agentui/en/what-is-agent-ui): Conceptual entry point and scope.
+- [Specification](https://limecloud.github.io/agentui/en/specification): Latest portable Agent UI specification.
+- [Quickstart](https://limecloud.github.io/agentui/en/authoring/quickstart): Implementation quickstart.
+- [Acceptance scenarios](https://limecloud.github.io/agentui/en/authoring/acceptance-scenarios): Behavior-level validation scenarios.
+
+## Surfaces
+
+- [Composer](https://limecloud.github.io/agentui/en/surfaces/composer): Input composer, attachments, steering, and submission.
+- [Message parts](https://limecloud.github.io/agentui/en/surfaces/message-parts): Renderable message part model.
+- [Runtime status](https://limecloud.github.io/agentui/en/surfaces/runtime-status): Execution status projection.
+- [Tool UI](https://limecloud.github.io/agentui/en/surfaces/tool-ui): Tool call visibility and controls.
+- [Task capsule](https://limecloud.github.io/agentui/en/surfaces/task-capsule): Task progress and lifecycle surface.
+- [Human-in-the-loop](https://limecloud.github.io/agentui/en/surfaces/human-in-the-loop): Permission and structured input interactions.
+- [Artifact Workspace](https://limecloud.github.io/agentui/en/surfaces/artifact-canvas): Artifact reading, preview, edit, and export surface.
+- [Timeline and evidence](https://limecloud.github.io/agentui/en/surfaces/timeline-evidence): Timeline, evidence, replay, and review projection.
+- [Session and tabs](https://limecloud.github.io/agentui/en/surfaces/session-tabs): Session containers and tab surfaces.
+
+## Contracts
+
+- [Runtime event projection](https://limecloud.github.io/agentui/en/contracts/runtime-event-projection): Mapping runtime facts into UI projections.
+- [Backend coordination](https://limecloud.github.io/agentui/en/contracts/backend-coordination): Backend and frontend coordination rules.
+- [Performance metrics](https://limecloud.github.io/agentui/en/contracts/performance-metrics): Latency, rendering, and responsiveness metrics.
+
+## Client implementation
+
+- [Runtime standard](https://limecloud.github.io/agentui/en/client-implementation/runtime-standard): How Agent UI consumes runtime standards.
+- [Progressive rendering](https://limecloud.github.io/agentui/en/client-implementation/progressive-rendering): Streaming and progressive rendering guidance.
+- [Session hydration](https://limecloud.github.io/agentui/en/client-implementation/session-hydration): Recovering sessions from snapshots and history.
+- [Queue and steer](https://limecloud.github.io/agentui/en/client-implementation/queue-and-steer): Queue, steering, interruption, and control.
+
+## Reference
+
+- [Glossary](https://limecloud.github.io/agentui/en/reference/glossary): Terms used by the standard.
+- [Ecosystem boundaries](https://limecloud.github.io/agentui/en/reference/ecosystem-boundaries): Boundaries with adjacent systems.
+- [Research sources](https://limecloud.github.io/agentui/en/reference/research-sources): External sources used to shape the standard.
+
+## Examples and versions
+
+- [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Reference workbench example.
+- [v0.4.1 overview](https://limecloud.github.io/agentui/en/versions/v0.4.1/overview): Latest released version overview.
+- [v0.4.1 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.1/specification): Latest released specification snapshot.
+
+## Schemas
+
+- [Agent UI event schema](https://limecloud.github.io/agentui/schemas/agentui-event.schema.json): Public event schema.
+
+## Language mirrors
+
+- Chinese documentation is available under `/zh/` with matching page structure where translated pages exist.

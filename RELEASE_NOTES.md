@@ -1,3 +1,25 @@
+# Agent UI v0.4.1
+
+Agent UI v0.4.1 adds LLM-friendly documentation entrypoints. It publishes concise and full-context markdown files at the repository root and the documentation site root so AI clients can discover the standard without crawling the whole site.
+
+## Highlights
+
+- Adds `llms.txt` as the concise LLM navigation index.
+- Adds `llms-full.txt` as a concatenated English core documentation file with source URLs.
+- Adds compatible `llm.txt` and `llm-full.txt` aliases.
+- Publishes the same files through `docs/public/` so GitHub Pages serves them from the site root.
+- Includes the LLM entrypoint files in the package manifest.
+
+## Validation
+
+- `npm run build`
+- `VITEPRESS_BASE="/agentui/" npm run build`
+- `npm pack --dry-run`
+- Root/public LLM file consistency checks
+- Forbidden-term and project-coupling scan outside generated output
+
+---
+
 # Agent UI v0.4.0
 
 Agent UI v0.4.0 makes Artifact Workspace a first-class surface in the standard. The release keeps Artifact inside Agent UI, but draws a hard boundary: Agent UI owns artifact interaction semantics; artifact services own content, storage, version persistence, export bytes, and write authority; evidence systems own verification, replay, and review facts.
