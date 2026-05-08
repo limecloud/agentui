@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.8 - 2026-05-08
+
+- Adds Agent Context to the current standards ecosystem map.
+- Refreshes README, LLM entrypoints, and version snapshots for Agent Context discovery.
+
 ## v0.4.7 - 2026-05-08
 
 - Adds Agent Tool to the current standards ecosystem map.
