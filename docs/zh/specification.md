@@ -5,11 +5,9 @@ description: Agent UI runtime projection 草案规范。
 
 # 规范
 
-Agent UI v0.2 是 runtime-first 的 Agent 交互表面标准。核心契约是 Agent facts 与用户可见 UI 之间的 runtime projection 边界。
+Agent UI v0.2 是 runtime-first 的 Agent 交互表面标准。核心契约是 Agent facts 与用户可见 UI 之间的 projection 边界。
 
-- **Agent Skills** 定义可执行能力和流程。
-- **Agent Knowledge** 定义有来源的上下文和事实。
-- **Agent UI** 定义 runtime facts 如何变得可见、可控制、可恢复、可编辑和可审计。
+Agent UI 定义 runtime、tool、workflow、context、permission、artifact、evidence 和 session facts 如何变得可见、可控制、可恢复、可编辑和可审计，同时不让 UI 变成这些事实的权威来源。
 
 ## 范围
 

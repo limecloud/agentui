@@ -5,7 +5,7 @@ description: Agent UI is a runtime-first standard for agent interaction surfaces
 
 # What is Agent UI?
 
-Agent UI defines how structured agent work becomes visible and controllable in an AI client. It is an interoperability sibling to Agent Skills and Agent Knowledge: Skills describe executable capabilities, Knowledge describes trusted context, and Agent UI describes runtime projection into interaction surfaces.
+Agent UI defines how structured agent work becomes visible and controllable in an AI client. It interoperates with runtimes, model streams, tools, workflows, context stores, permission systems, artifact services, evidence stores, sessions, and the host product interface.
 
 Use Agent UI when an agent product needs stable UI semantics for:
 
@@ -17,7 +17,7 @@ Use Agent UI when an agent product needs stable UI semantics for:
 - citations, evidence, review, and replay
 - handoff between agents, users, sessions, and clients
 
-Do not use it to store model prompts, tool protocols, business facts, or executable workflows. Those belong in Skills, Knowledge, or the client runtime.
+Do not use it to store model prompts, tool protocols, business facts, executable workflows, artifact contents, evidence records, or permission policy. Those belong to adjacent runtime, workflow, context, artifact, evidence, or policy systems.
 
 ## Surface layers
 

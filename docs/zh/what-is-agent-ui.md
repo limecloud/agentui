@@ -5,7 +5,7 @@ description: Agent UI 是面向 Agent 交互表面的 runtime-first 标准。
 
 # 什么是 Agent UI？
 
-Agent UI 定义结构化 Agent 工作如何在 AI 客户端里变得可见、可控制。它是 Agent Skills 和 Agent Knowledge 的互操作伙伴标准：Skills 描述可执行能力，Knowledge 描述可信上下文，Agent UI 描述 runtime projection 到交互表面。
+Agent UI 定义结构化 Agent 工作如何在 AI 客户端里变得可见、可控制。它与 runtime、模型流、工具、工作流、上下文存储、权限系统、产物服务、证据存储、session 和宿主产品界面协作。
 
 适用于需要稳定 UI 语义的 Agent 产品：
 
@@ -17,7 +17,7 @@ Agent UI 定义结构化 Agent 工作如何在 AI 客户端里变得可见、可
 - 引用、证据、评审和重放
 - Agent、用户、session、客户端之间的交接
 
-不要用它保存模型 prompt、工具协议、业务事实或可执行工作流。这些内容属于 Skills、Knowledge 或客户端 runtime。
+不要用它保存模型 prompt、工具协议、业务事实、可执行工作流、产物内容、证据记录或权限策略。这些内容属于相邻的 runtime、workflow、context、artifact、evidence 或 policy 系统。
 
 ## 表面分层
 

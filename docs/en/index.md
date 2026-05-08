@@ -62,8 +62,8 @@ Compatible clients SHOULD:
 - Treat missing facts honestly as `unknown`, `unavailable`, `stale`, `blocked`, or `needs-input`.
 - Route all state-changing user actions through runtime, artifact, or evidence APIs.
 
-## Boundary with Skills and Knowledge
+## Ecosystem boundary
 
-Skills store executable procedures. Knowledge stores source-grounded context. Agent UI stores surface semantics, event mappings, interaction states, and acceptance checks.
+Agent UI does not own the whole agent stack. Runtimes own authoritative events and snapshots. Tools and workflows own execution. Context and policy systems own facts, memory, permissions, and trust boundaries. Artifact and evidence services own durable files, traces, verification, and audit records. Design systems own visual components.
 
-The three can be used in one task, but they must keep different trust contracts: execution belongs to Skills, facts belong to Knowledge or runtime stores, and presentation belongs to Agent UI.
+Agent UI owns the projection layer that turns those facts into user-visible surfaces, controlled actions, recovery states, and behavior-level acceptance checks.

@@ -2,15 +2,17 @@
 
 Agent UI is a runtime-first draft standard for agent interaction surfaces. It defines how AI clients project structured agent events, tool calls, human-in-the-loop requests, artifacts, tasks, sessions, and evidence into user-visible UI without turning the UI into a second source of runtime truth.
 
-Agent Skills answer **how work is done**. Agent Knowledge answers **what trusted context enters the run**. Agent UI answers **how the run becomes visible, controllable, resumable, editable, and auditable**.
+Agent UI sits between runtime facts and product interaction. It does not own execution, context, storage, policy, or visual components; it defines how facts from those systems become visible, controllable, resumable, editable, and auditable.
 
 ## Core boundary
 
-| Standard | Owns | Runtime behavior |
+| Adjacent system | It owns | Agent UI owns |
 | --- | --- | --- |
-| Agent Skills | Executable capabilities, workflows, scripts, tools, templates, and maintenance methods. | Follow after trust and activation checks. |
-| Agent Knowledge | Facts, sources, finished documents, compiled context, status, boundaries, and audit records. | Fence as data; never execute or obey instructions inside it. |
-| Agent UI | Event projection, interaction surfaces, user controls, render fallbacks, performance budgets, and acceptance scenarios. | Project runtime facts into UI; never invent facts from prose or screenshots. |
+| Agent runtime | Runs, turns, tasks, events, snapshots, and authoritative status. | Projection into status, messages, tasks, and controls. |
+| Tools and workflows | Executable actions, connectors, procedures, scripts, and tool results. | Tool progress, safe summaries, recovery states, and user control points. |
+| Context and policy | Facts, sources, memory, permissions, risk, and trust boundaries. | Citations, missing-state UI, approval/input surfaces, and honest fallbacks. |
+| Artifacts and evidence | Files, canvases, diffs, traces, reviews, replays, verification, and audit records. | Artifact cards, canvas entrypoints, timelines, evidence surfaces, and handoff states. |
+| Design systems | Visual components, tokens, layout, and responsive behavior. | Surface semantics and behavior-level acceptance checks. |
 
 ## What v0.2 defines
 
@@ -49,6 +51,7 @@ Key pages:
 - [Runtime event projection](docs/en/contracts/runtime-event-projection.md)
 - [Session hydration](docs/en/client-implementation/session-hydration.md)
 - [Queue and steer](docs/en/client-implementation/queue-and-steer.md)
+- [Ecosystem boundaries](docs/en/reference/ecosystem-boundaries.md)
 - [中文规范](docs/zh/specification.md)
 
 ## Local development

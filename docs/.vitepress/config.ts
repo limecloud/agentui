@@ -10,6 +10,8 @@ const enNav = [
     text: 'Version',
     items: [
       { text: 'latest', link: '/en/specification' },
+      { text: 'v0.3.0 overview', link: '/en/versions/v0.3.0/overview' },
+      { text: 'v0.3.0', link: '/en/versions/v0.3.0/specification' },
       { text: 'v0.2.0 overview', link: '/en/versions/v0.2.0/overview' },
       { text: 'v0.2.0', link: '/en/versions/v0.2.0/specification' },
       { text: 'v0.1.0 overview', link: '/en/versions/v0.1.0/overview' },
@@ -26,6 +28,8 @@ const zhNav = [
     text: '版本',
     items: [
       { text: 'latest', link: '/zh/specification' },
+      { text: 'v0.3.0 概览', link: '/zh/versions/v0.3.0/overview' },
+      { text: 'v0.3.0', link: '/zh/versions/v0.3.0/specification' },
       { text: 'v0.2.0 概览', link: '/zh/versions/v0.2.0/overview' },
       { text: 'v0.2.0', link: '/zh/versions/v0.2.0/specification' },
       { text: 'v0.1.0 概览', link: '/zh/versions/v0.1.0/overview' },
@@ -40,7 +44,6 @@ const enSidebar = [
     items: [
       { text: 'Overview', link: '/en/' },
       { text: 'What is Agent UI?', link: '/en/what-is-agent-ui' },
-      { text: 'UI vs Skills and Knowledge', link: '/en/agent-ui-vs-skills-knowledge' },
       { text: 'Specification', link: '/en/specification' }
     ]
   },
@@ -87,6 +90,7 @@ const enSidebar = [
     text: 'Reference',
     items: [
       { text: 'Glossary', link: '/en/reference/glossary' },
+      { text: 'Ecosystem boundaries', link: '/en/reference/ecosystem-boundaries' },
       { text: 'Research sources', link: '/en/reference/research-sources' }
     ]
   },
@@ -99,6 +103,9 @@ const enSidebar = [
   {
     text: 'Versions',
     items: [
+      { text: 'v0.3.0 overview', link: '/en/versions/v0.3.0/overview' },
+      { text: 'v0.3.0 specification', link: '/en/versions/v0.3.0/specification' },
+      { text: 'v0.3.0 changelog', link: '/en/versions/v0.3.0/changelog' },
       { text: 'v0.2.0 overview', link: '/en/versions/v0.2.0/overview' },
       { text: 'v0.2.0 specification', link: '/en/versions/v0.2.0/specification' },
       { text: 'v0.2.0 changelog', link: '/en/versions/v0.2.0/changelog' },
@@ -115,7 +122,6 @@ const zhSidebar = [
     items: [
       { text: '概览', link: '/zh/' },
       { text: '什么是 Agent UI', link: '/zh/what-is-agent-ui' },
-      { text: 'UI 与 Skills / Knowledge 的边界', link: '/zh/agent-ui-vs-skills-knowledge' },
       { text: '规范', link: '/zh/specification' }
     ]
   },
@@ -162,6 +168,7 @@ const zhSidebar = [
     text: '参考',
     items: [
       { text: '术语表', link: '/zh/reference/glossary' },
+      { text: '生态边界', link: '/zh/reference/ecosystem-boundaries' },
       { text: '调研来源', link: '/zh/reference/research-sources' }
     ]
   },
@@ -174,6 +181,9 @@ const zhSidebar = [
   {
     text: '版本',
     items: [
+      { text: 'v0.3.0 概览', link: '/zh/versions/v0.3.0/overview' },
+      { text: 'v0.3.0 规范', link: '/zh/versions/v0.3.0/specification' },
+      { text: 'v0.3.0 变更记录', link: '/zh/versions/v0.3.0/changelog' },
       { text: 'v0.2.0 概览', link: '/zh/versions/v0.2.0/overview' },
       { text: 'v0.2.0 规范', link: '/zh/versions/v0.2.0/specification' },
       { text: 'v0.2.0 变更记录', link: '/zh/versions/v0.2.0/changelog' },

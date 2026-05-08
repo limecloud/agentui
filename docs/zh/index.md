@@ -62,8 +62,8 @@ agent events + session snapshots + artifact facts + evidence facts
 - 信息缺失时诚实显示 `unknown`、`unavailable`、`stale`、`blocked` 或 `needs-input`。
 - 所有会改变状态的用户动作都必须通过 runtime、artifact 或 evidence API 写入。
 
-## 与 Skills 和 Knowledge 的边界
+## 生态边界
 
-Skills 保存可执行流程。Knowledge 保存有来源的上下文。Agent UI 保存表面语义、事件映射、交互状态和验收检查。
+Agent UI 不拥有完整 Agent 技术栈。Runtime 拥有权威 events 和 snapshots。工具与工作流系统拥有执行。上下文与策略系统拥有事实、记忆、权限和信任边界。产物与证据服务拥有持久文件、trace、verification 和 audit records。Design system 拥有视觉组件。
 
-三者可以服务同一个任务，但信任契约必须分开：执行属于 Skills，事实属于 Knowledge 或 runtime store，呈现属于 Agent UI。
+Agent UI 拥有的是投影层：把这些系统产生的事实转成用户可见表面、受控动作、恢复状态和行为级验收检查。

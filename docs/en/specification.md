@@ -5,11 +5,9 @@ description: The draft Agent UI runtime projection specification.
 
 # Specification
 
-Agent UI v0.2 is a runtime-first standard for agent interaction surfaces. The core contract is the runtime projection boundary between agent facts and user-visible UI.
+Agent UI v0.2 is a runtime-first standard for agent interaction surfaces. The core contract is the projection boundary between agent facts and user-visible UI.
 
-- **Agent Skills** define executable capabilities and procedures.
-- **Agent Knowledge** defines source-grounded context and facts.
-- **Agent UI** defines how runtime facts become visible, controllable, resumable, editable, and auditable.
+Agent UI defines how runtime, tool, workflow, context, permission, artifact, evidence, and session facts become visible, controllable, resumable, editable, and auditable without turning the UI into the authority for those facts.
 
 ## Scope
 

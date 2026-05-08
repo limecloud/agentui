@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.0
+
+### Changed
+
+- Reframed the boundary guide around the full Agent UI ecosystem: runtime, models, tools, skills/workflows, context, artifacts, evidence, permissions, sessions, and design systems.
+- Moved the ecosystem boundary guide out of the start section and into reference navigation under `/reference/ecosystem-boundaries`.
+- Removed the old Skills/Knowledge-centered boundary page source files to avoid implying that Agent UI is scoped to only two adjacent standards.
+- Updated README, overview, definition, and specification pages so Agent UI is described as a projection layer across the full agent product stack.
+
 ## v0.2.1
 
 ### Fixed
