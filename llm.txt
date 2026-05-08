@@ -48,10 +48,13 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 
 ## Ecosystem
 
-- [Agent standards ecosystem](https://limecloud.github.io/agentui/en/reference/agent-ecosystem): Mutual links across Agent Knowledge, Agent UI, Agent Runtime, and Agent Evidence.
+- [Agent standards ecosystem](https://limecloud.github.io/agentui/en/reference/agent-ecosystem): Mutual links across Agent Knowledge, Agent UI, Agent Runtime, Agent Evidence, and Agent Policy.
+- [Agent Policy](https://limecloud.github.io/agentpolicy/): Policy decisions, approvals, permissions, risk, retention, waivers, and traces.
 
 ## Examples and versions
 
+- [v0.4.5 overview](https://limecloud.github.io/agentui/en/versions/v0.4.5/overview): Latest released version overview.
+- [v0.4.5 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.5/specification): Latest released specification snapshot.
 - [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Reference workbench example.
 - [v0.4.4 overview](https://limecloud.github.io/agentui/en/versions/v0.4.4/overview): Latest released version overview.
 - [v0.4.4 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.4/specification): Latest released specification snapshot.
