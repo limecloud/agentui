@@ -67,3 +67,13 @@ agent events + session snapshots + artifact facts + evidence facts
 Agent UI 不拥有完整 Agent 技术栈。Runtime 拥有权威 events 和 snapshots。工具与工作流系统拥有执行。上下文与策略系统拥有事实、记忆、权限和信任边界。产物与证据服务拥有持久文件、trace、verification 和 audit records。Design system 拥有视觉组件。
 
 Agent UI 拥有的是投影层：把这些系统产生的事实转成用户可见表面、受控动作、恢复状态和行为级验收检查。
+
+## Agent 标准生态
+
+Agent 产品需要多个标准协同：Knowledge 负责 source-grounded context，Runtime 负责 execution facts，UI 负责 interaction surfaces，Evidence 负责 trust、review、replay 与 export。
+
+- [Agent 标准生态](./reference/agent-ecosystem.md)
+- [Agent Knowledge](https://limecloud.github.io/agentknowledge/)
+- [Agent UI](https://limecloud.github.io/agentui/)
+- [Agent Runtime](https://limecloud.github.io/agentruntime/)
+- [Agent Evidence](https://limecloud.github.io/agentevidence/)

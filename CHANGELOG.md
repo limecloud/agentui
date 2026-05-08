@@ -1,5 +1,17 @@
 # Changelog
 
+
+## v0.4.2 - 2026-05-08
+
+### Added
+
+- Added public Agent standards ecosystem page with mutual links across Agent Knowledge, Agent UI, Agent Runtime, and Agent Evidence.
+- Added ecosystem navigation, reference sidebar entries, version snapshots, and LLM index links.
+
+### Changed
+
+- Updated package and version navigation to 0.4.2.
+
 ## v0.4.1
 
 ### Added
