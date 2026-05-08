@@ -191,7 +191,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {
-    logo: `${base}logo.svg`,
+    logo: '/logo.svg',
     nav: [
       { text: 'English', items: enNav },
       { text: '中文', items: zhNav }

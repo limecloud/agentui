@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1
+
+### Fixed
+
+- Fixed the GitHub Pages navigation logo path when the site is deployed under a repository base path.
+
 ## v0.2.0
 
 ### Added
