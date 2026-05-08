@@ -1,6 +1,6 @@
 {
   "name": "agentui-standard",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "type": "module",
   "description": "Draft documentation for the Agent UI standard.",
   "homepage": "https://limecloud.github.io/agentui/",

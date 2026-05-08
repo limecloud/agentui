@@ -11,6 +11,9 @@ const enNav = [
     text: 'Version',
     items: [
       { text: 'latest', link: '/en/specification' },
+      { text: 'v0.4.6 overview', link: '/en/versions/v0.4.6/overview' },
+      { text: 'v0.4.6 specification', link: '/en/versions/v0.4.6/specification' },
+      { text: 'v0.4.6 changelog', link: '/en/versions/v0.4.6/changelog' },
       { text: 'v0.4.5 overview', link: '/en/versions/v0.4.5/overview' },
       { text: 'v0.4.5 specification', link: '/en/versions/v0.4.5/specification' },
       { text: 'v0.4.5 changelog', link: '/en/versions/v0.4.5/changelog' },
@@ -43,6 +46,9 @@ const zhNav = [
     text: '版本',
     items: [
       { text: 'latest', link: '/zh/specification' },
+      { text: 'v0.4.6 概览', link: '/zh/versions/v0.4.6/overview' },
+      { text: 'v0.4.6 规范', link: '/zh/versions/v0.4.6/specification' },
+      { text: 'v0.4.6 变更记录', link: '/zh/versions/v0.4.6/changelog' },
       { text: 'v0.4.5 概览', link: '/zh/versions/v0.4.5/overview' },
       { text: 'v0.4.5 规范', link: '/zh/versions/v0.4.5/specification' },
       { text: 'v0.4.5 变更记录', link: '/zh/versions/v0.4.5/changelog' },
@@ -132,6 +138,9 @@ const enSidebar = [
   {
     text: 'Versions',
     items: [
+      { text: 'v0.4.6 overview', link: '/en/versions/v0.4.6/overview' },
+      { text: 'v0.4.6 specification', link: '/en/versions/v0.4.6/specification' },
+      { text: 'v0.4.6 changelog', link: '/en/versions/v0.4.6/changelog' },
       { text: 'v0.4.5 overview', link: '/en/versions/v0.4.5/overview' },
       { text: 'v0.4.5 specification', link: '/en/versions/v0.4.5/specification' },
       { text: 'v0.4.5 changelog', link: '/en/versions/v0.4.5/changelog' },
@@ -229,6 +238,9 @@ const zhSidebar = [
   {
     text: '版本',
     items: [
+      { text: 'v0.4.6 概览', link: '/zh/versions/v0.4.6/overview' },
+      { text: 'v0.4.6 规范', link: '/zh/versions/v0.4.6/specification' },
+      { text: 'v0.4.6 变更记录', link: '/zh/versions/v0.4.6/changelog' },
       { text: 'v0.4.5 概览', link: '/zh/versions/v0.4.5/overview' },
       { text: 'v0.4.5 规范', link: '/zh/versions/v0.4.5/specification' },
       { text: 'v0.4.5 变更记录', link: '/zh/versions/v0.4.5/changelog' },
