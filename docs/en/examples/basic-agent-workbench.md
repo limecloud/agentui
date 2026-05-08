@@ -1,91 +1,97 @@
 ---
 title: Basic agent workbench
-description: Example Agent UI pack for a five-surface agent workspace.
+description: Example runtime-first Agent UI workbench.
 ---
 
 # Basic agent workbench
 
-This example shows a small Agent UI pack for a client that needs chat, progress, task control, artifact editing, and evidence review.
+This example shows a minimal agent workbench that consumes runtime events and durable snapshots. It is not a reusable file bundle. The implementation can live inside an existing product codebase.
 
-## Directory
+## Layout
 
 ```text
-basic-agent-workbench/
-├── AGENTUI.md
-├── surfaces/
-│   ├── conversation.md
-│   ├── process.md
-│   ├── task.md
-│   ├── artifact.md
-│   └── evidence.md
-├── contracts/
-│   └── actions.md
-└── examples/
-    └── prompt-to-artifact.md
+BasicAgentWorkbench
+  SessionTabs
+  TaskCapsuleStrip
+  ConversationPane
+    MessageList
+    RuntimeStatusStrip
+    Composer
+  WorkbenchPane
+    ArtifactCanvas
+    EvidencePanel
+  ProcessDrawer
+    ToolTimeline
+    Diagnostics
 ```
 
-## `AGENTUI.md`
+## Event adapter
 
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-language: en
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - tool-events
-    - task-state
-    - artifact-references
-    - evidence-references
----
-
-# Basic Agent Workbench
-
-Use this pack when agent work may take multiple steps, call tools, create artifacts, or require user approval.
-
-## Surfaces
-
-- Conversation: user messages and final assistant text.
-- Process: runtime status, reasoning summary, tool progress, and errors.
-- Task: queue, background work, needs input, approvals, and interrupts.
-- Artifact: generated deliverables, previews, diffs, and editors.
-- Evidence: citations, verification, replay, and review.
-
-## Load details
-
-- Load `surfaces/process.md` when tool or runtime status events are visible.
-- Load `surfaces/artifact.md` when an artifact reference is present.
-- Load `contracts/actions.md` before wiring approval, interrupt, or artifact edit controls.
+```ts
+function normalizeRuntimeEvent(event: RuntimeEvent): AgentUiEvent[] {
+  switch (event.kind) {
+    case 'turn_started':
+      return [{ type: 'run.started', sessionId: event.sessionId, runId: event.turnId }]
+    case 'runtime_status':
+      return [{ type: 'run.status', runId: event.turnId, stage: event.stage, detail: event.detail }]
+    case 'text_delta':
+      return [{ type: 'text.delta', runId: event.turnId, messageId: event.messageId, delta: event.text }]
+    case 'thinking_delta':
+      return [{ type: 'reasoning.delta', runId: event.turnId, partId: event.partId, delta: event.text }]
+    case 'tool_start':
+      return [{ type: 'tool.started', runId: event.turnId, toolCallId: event.toolCallId, name: event.name, inputSummary: event.inputSummary }]
+    case 'artifact_snapshot':
+      return [{ type: 'artifact.changed', runId: event.turnId, artifactId: event.artifactId, kind: event.kind, preview: event.preview }]
+    default:
+      return []
+  }
+}
 ```
 
-## Surface summary
+## Surface behavior
 
-| Surface | Required facts | Fallback |
-| --- | --- | --- |
-| Conversation | user text, assistant text parts | pending message or empty state |
-| Process | runtime status, tool events, errors | preparing, unknown, or stale |
-| Task | task id, queue state, action requests | no active tasks |
-| Artifact | artifact id, kind, title, read path | unknown artifact |
-| Evidence | source, verification, replay, audit refs | evidence unavailable |
+| Surface | Behavior |
+| --- | --- |
+| Session Tabs | Inactive sessions show title, last activity, running/queued/pending count, and stale marker. |
+| Task Capsule | Running is quiet; `needs-input`, `plan-ready`, and `failed` get attention. |
+| Message Parts | User text and assistant final text stay readable; reasoning and tools are separate parts. |
+| Runtime Status | `submitted`, `routing`, and `preparing` appear before first text. |
+| Tool Timeline | Tool rows show safe input summary, progress, result, and detail link. |
+| Artifact Canvas | Latest important artifact opens in a workbench surface. |
+| Evidence Panel | Evidence export is a background action with durable links. |
 
-## Acceptance flow
+## Send flow
 
-1. User submits: "Create a migration checklist and save it as a document."
-2. Conversation shows the user message immediately.
-3. Process shows a preparing or routing state before first answer text.
-4. If tools run, their output stays in Process and is collapsed after completion.
-5. Task shows `needs-input` if approval is required.
-6. Artifact shows the generated document with an open/edit action.
-7. Evidence shows source or verification entries if the runtime produced them.
-8. The final answer summarizes the deliverable and links to the artifact; it does not contain raw process logs.
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI
+  participant Runtime
+  participant Artifact
+  participant Evidence
 
-## Why this is portable
+  User->>UI: Send prompt
+  UI->>Runtime: register listener
+  UI->>Runtime: submit turn
+  Runtime-->>UI: run.status preparing
+  Runtime-->>UI: text.delta
+  Runtime-->>UI: tool.started
+  Runtime-->>UI: artifact.changed
+  UI->>Artifact: load artifact preview
+  Runtime-->>UI: run.finished success
+  User->>UI: Export evidence
+  UI->>Evidence: export run evidence
+```
 
-The example defines semantics, not a visual skin. A terminal, IDE, desktop app, or web app can render the same surfaces differently while preserving the same runtime boundaries and user controls.
+## Acceptance
+
+The workbench is acceptable when:
+
+1. First runtime status appears before first text.
+2. Tool calls are visible but not injected into final answer text.
+3. Reasoning is collapsed or summarized by default.
+4. Generated artifacts open outside the message body.
+5. Queue and steer are visually different.
+6. Pending approval has an explicit controlled response path.
+7. Old sessions render recent messages before timeline details.
+8. Evidence export is linked to the same run/session facts.

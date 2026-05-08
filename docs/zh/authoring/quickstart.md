@@ -1,133 +1,150 @@
 ---
-title: 快速开始
-description: 创建第一个 Agent UI 包。
+title: 实现快速开始
+description: 构建最小 runtime-first Agent UI projection。
 ---
 
-# 快速开始
+# 实现快速开始
 
-本指南创建一个用于通用 Agent 工作台的小型 Agent UI pack。
+本指南构建一个最小 Agent UI 实现。不需要独立 manifest。先从 event stream 和 UI projection store 开始。
 
-## 1. 创建目录
+## 1. 定义 event adapter
+
+把你的 runtime events 归一化为 UI 使用的标准 event classes。
+
+```ts
+type AgentUiEvent =
+  | { type: 'run.started'; sessionId: string; runId: string }
+  | { type: 'run.status'; runId: string; stage: RuntimeStage; detail?: string }
+  | { type: 'text.delta'; runId: string; messageId: string; delta: string }
+  | { type: 'text.final'; runId: string; messageId: string; text: string }
+  | { type: 'reasoning.delta'; runId: string; partId: string; delta: string }
+  | { type: 'tool.started'; runId: string; toolCallId: string; name: string; inputSummary?: unknown }
+  | { type: 'tool.result'; runId: string; toolCallId: string; status: 'ok' | 'error'; outputRef?: string }
+  | { type: 'action.required'; runId: string; actionId: string; schema?: unknown; severity?: string }
+  | { type: 'queue.changed'; sessionId: string; queued: QueuedTurnSummary[] }
+  | { type: 'artifact.changed'; runId: string; artifactId: string; kind?: string; preview?: string }
+  | { type: 'evidence.changed'; runId: string; evidenceId: string; status?: string }
+  | { type: 'run.finished'; runId: string; outcome: 'success' | 'interrupt' | 'cancelled' }
+  | { type: 'run.failed'; runId: string; error: string; retryable?: boolean }
+```
+
+从你的源协议做映射，但不要改变事实所有权。例如 lifecycle events、AI SDK UI message parts、Apps SDK tool outputs 和桌面 runtime events 都可以进入这个 adapter。
+
+## 2. 创建 projection store
+
+保持 facts 和 projection 分离。
+
+```ts
+type AgentUiProjection = {
+  activeSessionId: string | null
+  activeRunId: string | null
+  messages: Record<string, ProjectedMessage>
+  runs: Record<string, ProjectedRun>
+  tools: Record<string, ProjectedToolCall>
+  actions: Record<string, ProjectedActionRequest>
+  queues: Record<string, QueuedTurnSummary[]>
+  artifacts: Record<string, ProjectedArtifactRef>
+  evidence: Record<string, ProjectedEvidenceRef>
+  ui: {
+    selectedTabId: string | null
+    focusedArtifactId: string | null
+    collapsedToolCallIds: string[]
+    visibleMessageWindow: { cursor?: string; limit: number }
+  }
+}
+```
+
+`ui` state 只是 projection。它可以用 id 指向 facts，但不能成为 runtime status、artifact content、approval state 或 evidence verdict 的 owner。
+
+## 3. 把 events reduce 成 message parts
+
+```ts
+function applyEvent(state: AgentUiProjection, event: AgentUiEvent) {
+  switch (event.type) {
+    case 'run.status':
+      state.runs[event.runId].stage = event.stage
+      state.runs[event.runId].statusDetail = event.detail
+      return
+    case 'text.delta':
+      appendTextPartDelta(state.messages[event.messageId], event.delta)
+      return
+    case 'text.final':
+      reconcileFinalText(state.messages[event.messageId], event.text)
+      return
+    case 'reasoning.delta':
+      appendReasoningDelta(state.runs[event.runId], event.partId, event.delta)
+      return
+    case 'tool.started':
+      state.tools[event.toolCallId] = { ...event, status: 'running' }
+      return
+    case 'tool.result':
+      state.tools[event.toolCallId] = { ...state.tools[event.toolCallId], ...event }
+      return
+  }
+}
+```
+
+关键不是 reducer 长什么样，而是分离：text 更新 text parts，reasoning 更新 process parts，tools 更新 tool UI，artifacts 更新 artifact references，final text 做 reconcile 而不是重复 append。
+
+## 4. 渲染最小工作台
+
+第一版有五个区域就够：
 
 ```text
-basic-agent-workbench/
-├── AGENTUI.md
-├── surfaces/
-├── contracts/
-└── examples/
+AgentWorkbench
+  SessionTabs
+  ConversationPane
+    MessageList
+    MessageParts
+  RuntimeStatusStrip
+  Composer
+  WorkbenchPane
+    ArtifactCanvas
+    EvidencePanel
 ```
 
-## 2. 添加 `AGENTUI.md`
+先保持简单：
 
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - task-state
-    - artifact-references
----
+- Message list 渲染用户文本和助手最终文本。
+- Runtime strip 展示 accepted、routing、preparing、streaming、retrying、cancelled、failed、completed。
+- Tool calls 作为压缩 process rows 展示，可展开详情。
+- Action requests 渲染为 approval/input cards，并有明确 submit / cancel 路径。
+- Artifacts 打开到 workbench，不作为巨大聊天消息。
 
-# Basic Agent Workbench
+## 5. 连接受控动作
 
-Use this pack when the client must show a long-running agent task without mixing logs into the final answer.
-
-## Load when
-
-- The product has a chat or command surface for agent work.
-- The agent can stream status, tool progress, task state, or artifact references.
-- Users need to approve, interrupt, resume, inspect, or hand off work.
-
-## Surfaces
-
-- Conversation: final messages and composer.
-- Process: runtime status, tool progress, and errors.
-- Task: queue, needs-input, plan approval, and background work.
-- Artifact: generated deliverables and previews.
-- Evidence: citations, verification, replay, and audit.
+```ts
+const actions = {
+  sendPrompt: (draft: DraftInput) => runtime.submitTurn(draft),
+  queueInput: (draft: DraftInput) => runtime.queueTurn(draft),
+  steerRun: (runId: string, payload: SteeringInput) => runtime.steerRun(runId, payload),
+  interrupt: (runId: string) => runtime.interruptRun(runId),
+  respondAction: (actionId: string, response: unknown) => runtime.respondAction(actionId, response),
+  saveArtifact: (artifactId: string, patch: unknown) => artifactService.save(artifactId, patch),
+  exportEvidence: (runId: string) => evidenceService.export(runId)
+}
 ```
 
-保持入口简短。它应该帮助客户端判断是否激活本包，以及去哪里加载更多细节。
+在拥有 API 返回确认事实前，不要在 UI 里标记 approval、success、artifact save 或 evidence pass。
 
-## 3. 定义一个表面
+## 6. 增加旧会话恢复
 
-创建 `surfaces/process.md`：
+旧 session 不要被 full detail 阻塞：
 
-```markdown
-# Process surface
+1. 立即显示 shell、tab、title 和 cached snapshot。
+2. 用 bounded limit 拉取最近 messages。
+3. 拉取 queue、pending action 和 runtime status summary。
+4. Timeline/tool/artifact/evidence detail 在首屏 paint 后或用户展开时再加载。
+5. 用 cursor 加载更早历史。
 
-## Purpose
+## 7. 验证行为
 
-Show what the agent is doing before and between final answer updates.
+最小实现可接受的标准：
 
-## Inputs
-
-- `runtime.status`
-- `reasoning.summary`
-- `tool.start`
-- `tool.progress`
-- `tool.end`
-- `runtime.error`
-
-## Projection
-
-- `statusLabel`
-- `activeToolSummary`
-- `collapsedHistoryCount`
-
-## Fallbacks
-
-- If no status has arrived, show `Preparing...`.
-- If a tool output is large, show a summary and open details on demand.
-- If status is stale, show `No recent activity` and keep interrupt available.
-```
-
-## 4. 单独定义动作
-
-创建 `contracts/actions.md`：
-
-```markdown
-# Action contract
-
-User controls write through runtime APIs, never by editing projection state directly.
-
-| Action | Required fact | Runtime write |
-| --- | --- | --- |
-| Approve plan | `action.id` | `respond_action(approve)` |
-| Reject plan | `action.id` | `respond_action(reject)` |
-| Interrupt | `task.id` or `turn.id` | `interrupt_task` |
-| Open artifact | `artifact.id` | Read artifact through artifact service |
-```
-
-## 5. 添加验收示例
-
-创建 `examples/basic-flow.md`：
-
-```markdown
-# Basic flow
-
-1. User submits a prompt.
-2. Conversation shows the user message immediately.
-3. Process shows a preparing or routing state before first answer text.
-4. Tool output appears as a collapsed process item, not as final answer text.
-5. Generated files appear in the Artifact surface.
-6. Evidence links remain available after completion.
-```
-
-## 6. 评审本包
-
-分享前检查：
-
-- description 说明这个模式做什么、何时使用。
-- runtime facts 和 UI projection fields 已分离。
-- 每个用户动作都命名 runtime write path，或明确为 display-only。
-- 大工具输出、missing facts、errors、stale status 都有 fallback。
-- examples 是指南，不是强制视觉皮肤。
+- Runtime 接受 run 后，首文本前出现 status。
+- Tool call 显示在最终回答正文之外。
+- Final event 不重复已流式输出的文本。
+- Pending approval 阻塞进度，并通过受控 action response 恢复。
+- 生成的 artifact 打开在 artifact surface。
+- Evidence export 作为后台任务运行，并链接回同一 run/session。
+- 打开旧 session 不等待完整 timeline 或所有 artifact content。

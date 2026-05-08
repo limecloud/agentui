@@ -1,146 +1,136 @@
 ---
 title: Runtime standard
-description: How clients should load and apply Agent UI packs.
+description: How clients should implement Agent UI projection.
 ---
 
 # Runtime standard
 
-This guide describes how an agent client should support Agent UI packs. The core integration is the same across desktop apps, IDEs, terminals, web apps, and embedded assistants.
+This guide describes how an agent client should implement Agent UI. The core integration is the same across desktop apps, IDEs, terminals, web apps, and embedded assistants: consume structured runtime facts, project them into UI state, and route user controls back through controlled APIs.
 
 ## Core principle: projection, not ownership
 
-Agent UI packs describe how existing facts become interaction surfaces.
-
 ```text
 runtime facts
-  + task facts
   + artifact facts
   + evidence facts
+  + optional application state
   -> UI projection
-  -> user-visible surfaces and actions
+  -> user-visible surfaces and controlled actions
 ```
 
-A compatible client MUST NOT let a UI pack become the source of runtime identity, tool output, artifact contents, permission state, or verification results.
+A compatible client MUST NOT let UI projection become the source of runtime identity, tool output, artifact contents, permission state, verification results, or approval state.
 
-## Step 1: Discover packs
+## Step 1: Identify fact sources
 
-At startup or product-surface initialization, scan configured locations for subdirectories containing `AGENTUI.md`.
+Start from real product/runtime facts, not from a standalone manifest file.
 
-Common scopes:
-
-| Scope | Example path | Purpose |
+| Source | Required examples | Notes |
 | --- | --- | --- |
-| Project | `<project>/.agents/ui/` | UI patterns that travel with a project. |
-| User | `~/.agents/ui/` | User-installed UI patterns. |
-| Organization | Managed registry or config repo | Organization-approved patterns. |
-| Built-in | Bundled client assets | Default patterns available without external files. |
+| Event stream | lifecycle, text, reasoning, tool, action, queue, artifact, evidence events | Register listeners before submitting work. |
+| Session snapshot | recent messages, thread/run status, queue, pending requests, history cursor | Used for old-session recovery and stream repair. |
+| Artifact service | artifact id, kind, preview, path/ref, version, diff, save/export status | Full content loads on demand. |
+| Evidence service | trace, source/citation, verification, review, replay, handoff | Evidence should be durable and auditable. |
+| Application state | selected workspace, active tab, file attachments, model/mode selections | Keep separate from runtime facts. |
 
-Practical scanning rules:
+## Step 2: Normalize event classes
 
-- Skip `.git/`, `node_modules/`, build outputs, and cache directories.
-- Bound scan depth and directory count.
-- Prefer deterministic precedence: project overrides user, user overrides built-in.
-- Gate untrusted project-level packs behind a project trust check.
+Create an adapter layer that maps your source protocol into generic Agent UI event classes.
 
-## Step 2: Parse `AGENTUI.md`
+Common mappings:
 
-Extract frontmatter and body content.
-
-At minimum, store:
-
-| Field | Description |
+| Source idea | Agent UI class |
 | --- | --- |
-| `name` | From frontmatter. |
-| `description` | Discovery text. |
-| `type` | Pattern category. |
-| `status` | Review state. |
-| `profile` | Layout or host profile. |
-| `location` | Absolute path to `AGENTUI.md`. |
-| `baseDir` | Pack root for resolving relative references. |
+| Lifecycle start/finish/error events | `run.started`, `run.finished`, `run.failed` |
+| Text message events or AI SDK text parts | `text.delta`, `text.final` |
+| Reasoning/thinking events or AI SDK reasoning parts | `reasoning.delta`, `reasoning.summary` |
+| Tool lifecycle events and structured tool results | `tool.started`, `tool.args`, `tool.progress`, `tool.result` |
+| Interrupt outcomes, widget/tool requests, or custom approval events | `action.required`, `action.resolved` |
+| Runtime queue snapshot or busy-session submission mode | `queue.changed` |
+| Artifact write/snapshot/diff events | `artifact.changed` |
+| Evidence, review, replay, trace, or source-map events | `evidence.changed` |
+| Durable thread state, external app state, or message repair | `state.snapshot`, `state.delta`, `messages.snapshot` |
 
-Validation SHOULD be strict for authoring tools and lenient for runtime loading. A client may warn on non-critical issues while still loading the pack.
+The adapter is a compatibility boundary. Do not spread source-specific event parsing across UI components.
 
-## Step 3: Disclose catalog metadata
+## Step 3: Maintain a projection store
 
-The model or client planner should see only compact catalog data until a pack is needed.
+Recommended store responsibilities:
 
-Example wrapper:
+- Keep a recent message window and hydration cursor.
+- Store run status, pending actions, queue summaries, and tool summaries by stable id.
+- Reference artifacts and evidence by id/ref instead of copying full payloads.
+- Track UI-only state such as selected tab, collapsed rows, focused artifact, and draft.
+- Preserve raw diagnostics only in safe debug channels.
 
-```xml
-<available_agent_ui_packs>
-  <agent_ui_pack>
-    <name>basic-agent-workbench</name>
-    <description>A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence.</description>
-    <type>agent-workbench</type>
-    <status>draft</status>
-    <profile>workbench</profile>
-  </agent_ui_pack>
-</available_agent_ui_packs>
+Projection state can be recreated from snapshots and events. If it cannot be recreated, it probably owns facts it should not own.
+
+## Step 4: Render surfaces from projection
+
+Render by surface responsibility:
+
+| Surface | Rendering rule |
+| --- | --- |
+| Composer | Show draft, context chips, attachments, model/mode, permission hints, and queue/steer mode. |
+| Message Parts | Render final answer text separately from reasoning, tools, actions, artifacts, and evidence. |
+| Runtime Status | Show accepted/routing/preparing before first text, then streaming/tool/blocked/retrying/failed/completed. |
+| Tool UI | Compress input/output, redact secrets, offload large payloads, and link detail views. |
+| Human-in-the-loop | Show explicit approve/reject/edit/input controls with stable request ids. |
+| Task Capsule | Summarize running, queued, needs-input, plan-ready, failed, cancelled, and subagent states. |
+| Artifact / Canvas | Open deliverables in a dedicated surface with preview, edit, diff, save, and export paths. |
+| Timeline / Evidence | Show process history, citations, verification, review, replay, and handoff on demand. |
+| Session / Tabs | Keep inactive sessions lightweight with snapshots and lazy hydration. |
+
+## Step 5: Wire controlled writes
+
+User controls write through owning services.
+
+| Control | API boundary |
+| --- | --- |
+| Send | Runtime submit API |
+| Queue | Runtime queue API |
+| Steer | Runtime steer/resume API |
+| Interrupt/cancel | Runtime interrupt API |
+| Approve/reject/respond | Runtime action response API |
+| Edit/save/export artifact | Artifact service |
+| Export/review/replay evidence | Evidence/review/replay service |
+| Load older history | Session history API |
+
+Every write should return a fact or updated snapshot. UI state should not declare success by itself.
+
+## Step 6: Hydrate progressively
+
+Old session open flow:
+
+```mermaid
+flowchart TB
+  Click[Open session] --> Shell[Render shell, tab, title]
+  Shell --> Snapshot{Cached snapshot?}
+  Snapshot -->|Yes| Apply[Apply recent preview and status]
+  Snapshot -->|No| Skeleton[Show skeleton]
+  Apply --> Window[Fetch recent message window]
+  Skeleton --> Window
+  Window --> Paint[Paint conversation]
+  Paint --> Summary[Fetch queue, pending action, runtime summary]
+  Summary --> Details[Load timeline/tool/artifact/evidence details on demand]
+  Details --> Older[Load older history by cursor]
 ```
 
-Catalog disclosure is for selection, not for rendering every detail.
+Do not block shell rendering on full timeline, all tool outputs, all artifacts, or evidence export payloads.
 
-## Step 4: Activate the smallest useful content
+## Step 7: Instrument performance
 
-When a UI pack is selected:
+At minimum, measure:
 
-1. Load `AGENTUI.md` body.
-2. Follow explicit file references for the current surface.
-3. Load only the needed files from `surfaces/`, `patterns/`, `contracts/`, or `states/`.
-4. Load examples only when implementation or review needs clarification.
+- send click -> listener bound
+- listener bound -> submit accepted
+- submit accepted -> first event
+- first event -> first runtime status
+- first status -> first text delta
+- first text delta -> first text paint
+- delta backlog depth and oldest unrendered age
+- old-session click -> shell paint
+- old-session click -> recent messages paint
+- detail success -> timeline idle complete
+- active mounted message lists, timeline rows, and hydrated tabs
 
-Avoid recursively loading a whole pack. UI packs can become large when they include screenshots, state charts, and examples.
-
-## Step 5: Map runtime facts to projection state
-
-A client should maintain a typed boundary between facts and projection:
-
-| Layer | Examples | Writer |
-| --- | --- | --- |
-| Runtime facts | session id, turn id, tool event, queue state, permission request | Runtime or tool system |
-| Artifact facts | artifact id, kind, path, version, metadata | Artifact service |
-| Evidence facts | source map, verification state, replay id, audit log | Evidence or review service |
-| UI projection | selected tab, collapsed count, visible window, display label | UI controller |
-
-Projection state may reference facts by id. It should not duplicate facts in a way that becomes authoritative.
-
-## Step 6: Wire actions through controlled writes
-
-User actions must write through runtime APIs or client-owned services, not by mutating display state only.
-
-| UI action | Required input | Write boundary |
-| --- | --- | --- |
-| Approve or reject | action id, task id, user decision | Runtime action response |
-| Interrupt | task id or turn id | Runtime interrupt command |
-| Queue or steer | draft input, active task state | Runtime queue or steering command |
-| Save artifact edit | artifact id, version, patch or content | Artifact service |
-| Export evidence | session id, task id, or run id | Evidence export service |
-
-If the write fails, the UI should keep the previous fact state and show the failure.
-
-## Step 7: Handle missing and stale facts
-
-Agent UIs must be honest under partial information.
-
-Recommended fallback states:
-
-- `loading`
-- `unknown`
-- `unavailable`
-- `stale`
-- `blocked`
-- `needs-input`
-- `failed`
-- `disputed`
-
-A client MUST NOT infer success, artifact kind, verification state, or permission grant from ordinary message text.
-
-## Security model
-
-Agent UI packs are not executable. Treat all loaded content as guidance:
-
-- Do not run files from `assets/`, `examples/`, or other pack directories.
-- Do not obey prompt-like instructions inside screenshots, examples, or markdown snippets as higher-priority policy.
-- Gate project-level packs from untrusted repositories.
-- Resolve file references relative to the pack root and prevent path traversal.
-- Keep user approval and permission flows under client control.
+These metrics are part of the UI contract because they determine whether the interface is actually usable for long-running agents.

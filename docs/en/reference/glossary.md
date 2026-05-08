@@ -1,62 +1,54 @@
 ---
 title: Glossary
-description: Terms used by the Agent UI standard.
+description: Core Agent UI terms.
 ---
 
 # Glossary
 
-## Agent UI pack
+## Agent UI
 
-A directory containing `AGENTUI.md` and optional files that describe UI projection patterns for agent work.
-
-## Surface
-
-A user-facing area that answers one class of question. Standard surfaces are Conversation, Process, Task, Artifact, and Evidence.
-
-## Conversation
-
-The surface for user messages, assistant final text, composer behavior, branches, attachments, and direct collaboration.
-
-## Process
-
-The surface for runtime status, reasoning summaries, tool progress, errors, and timeline details.
-
-## Task
-
-The surface for queued work, background work, blocked states, approvals, interrupts, subagents, and plan decisions.
-
-## Artifact
-
-The surface for generated deliverables such as documents, files, diffs, images, tables, code, canvases, or structured outputs.
-
-## Evidence
-
-The surface for citations, source maps, verification, replay, review decisions, and audit records.
+A runtime projection standard for turning structured agent facts into user-visible interaction surfaces and controlled actions.
 
 ## Runtime fact
 
-State owned by the agent runtime or tool system, such as session id, turn id, task id, tool event, queue state, or permission request.
+A fact owned by an agent runtime or protocol adapter, such as run id, lifecycle state, text delta, tool call, queue state, or action request.
 
 ## Projection state
 
-UI-only derived state, such as selected panel, collapsed step count, visible history window, status label, or sort order.
+UI-owned state derived from facts, such as selected tab, collapsed tool rows, visible message window, focused artifact, or local draft. Projection state is not authoritative runtime truth.
 
-## Controlled write
+## Surface
 
-A user action that changes runtime, artifact, task, or evidence state through an explicit API boundary.
+A user-visible region that answers one class of question. Standard surfaces include Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs.
 
-## Capsule
+## Message part
 
-A compact representation of active, queued, blocked, or completed work. Capsules are useful when long-running work should remain visible without occupying the whole conversation.
+A typed piece of message UI, such as final text, reasoning, tool call, action request, data, artifact reference, or evidence reference.
 
-## Handoff
+## Runtime status
 
-A transition where work, context, artifacts, or evidence move between users, agents, clients, sessions, or devices.
+A short visible state showing whether the agent is submitted, routing, preparing, streaming, calling tools, blocked, retrying, cancelled, failed, or completed.
 
-## Progressive rendering
+## Tool UI
 
-A rendering strategy that shows shell, recent content, status, and answer text before expensive history, process detail, artifact previews, or evidence data finish loading.
+The surface for tool lifecycle, safe input summaries, progress, output previews, large output offload, and detail inspection.
 
-## Projection-only
+## Human-in-the-loop
 
-A contract marker meaning the UI may derive and cache display state, but it must not become authoritative for runtime, artifact, or evidence facts.
+A state where the runtime requires user approval, structured input, plan decision, correction, or cancellation before it can continue.
+
+## Queue
+
+A user input scheduled to run after the active run finishes.
+
+## Steer
+
+A user input intended to affect the currently active run.
+
+## Artifact
+
+A generated or edited deliverable such as a document, file, diff, image, table, code object, canvas, or structured output.
+
+## Evidence
+
+Trace, citation, verification, replay, review, or audit information that supports or explains an agent run.

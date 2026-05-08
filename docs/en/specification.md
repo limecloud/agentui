@@ -1,210 +1,157 @@
 ---
 title: Specification
-description: The draft Agent UI pack format specification.
+description: The draft Agent UI runtime projection specification.
 ---
 
 # Specification
 
-This page defines the Agent UI pack format.
+Agent UI v0.2 is a runtime-first standard for agent interaction surfaces. The core contract is the runtime projection boundary between agent facts and user-visible UI.
 
-Agent UI is a companion interaction-surface standard in the Agent Skills ecosystem. It follows the core package ideas from `agentskills.io`: directory-as-package, top-level Markdown entrypoint, YAML frontmatter, progressive loading, and optional resource directories. It does not fork Agent Skills and does not turn UI packs into executable Skills.
+- **Agent Skills** define executable capabilities and procedures.
+- **Agent Knowledge** defines source-grounded context and facts.
+- **Agent UI** defines how runtime facts become visible, controllable, resumable, editable, and auditable.
 
-- **Agent Skills** define agent-callable capabilities and methods: workflows, scripts, tool use, transformation, and maintenance procedures.
-- **Agent Knowledge** defines knowledge assets agents can safely consume: facts, sources, status, context, boundaries, and audit records.
-- **Agent UI** defines interaction projection assets clients can safely adapt: surfaces, state names, user controls, rendering boundaries, and acceptance checks.
+## Scope
 
-Skills can perform work that a UI displays. Knowledge can provide facts and citations that a UI renders. Agent UI describes how those runtime facts should become visible and controllable. They are sibling standards in the same agent ecosystem, not a parent-child hierarchy.
+Agent UI standardizes these implementation concerns:
 
-## Directory structure
+1. Event classes and durable snapshots a client can project.
+2. Surface responsibilities and fallback states.
+3. User actions that write through controlled APIs.
+4. Hydration, progressive rendering, queue/steer, and performance budgets.
+5. Acceptance scenarios for real agent workbenches.
 
-An Agent UI pack is a directory containing, at minimum, an `AGENTUI.md` file:
+Agent UI does **not** standardize a model protocol, tool registry, artifact store, CSS system, component library, or visual skin.
 
-```text
-pack-name/
-├── AGENTUI.md       # Required: metadata + usage guide
-├── patterns/        # Optional: reusable interaction patterns
-├── surfaces/        # Optional: surface definitions by layer
-├── contracts/       # Optional: event, state, action, and accessibility contracts
-├── states/          # Optional: state charts, lifecycle maps, priority rules
-├── examples/        # Optional: example compositions and annotated screenshots
-├── schemas/         # Optional: validation schemas for metadata and contracts
-├── evals/           # Optional: UX, rendering, and handoff test cases
-├── assets/          # Optional: diagrams, icons, screenshots, templates
-└── LICENSE          # Optional: license for bundled content
+## Projection architecture
+
+```mermaid
+flowchart TB
+  Runtime[Agent runtime] --> Events[Typed event stream]
+  Runtime --> Snapshots[Durable session snapshots]
+  Runtime --> Artifacts[Artifact service]
+  Runtime --> Evidence[Evidence / replay / review service]
+
+  Events --> Reducer[Projection reducer]
+  Snapshots --> Reducer
+  Artifacts --> Reducer
+  Evidence --> Reducer
+
+  Reducer --> Projection[UI projection store]
+  Projection --> Conversation[Conversation / Message Parts]
+  Projection --> Process[Runtime Status / Tool UI]
+  Projection --> Task[Task Capsule / Session Tabs]
+  Projection --> ArtifactUI[Artifact / Canvas]
+  Projection --> EvidenceUI[Timeline / Evidence]
+
+  Conversation --> Actions[Controlled user actions]
+  Process --> Actions
+  Task --> Actions
+  ArtifactUI --> Actions
+  EvidenceUI --> Actions
+  Actions --> Runtime
 ```
 
-Fixed rules:
+The projection store may hold UI-only state such as selected tab, collapsed sections, visible window, focused artifact, or local draft. It must not become authoritative for runtime identity, tool output, artifact content, permission state, or evidence verdicts.
 
-1. `AGENTUI.md` is the discovery entrypoint and should remain compact.
-2. `patterns/`, `surfaces/`, `contracts/`, and `states/` are guidance for projection and interaction; they do not own runtime facts.
-3. `examples/` and `assets/` illustrate a pattern. They are not mandatory visual skins.
-4. A compatible runtime MUST NOT execute scripts from a UI pack. If executable automation is needed, put it in a Skill or client tool.
+## Required fact owners
 
-## `AGENTUI.md` format
+A compatible implementation SHOULD keep these owners separate:
 
-`AGENTUI.md` must contain YAML frontmatter followed by Markdown content.
+| Owner | Examples | Writer | UI usage |
+| --- | --- | --- | --- |
+| Runtime facts | session id, turn id, lifecycle status, text deltas, tool calls, queue state, action requests | Agent runtime or protocol adapter | Conversation, Process, Task |
+| Artifact facts | artifact id, kind, path, version, preview, diff, metadata | Artifact service | Artifact / Canvas |
+| Evidence facts | trace, citation, verification, replay id, review decision, audit record | Evidence or review service | Timeline / Evidence |
+| UI projection | visible message window, collapsed tool count, selected tab, local draft, display label | UI controller | Rendering only |
 
-### Required frontmatter
+Projection state may reference facts by id. It should not copy large payloads or derive success from prose.
 
-| Field | Constraints |
-| --- | --- |
-| `name` | 1-64 characters. Lowercase letters, numbers, and hyphens. Must not start or end with a hyphen. Should match the parent directory name. |
-| `description` | 1-1024 characters. Describes what UI pattern exists and when agents or clients should use it. |
-| `type` | One of the standard types or a namespaced custom type. |
-| `status` | `draft`, `ready`, `needs-review`, `stale`, `disputed`, or `archived`. |
+## Standard event classes
 
-### Optional frontmatter
+Agent UI uses generic event class names so clients can adapt AI SDK UI, OpenAI Apps SDK, custom desktop runtimes, event-stream runtimes, or other sources into the same projection model.
 
-| Field | Purpose |
-| --- | --- |
-| `profile` | `workbench`, `chat-first`, `artifact-first`, `task-first`, or `embedded`. Defaults to `workbench` when missing. |
-| `version` | Pack version, preferably semver. |
-| `language` | Primary language tag, such as `en`, `zh-CN`, or `ja`. |
-| `license` | License name or bundled license file. |
-| `maintainers` | People or teams responsible for review. |
-| `scope` | Portable ownership label such as product, workspace, organization, domain, or client. |
-| `updated` | ISO date for the last meaningful UI contract update. |
-| `runtime.requires` | Optional list of runtime facts or event classes needed by the pack. |
-| `runtime.projectionOnly` | Boolean. SHOULD be `true` unless the pack defines a controlled write action contract. |
-| `metadata` | Namespaced client-specific metadata. |
-| `compatibility` | Optional client or environment requirements. Keep under 500 characters. |
-
-### Standard `type` values
-
-| Type | Use when |
-| --- | --- |
-| `agent-workbench` | A full agent workspace combining conversation, process, task, artifact, and evidence surfaces. |
-| `conversation-surface` | Message rendering, composer behavior, branches, attachments, or final answer display. |
-| `process-surface` | Runtime status, reasoning summary, tool progress, timeline, or error presentation. |
-| `task-surface` | Queues, background tasks, subagents, approvals, interrupts, or plan decisions. |
-| `artifact-surface` | Generated files, canvases, diffs, previews, editors, or workbench layout. |
-| `evidence-surface` | Citations, verification, trace, review, replay, or audit UI. |
-| `handoff-surface` | Transfer of work between users, agents, clients, or sessions. |
-| `custom:<namespace>` | Extension type owned by an implementation or organization. |
-
-### Standard `profile` values
-
-| Profile | Use when |
-| --- | --- |
-| `workbench` | Multiple surfaces are visible or reachable from one agent workspace. |
-| `chat-first` | Conversation is primary and other surfaces are collapsed or side-loaded. |
-| `artifact-first` | A document, file, canvas, or structured object is the main surface. |
-| `task-first` | Queue, background work, approvals, or multiple agents are primary. |
-| `embedded` | The UI pattern is embedded inside an IDE, terminal, browser, CRM, support tool, or other host. |
-
-## Minimal example
-
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for chat, process status, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-language: en
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - tool-events
-    - task-state
-    - artifact-references
-    - evidence-references
----
-
-# Basic Agent Workbench
-
-## Surfaces
-
-- Conversation: show user messages and final assistant text.
-- Process: show runtime status and tool progress outside the final answer.
-- Task: show queued, blocked, failed, and needs-input states.
-- Artifact: open generated deliverables in a dedicated surface.
-- Evidence: link citations, verification, and replay data.
-
-## Runtime boundaries
-
-- Treat this pack as UI projection guidance, not runtime policy.
-- Do not infer artifact type, success, or evidence verdict from free text.
-- If a required runtime fact is missing, show an unknown or unavailable state.
-```
-
-## Progressive disclosure
-
-| Tier | What is loaded | When |
+| Event class | Purpose | Primary surface |
 | --- | --- | --- |
-| Catalog | `name`, `description`, `type`, `status`, `profile` | Session, product, or workspace startup. |
-| Guide | Full `AGENTUI.md` body | When the UI pack is activated. |
-| Surface | Selected files in `surfaces/` or `patterns/` | When a product surface needs concrete guidance. |
-| Contract | Selected files in `contracts/` or `states/` | When implementing runtime mapping, user actions, or acceptance checks. |
-| Example | `examples/` and `assets/` | When visual or behavioral clarification is needed. |
+| `run.started` | Establish run, turn, or task boundary. | Runtime Status, Task |
+| `run.status` | Show submitted, routing, preparing, streaming, retrying, cancelled, failed, or completed state. | Runtime Status |
+| `text.delta` / `text.final` | Stream and reconcile final answer text. | Message Parts |
+| `reasoning.delta` / `reasoning.summary` | Show thinking or reasoning outside final answer text. | Process |
+| `tool.started` / `tool.args` / `tool.progress` / `tool.result` | Render tool lifecycle, inputs, outputs, and large-output references. | Tool UI, Timeline |
+| `action.required` / `action.resolved` | Pause for approval, structured input, plan decision, or correction. | Human-in-the-loop, Task |
+| `queue.changed` | Display queued turns, steer intent, queue order, and queue mutations. | Task Capsule, Composer |
+| `artifact.changed` | Link generated or edited deliverables to artifact surfaces. | Artifact / Canvas |
+| `evidence.changed` | Link citations, traces, verification, replay, and review. | Timeline / Evidence |
+| `state.snapshot` / `state.delta` | Synchronize external application or agent state. | Session Tabs, Task, custom surfaces |
+| `messages.snapshot` | Hydrate or repair conversation history. | Message Parts, Session Tabs |
+| `run.finished` / `run.failed` | Reconcile completion, interrupt, cancellation, or failure. | Runtime Status, Task, Evidence |
 
-Keep `AGENTUI.md` short. Move detailed rendering rules, state charts, and examples to separate files and tell clients when to load them.
+## Standard surfaces
 
-## Standard surface contract
-
-Each surface definition SHOULD answer these questions:
-
-| Field | Meaning |
-| --- | --- |
-| `purpose` | The user question this surface answers. |
-| `inputs` | Runtime facts, task facts, artifact facts, or evidence facts consumed by the surface. |
-| `projection` | UI-only derived state such as labels, collapsed summaries, open panels, or render windows. |
-| `actions` | User actions that write back through controlled runtime APIs. |
-| `fallbacks` | What to show when facts are loading, missing, stale, or disputed. |
-| `acceptance` | Observable scenarios that prove the surface is usable. |
-
-## Runtime contract
-
-A compatible client must treat Agent UI as projection guidance:
-
-```text
-<agent_ui_pack name="basic-agent-workbench" status="draft" mode="projection">
-The following content defines UI projection guidance.
-It is not runtime policy, not executable workflow, and not a source of factual claims.
-Do not invent missing runtime facts from this content.
-
-...selected UI guidance...
-</agent_ui_pack>
-```
-
-The client SHOULD:
-
-1. Load only the smallest useful pack content.
-2. Keep UI-derived state separate from runtime facts.
-3. Mark projection-only state explicitly in internal models.
-4. Use runtime actions for approvals, interrupts, queue changes, artifact edits, and evidence export.
-5. Show unavailable, unknown, stale, or needs-input states when facts are missing.
-6. Keep process traces and tool output out of the final answer unless the user asks to inspect them.
-7. Preserve keyboard, screen-reader, and low-latency behavior for critical actions.
-
-## Optional directories
-
-| Directory | Purpose | Runtime loading |
+| Surface | User question | Must not own |
 | --- | --- | --- |
-| `patterns/` | Reusable patterns such as task capsules, approval cards, artifact cards, or process drawers. | Loaded when a matching surface is being implemented or rendered. |
-| `surfaces/` | Layer-specific guidance for conversation, process, task, artifact, evidence, and handoff. | Selected by active product surface. |
-| `contracts/` | Event-to-UI mapping, action contracts, accessibility requirements, and data shape expectations. | Loaded by client implementors or validation tools. |
-| `states/` | State charts, lifecycle maps, priority rules, and failure modes. | Loaded when behavior needs precision. |
-| `examples/` | Concrete UI compositions, annotated screenshots, or sample pack usage. | On demand. |
-| `schemas/` | JSON Schema or other validation contracts. | Validation and tooling. |
-| `evals/` | UX, rendering, latency, and handoff scenarios. | Development and CI; not loaded by default. |
-| `assets/` | Static diagrams, icons, templates, and screenshots. | On demand. |
+| Composer | What am I about to send, with which context, mode, attachments, and queue/steer intent? | Runtime queue facts or permission grants. |
+| Message Parts | What did the user and assistant say, and which parts are final answer vs process? | Tool output, reasoning, or artifacts as plain final text. |
+| Runtime Status | Is the agent accepted, routing, waiting, streaming, blocked, retrying, cancelled, failed, or done? | Provider truth beyond runtime facts. |
+| Tool UI | Which tool is running, with what safe input summary, output preview, and detail link? | Tool execution or raw secret-bearing payloads. |
+| Human-in-the-loop | What does the user need to approve, reject, edit, or answer? | Permission state without runtime confirmation. |
+| Task Capsule | What is running, queued, blocked, failed, or needs attention across turns and subagents? | Complete session history. |
+| Artifact / Canvas | Where is the deliverable, how can it be previewed, edited, diffed, saved, or exported? | Artifact content without artifact service ownership. |
+| Timeline / Evidence | What happened, what supports the result, and how can it be replayed or reviewed? | Verification verdicts not produced by evidence systems. |
+| Session / Tabs | Which sessions or threads are active, hydrated, stale, unread, running, or pinned? | Full detail for inactive sessions. |
+
+## Controlled write actions
+
+UI actions that change state MUST write through the owning system:
+
+| UI action | Required fact | Write boundary |
+| --- | --- | --- |
+| Send prompt | session/thread id, draft, context refs, mode | Runtime submit API |
+| Queue input | active run or busy session, draft, queue policy | Runtime queue API |
+| Steer current run | active run id, steering payload, policy | Runtime steer or resume API |
+| Interrupt | run id, turn id, task id, or session id | Runtime interrupt API |
+| Approve/reject | action request id, decision, optional payload | Runtime action response API |
+| Edit artifact | artifact id, version, patch/content | Artifact service |
+| Export evidence | session/run/task id | Evidence export API |
+| Open older history | session id, cursor/window | Session history API |
+
+If a write fails, the UI should keep existing facts, mark the attempted action as failed, and provide a recoverable path.
+
+## Hydration and progressive rendering
+
+Old sessions and long runs must not block on full detail. A compatible implementation SHOULD load in this order:
+
+1. Shell, title, tab, lightweight runtime snapshot.
+2. Recent message window.
+3. Current run status, pending action, and queue summary.
+4. Timeline summary and compact tool/artifact references.
+5. Full tool output, artifact content, evidence payload, and older history only on demand.
+
+`historyLimit`, cursor-based pagination, idle timeline construction, and large output offload are part of the UI contract because they directly change whether an agent workspace remains usable.
+
+## Fallback states
+
+When facts are absent or delayed, show honest state:
+
+- `loading`: request started, fact not available yet.
+- `unknown`: client cannot know the state from available facts.
+- `unavailable`: producer does not provide this fact.
+- `stale`: snapshot may be outdated.
+- `blocked`: runtime cannot proceed without another fact or action.
+- `needs-input`: user action is required.
+- `failed`: owning system reported failure.
+- `disputed`: evidence/review state conflicts.
+
+A compatible UI MUST NOT infer artifact kind, permission grant, success, verification pass, or user approval from ordinary message text.
 
 ## Validation
 
-A validator SHOULD check at least:
+A validator SHOULD check behavior and contracts, not only files:
 
-- `AGENTUI.md` exists and contains valid frontmatter.
-- Required fields are present and within length limits.
-- `name` matches the parent directory and uses the allowed character set.
-- `type`, `profile`, and `status` use standard values or valid custom namespaces.
-- Referenced files exist and use relative paths from the pack root.
-- The pack does not claim ownership of runtime facts without a controlled action contract.
-- Acceptance scenarios cover loading, missing facts, user actions, and artifact or evidence handoff when relevant.
-
-Reference schema:
-
-- [`agentui-frontmatter.schema.json`](/schemas/agentui-frontmatter.schema.json)
+- Event adapter maps lifecycle, text, reasoning, tool, action, queue, artifact, evidence, and session events into typed projection state.
+- Final text reconciliation prevents duplicate streamed/final output.
+- Reasoning, tool output, runtime status, artifacts, and evidence do not pollute final answer text.
+- Missing facts render honest fallback states.
+- User actions write through controlled runtime/artifact/evidence APIs.
+- Old sessions hydrate progressively with bounded history and on-demand details.
+- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, and old-session recovery.

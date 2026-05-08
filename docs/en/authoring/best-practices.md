@@ -1,132 +1,147 @@
 ---
 title: Best practices
-description: How to author maintainable Agent UI packs.
+description: How to design maintainable Agent UI runtime projections.
 ---
 
 # Best practices
 
-Use this page as authoring requirements for Agent UI packs that must stay maintainable across clients.
+Use this page as requirements for Agent UI implementations and reusable surface guidance.
 
-## Keep UI projection separate from runtime facts
+## Keep facts owned by their source
 
-Agent UI packs MUST NOT define new model events, artifact stores, evidence verdicts, or permission grants.
+Agent UI MUST NOT define new model events, artifact stores, evidence verdicts, permission grants, or task truth. It projects facts supplied by the runtime, artifact service, evidence service, or application state owner.
 
-Allowed content:
+Good wording:
 
-- surface purpose
-- runtime inputs
-- UI-only projection fields
-- user controls
-- fallback behavior
-- accessibility requirements
-- acceptance scenarios
+> Show `needs-input` when the runtime exposes a pending action request.
 
-Runtime protocols belong in the agent runtime or client implementation. Executable workflows belong in Agent Skills. Facts and citations belong in Agent Knowledge or a runtime evidence store.
+Bad wording:
 
-## Write for progressive disclosure
+> If the assistant says it needs approval, mark the task as blocked.
 
-Keep `AGENTUI.md` short. It SHOULD tell the client what exists and when to load details.
+## Start from event classes
 
-Good:
+Before drawing components, define how the UI receives:
 
-```markdown
-Read `surfaces/artifact.md` when a task emits artifact references.
-Read `contracts/actions.md` before wiring approval or interrupt controls.
-```
+- run lifecycle and status
+- text deltas and final text
+- reasoning or thinking parts
+- tool start/args/progress/result
+- action required/resolved
+- queue changed
+- artifact changed
+- evidence changed
+- session snapshot and history cursor
 
-Poor:
+A surface without event ownership usually becomes string parsing.
 
-```markdown
-Paste every surface state, screenshot annotation, accessibility rule, and event table into AGENTUI.md.
-```
+## Separate final answer from process
 
-## Separate final answers from process traces
+A common Agent UI failure is putting status, reasoning, tool output, and final answer text into one stream. Keep these separate:
 
-A common Agent UI failure is putting status, reasoning, tool output, and final answer text into one stream. Author packs so clients can keep these separate:
-
-| Content | Preferred layer |
+| Content | Preferred surface |
 | --- | --- |
-| User messages and final assistant text | `conversation` |
-| Reasoning summary, tool progress, runtime errors | `process` |
-| Queue, background work, needs input, plan approval | `task` |
-| Files, canvases, diffs, structured deliverables | `artifact` |
-| Sources, validation, replay, review | `evidence` |
+| Final answer | Message text part |
+| Reasoning or thinking | Collapsed process part |
+| Runtime status | Runtime strip or process row |
+| Tool call and result | Tool UI row + details |
+| Approval or input request | Human-in-the-loop card |
+| Artifact | Artifact card + workbench |
+| Evidence | Timeline/evidence panel |
 
-## Name required runtime inputs
+## Use stable ids everywhere
 
-Do not say "show the artifact" without naming what the UI needs.
+Every projected object SHOULD have a stable id from the owning system:
 
-Better:
+- session id
+- run or turn id
+- message id
+- message part id
+- tool call id
+- action request id
+- queued turn id
+- artifact id
+- evidence id
+- review/replay id
 
-```markdown
-Requires an `artifact.id`, `artifact.kind`, display title, and a runtime read path. If `artifact.kind` is missing, show an unknown artifact card and avoid guessing from message text.
-```
+Temporary optimistic ids are fine, but they must reconcile when runtime ids arrive.
 
-## Provide fallbacks, not fake states
+## Compress process by default
 
-When facts are missing, the UI should say so.
-
-Use states such as:
-
-- loading
-- unavailable
-- unknown
-- stale
-- blocked
-- needs-input
-- failed
-- disputed
-
-Avoid optimistic labels like "verified" or "saved" unless a runtime fact confirms them.
-
-## Preserve user control
-
-Critical controls SHOULD remain reachable while the agent is running:
-
-- interrupt
-- approve or reject
-- edit queued input
-- open tool details
-- open artifact
-- export or inspect evidence
-- retry or resume when supported
-
-If a control is disabled, the UI should expose why.
-
-## Compress long-running work
-
-Long agent work needs a compact shape. Use capsules, strips, drawers, or summaries for high-volume process data. Keep the primary surface stable and disclose details on demand.
+Process UI should be useful without becoming a log dump.
 
 Good defaults:
 
-- Show the latest active status in one line.
-- Collapse completed tool steps by default.
-- Summarize large output and open details on demand.
-- Keep high-priority states visible: `needs-input`, `approval-required`, `failed`, `stale`.
+- show the current stage and elapsed time
+- show tool name, safe input summary, and status
+- hide raw long JSON unless expanded
+- show large output as an offload reference
+- summarize completed reasoning
+- keep errors recoverable with copyable diagnostics
 
-## Write acceptance scenarios
+## Treat missing facts honestly
 
-Every pack SHOULD include observable scenarios. Good scenarios say what the user does and what must be visible.
+Use explicit fallback states instead of guessing:
 
-Example:
+- `loading`
+- `unknown`
+- `unavailable`
+- `stale`
+- `blocked`
+- `needs-input`
+- `failed`
+- `disputed`
 
-```markdown
-1. Submit a prompt that triggers a tool call.
-2. The Conversation surface shows the user message immediately.
-3. The Process surface shows runtime status before final text arrives.
-4. The tool output is collapsed by default.
-5. The final answer does not include raw tool logs.
-```
+If artifact metadata is missing, say the artifact kind is unknown. If verification has not run, do not show passed.
+
+## Route user control through APIs
+
+Approvals, interrupts, queue changes, steering, artifact edits, evidence export, review decisions, and replay creation are controlled writes. The UI may initiate them, but it does not own the resulting fact.
+
+Every control should define:
+
+| Field | Question |
+| --- | --- |
+| Required fact | Which id or snapshot proves the action is valid? |
+| API boundary | Which service owns the write? |
+| Pending state | What is visible while waiting? |
+| Failure state | How does the user recover? |
+| Audit state | Where is the action recorded? |
+
+## Design for old sessions
+
+Long-running agents create history. Do not make old-session open depend on full detail.
+
+Recommended behavior:
+
+- render shell and tab first
+- apply cached snapshot if available
+- hydrate recent message window before timeline details
+- lazy-load tool output, artifact content, and evidence payloads
+- paginate older history by cursor
+- keep inactive tabs as snapshots, not full mounted workspaces
+
+## Measure visible latency
+
+A UI that is technically streaming can still feel frozen. Track:
+
+- first runtime status
+- first text delta
+- first text paint
+- delta backlog depth
+- oldest unrendered delta age
+- old-session shell paint
+- recent-message paint
+- timeline idle completion
 
 ## Avoid visual lock-in
 
-Agent UI is not a CSS theme. Describe semantics before appearance.
+Agent UI standardizes semantics, not style. Avoid requiring a color system, typography, framework, animation, or component library unless the guidance is explicitly scoped to one product.
 
-Prefer:
+Good guidance:
 
-- `high-priority task capsule`
-- `collapsed process item`
-- `artifact preview with open action`
-- `evidence card with source count and verification state`
+> The pending approval control must remain keyboard reachable and show scope, consequence, approve, and reject.
 
-Avoid requiring a specific color, typography, framework, animation, or component library unless the pack is explicitly scoped to one client.
+Bad guidance:
+
+> Use a yellow card with this exact shadow and a specific React component.

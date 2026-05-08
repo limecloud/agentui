@@ -1,24 +1,32 @@
 ---
 title: v0.1.0 Overview
-description: What changed in Agent UI v0.1.0.
+description: Historical first draft, superseded by v0.2.0.
 ---
 
 # v0.1.0 Overview
 
-v0.1.0 is the first public draft of Agent UI, a companion interaction-surface standard in the Agent Skills ecosystem.
+v0.1.0 was the first public draft of Agent UI. It introduced the idea that agent interfaces need separate conversation, process, task, artifact, and evidence surfaces.
 
-## Highlights
+## Superseded direction
 
-- Introduces `AGENTUI.md` as the required entrypoint for UI pattern packs.
-- Defines five standard surfaces: Conversation, Process, Task, Artifact, and Evidence.
-- Establishes the projection-only runtime boundary: UI packs describe display and control semantics, not runtime fact ownership.
-- Adds standard `type` and `profile` values for workbench, chat-first, artifact-first, task-first, and embedded products.
-- Adds authoring guidance for progressive disclosure, fallback states, user controls, and acceptance scenarios.
-- Adds client implementation guidance for discovery, activation, runtime mapping, controlled writes, and progressive rendering.
-- Adds a basic agent workbench example and a frontmatter schema.
+The first draft under-specified runtime events, session hydration, and controlled actions. That direction is superseded by v0.2.0.
 
-## Compatibility
+Use v0.1.0 only as historical context. New implementations should follow the runtime-first latest specification:
 
-- `AGENTUI.md` is the only required entrypoint.
-- Packs are guidance and should not be executed.
-- Clients should keep UI projection state separate from runtime, artifact, and evidence facts.
+```text
+typed runtime events + durable snapshots
+  -> projection reducer
+  -> UI surfaces
+  -> controlled user actions
+```
+
+## What remains useful
+
+- Conversation, Process, Task, Artifact, and Evidence are still useful surface categories.
+- UI projection must not own runtime facts.
+- Process details, tool output, artifacts, and evidence should not pollute final answer text.
+
+## What changed after v0.1.0
+
+- The current standard starts from runtime facts rather than document shape.
+- The current standard starts from event classes, snapshots, controlled writes, progressive hydration, and acceptance scenarios.

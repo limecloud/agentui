@@ -1,25 +1,19 @@
 ---
 title: v0.1.0 Changelog
-description: Changelog for Agent UI v0.1.0.
+description: Historical changelog for the first draft.
 ---
 
 # v0.1.0 Changelog
 
 ## Added
 
-- Initial Agent UI standard draft.
-- `AGENTUI.md` package entrypoint with required frontmatter fields.
-- Five-surface model: Conversation, Process, Task, Artifact, and Evidence.
-- Standard `type` values for agent workbench, conversation, process, task, artifact, evidence, and handoff surfaces.
-- Standard `profile` values for workbench, chat-first, artifact-first, task-first, and embedded layouts.
-- Runtime contract for projection-only UI guidance.
-- Authoring quickstart and best practices.
-- Client implementation guidance for runtime mapping and progressive rendering.
-- Basic agent workbench example.
-- `agentui-frontmatter.schema.json` reference schema.
+- First public draft of Agent UI.
+- Five-surface vocabulary: Conversation, Process, Task, Artifact, and Evidence.
+- Projection-only boundary between UI-derived state and runtime facts.
+- English and Simplified Chinese documentation site.
 - GitHub Pages deployment workflow.
 
-## Compatibility
+## Superseded in v0.2.0
 
-- This is the first public draft.
-- Future versions should preserve the `AGENTUI.md` entrypoint and progressive disclosure model unless a major version explicitly changes them.
+- The first draft framing is replaced by runtime-first event projection.
+- New implementations should use the latest specification.

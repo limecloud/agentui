@@ -1,210 +1,157 @@
 ---
 title: 规范
-description: Agent UI 包格式草案。
+description: Agent UI runtime projection 草案规范。
 ---
 
 # 规范
 
-本文定义 Agent UI 包格式。
+Agent UI v0.2 是 runtime-first 的 Agent 交互表面标准。核心契约是 Agent facts 与用户可见 UI 之间的 runtime projection 边界。
 
-Agent UI 是 Agent Skills 生态中的互补交互表面标准。它参考 `agentskills.io` 的核心包思想：目录即包、顶层 Markdown 入口、YAML frontmatter、渐进加载和可选资源目录。但它不 fork Agent Skills，也不把 UI 包变成可执行 Skill。
+- **Agent Skills** 定义可执行能力和流程。
+- **Agent Knowledge** 定义有来源的上下文和事实。
+- **Agent UI** 定义 runtime facts 如何变得可见、可控制、可恢复、可编辑和可审计。
 
-- **Agent Skills** 定义 Agent 可调用的能力与工艺：工作流、脚本、工具使用、转换和维护方法。
-- **Agent Knowledge** 定义 Agent 可安全消费的知识资产：事实、来源、状态、上下文、边界和审计记录。
-- **Agent UI** 定义客户端可安全适配的交互投影资产：表面、状态名称、用户控制、渲染边界和验收检查。
+## 范围
 
-Skills 可以执行 UI 展示的工作。Knowledge 可以提供 UI 渲染的事实和引用。Agent UI 描述这些运行事实如何变得可见、可控制。三者是同一 Agent 生态下的 sibling standards，不是从属关系。
+Agent UI 标准化这些实现问题：
 
-## 目录结构
+1. 客户端可投影的 event classes 和 durable snapshots。
+2. Surface 职责和 fallback states。
+3. 通过受控 API 写回的用户动作。
+4. Hydration、progressive rendering、queue/steer 和性能预算。
+5. 面向真实 Agent 工作台的验收场景。
 
-Agent UI pack 至少包含一个 `AGENTUI.md` 文件：
+Agent UI **不**标准化模型协议、工具注册表、artifact store、CSS 系统、组件库或视觉皮肤。
 
-```text
-pack-name/
-├── AGENTUI.md       # 必需：元数据 + 使用指南
-├── patterns/        # 可选：可复用交互模式
-├── surfaces/        # 可选：按层定义的表面
-├── contracts/       # 可选：event、state、action、accessibility 契约
-├── states/          # 可选：状态图、生命周期地图、优先级规则
-├── examples/        # 可选：示例组合和截图说明
-├── schemas/         # 可选：metadata 和 contract 校验 schema
-├── evals/           # 可选：UX、渲染和交接测试用例
-├── assets/          # 可选：图表、图标、截图、模板
-└── LICENSE          # 可选：随包内容许可
+## 投影架构
+
+```mermaid
+flowchart TB
+  Runtime[Agent runtime] --> Events[Typed event stream]
+  Runtime --> Snapshots[Durable session snapshots]
+  Runtime --> Artifacts[Artifact service]
+  Runtime --> Evidence[Evidence / replay / review service]
+
+  Events --> Reducer[Projection reducer]
+  Snapshots --> Reducer
+  Artifacts --> Reducer
+  Evidence --> Reducer
+
+  Reducer --> Projection[UI projection store]
+  Projection --> Conversation[Conversation / Message Parts]
+  Projection --> Process[Runtime Status / Tool UI]
+  Projection --> Task[Task Capsule / Session Tabs]
+  Projection --> ArtifactUI[Artifact / Canvas]
+  Projection --> EvidenceUI[Timeline / Evidence]
+
+  Conversation --> Actions[Controlled user actions]
+  Process --> Actions
+  Task --> Actions
+  ArtifactUI --> Actions
+  EvidenceUI --> Actions
+  Actions --> Runtime
 ```
 
-固定规则：
+Projection store 可以保存 selected tab、collapsed sections、visible window、focused artifact、local draft 等 UI-only state。它不能成为 runtime identity、tool output、artifact content、permission state 或 evidence verdict 的权威来源。
 
-1. `AGENTUI.md` 是发现入口，应保持简短。
-2. `patterns/`、`surfaces/`、`contracts/`、`states/` 是投影和交互指南；它们不拥有 runtime facts。
-3. `examples/` 和 `assets/` 只说明模式，不是强制视觉皮肤。
-4. 兼容 runtime MUST NOT 执行 UI 包中的脚本。需要自动化时，应放入 Skill 或客户端工具。
+## 必需事实所有者
 
-## `AGENTUI.md` 格式
+兼容实现 SHOULD 分离这些 owner：
 
-`AGENTUI.md` 必须包含 YAML frontmatter 和 Markdown 正文。
+| Owner | 示例 | Writer | UI 使用 |
+| --- | --- | --- | --- |
+| Runtime facts | session id、turn id、lifecycle status、text deltas、tool calls、queue state、action requests | Agent runtime 或 protocol adapter | Conversation、Process、Task |
+| Artifact facts | artifact id、kind、path、version、preview、diff、metadata | Artifact service | Artifact / Canvas |
+| Evidence facts | trace、citation、verification、replay id、review decision、audit record | Evidence 或 review service | Timeline / Evidence |
+| UI projection | visible message window、collapsed tool count、selected tab、local draft、display label | UI controller | 仅渲染 |
 
-### 必需字段
+Projection state 可以用 id 引用 facts，但不应复制大 payload，也不应从正文推断成功。
 
-| 字段 | 约束 |
-| --- | --- |
-| `name` | 1-64 字符，小写字母、数字和连字符，不能以连字符开头或结尾，应该匹配父目录名。 |
-| `description` | 1-1024 字符，描述有哪些 UI 模式以及 Agent 或客户端何时使用。 |
-| `type` | 标准类型或命名空间自定义类型。 |
-| `status` | `draft`、`ready`、`needs-review`、`stale`、`disputed` 或 `archived`。 |
+## 标准事件类
 
-### 可选字段
+Agent UI 使用通用 event class 名称，方便客户端把 AI SDK UI、OpenAI Apps SDK、自定义桌面 runtime、事件流 runtime 或其他来源适配到同一投影模型。
 
-| 字段 | 用途 |
-| --- | --- |
-| `profile` | `workbench`、`chat-first`、`artifact-first`、`task-first` 或 `embedded`。缺省为 `workbench`。 |
-| `version` | 包版本，建议 semver。 |
-| `language` | 主语言，如 `en`、`zh-CN` 或 `ja`。 |
-| `license` | 内容许可或随包 license 文件。 |
-| `maintainers` | 负责评审的人或团队。 |
-| `scope` | 可移植归属标签，如 product、workspace、organization、domain 或 client。 |
-| `updated` | 最近一次有意义 UI 契约更新的 ISO 日期。 |
-| `runtime.requires` | 本包需要的 runtime facts 或 event classes。 |
-| `runtime.projectionOnly` | 布尔值。除非本包定义受控写入 action contract，否则 SHOULD 为 `true`。 |
-| `metadata` | 命名空间化客户端自定义元数据。 |
-| `compatibility` | 可选客户端或环境要求，控制在 500 字符内。 |
-
-### 标准 `type` 值
-
-| Type | 适用场景 |
-| --- | --- |
-| `agent-workbench` | 组合 conversation、process、task、artifact、evidence 的完整 Agent workspace。 |
-| `conversation-surface` | 消息渲染、输入区行为、分支、附件或最终回答展示。 |
-| `process-surface` | runtime status、推理摘要、工具进度、时间线或错误呈现。 |
-| `task-surface` | 队列、后台任务、子代理、审批、中断或计划决策。 |
-| `artifact-surface` | 生成文件、画布、diff、preview、editor 或 workbench layout。 |
-| `evidence-surface` | 引用、验证、trace、review、replay 或 audit UI。 |
-| `handoff-surface` | 用户、Agent、客户端或会话之间的工作交接。 |
-| `custom:<namespace>` | 由实现方或组织拥有的扩展类型。 |
-
-### 标准 `profile` 值
-
-| Profile | 适用场景 |
-| --- | --- |
-| `workbench` | 多个表面在一个 Agent workspace 中可见或可达。 |
-| `chat-first` | 对话为主，其他表面折叠或旁路加载。 |
-| `artifact-first` | 文档、文件、画布或结构化对象是主表面。 |
-| `task-first` | 队列、后台工作、审批或多 Agent 是主表面。 |
-| `embedded` | UI 模式嵌入 IDE、终端、浏览器、CRM、支持工具或其他 host。 |
-
-## 最小示例
-
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for chat, process status, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-language: en
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - tool-events
-    - task-state
-    - artifact-references
-    - evidence-references
----
-
-# Basic Agent Workbench
-
-## Surfaces
-
-- Conversation: show user messages and final assistant text.
-- Process: show runtime status and tool progress outside the final answer.
-- Task: show queued, blocked, failed, and needs-input states.
-- Artifact: open generated deliverables in a dedicated surface.
-- Evidence: link citations, verification, and replay data.
-
-## Runtime boundaries
-
-- Treat this pack as UI projection guidance, not runtime policy.
-- Do not infer artifact type, success, or evidence verdict from free text.
-- If a required runtime fact is missing, show an unknown or unavailable state.
-```
-
-## 渐进加载
-
-| 层级 | 加载内容 | 时机 |
+| Event class | 目的 | 主表面 |
 | --- | --- | --- |
-| Catalog | `name`、`description`、`type`、`status`、`profile` | 会话、产品表面或 workspace 启动。 |
-| Guide | 完整 `AGENTUI.md` 正文 | UI 包被激活时。 |
-| Surface | `surfaces/` 或 `patterns/` 中选中的文件 | 产品表面需要具体指南时。 |
-| Contract | `contracts/` 或 `states/` 中选中的文件 | 实现 runtime mapping、user actions 或 acceptance checks 时。 |
-| Example | `examples/` 和 `assets/` | 需要视觉或行为澄清时。 |
+| `run.started` | 建立 run、turn 或 task 边界。 | Runtime Status、Task |
+| `run.status` | 展示 submitted、routing、preparing、streaming、retrying、cancelled、failed 或 completed。 | Runtime Status |
+| `text.delta` / `text.final` | 流式展示并 reconcile 最终回答文本。 | Message Parts |
+| `reasoning.delta` / `reasoning.summary` | 在最终回答之外展示 thinking 或 reasoning。 | Process |
+| `tool.started` / `tool.args` / `tool.progress` / `tool.result` | 渲染工具生命周期、输入、输出和大输出引用。 | Tool UI、Timeline |
+| `action.required` / `action.resolved` | 为审批、结构化输入、计划决策或修正暂停。 | Human-in-the-loop、Task |
+| `queue.changed` | 展示排队 turn、steer intent、队列顺序和队列变更。 | Task Capsule、Composer |
+| `artifact.changed` | 把生成或编辑的交付物链接到 artifact surface。 | Artifact / Canvas |
+| `evidence.changed` | 链接 citations、traces、verification、replay 和 review。 | Timeline / Evidence |
+| `state.snapshot` / `state.delta` | 同步外部应用或 Agent 状态。 | Session Tabs、Task、自定义表面 |
+| `messages.snapshot` | 恢复或修复 conversation history。 | Message Parts、Session Tabs |
+| `run.finished` / `run.failed` | reconcile completed、interrupt、cancelled 或 failed。 | Runtime Status、Task、Evidence |
 
-保持 `AGENTUI.md` 简短。详细渲染规则、状态图和示例应放入独立文件，并说明客户端何时加载。
+## 标准表面
 
-## 标准表面契约
-
-每个 surface definition SHOULD 回答这些问题：
-
-| 字段 | 含义 |
-| --- | --- |
-| `purpose` | 这个表面回答哪个用户问题。 |
-| `inputs` | 本表面消费的 runtime facts、task facts、artifact facts 或 evidence facts。 |
-| `projection` | UI-only 派生状态，如标签、折叠摘要、打开面板或渲染窗口。 |
-| `actions` | 通过受控 runtime API 写回的用户动作。 |
-| `fallbacks` | facts 正在加载、缺失、过期或有争议时显示什么。 |
-| `acceptance` | 证明表面可用的可观察场景。 |
-
-## 运行时契约
-
-兼容客户端必须把 Agent UI 当作投影指南：
-
-```text
-<agent_ui_pack name="basic-agent-workbench" status="draft" mode="projection">
-以下内容定义 UI 投影指南。
-它不是 runtime policy，不是可执行 workflow，也不是事实声明来源。
-不要从这些内容编造缺失的 runtime facts。
-
-...selected UI guidance...
-</agent_ui_pack>
-```
-
-客户端 SHOULD：
-
-1. 只加载当前任务需要的最小包内容。
-2. 保持 UI-derived state 与 runtime facts 分离。
-3. 在内部模型中明确标记 projection-only state。
-4. 审批、中断、队列变更、artifact 编辑和 evidence export 都通过 runtime actions 写入。
-5. facts 缺失时显示 unavailable、unknown、stale 或 needs-input 状态。
-6. 除非用户要求检查过程，否则过程 trace 和 tool output 不进入最终回答。
-7. 为关键动作保留键盘、屏幕阅读器和低延迟行为。
-
-## 可选目录
-
-| 目录 | 用途 | 运行时加载 |
+| Surface | 用户问题 | 不应拥有 |
 | --- | --- | --- |
-| `patterns/` | 可复用模式，如 task capsule、approval card、artifact card 或 process drawer。 | 实现或渲染匹配表面时加载。 |
-| `surfaces/` | conversation、process、task、artifact、evidence、handoff 分层指南。 | 按活跃产品表面选择。 |
-| `contracts/` | event-to-UI mapping、action contracts、accessibility requirements 和 data shape expectations。 | 客户端实现或校验工具加载。 |
-| `states/` | 状态图、生命周期地图、优先级规则和失败模式。 | 行为需要精确时加载。 |
-| `examples/` | 具体 UI 组合、截图说明或样例用法。 | 按需加载。 |
-| `schemas/` | JSON Schema 或其他校验契约。 | 校验和工具。 |
-| `evals/` | UX、渲染、延迟和交接场景。 | 开发和 CI；默认不加载。 |
-| `assets/` | 静态图表、图标、模板和截图。 | 按需加载。 |
+| Composer | 我将发送什么，带哪些上下文、模式、附件和 queue/steer 意图？ | Runtime queue facts 或 permission grants。 |
+| Message Parts | 用户和助手说了什么，哪些是最终回答，哪些是过程？ | 把 tool output、reasoning 或 artifacts 当普通最终文本。 |
+| Runtime Status | Agent 是否 accepted、routing、waiting、streaming、blocked、retrying、cancelled、failed 或 done？ | 超出 runtime facts 的 provider 真相。 |
+| Tool UI | 哪个工具在运行，安全输入摘要是什么，输出预览和详情在哪里？ | 工具执行本身或带 secret 的原始 payload。 |
+| Human-in-the-loop | 用户需要批准、拒绝、编辑或回答什么？ | 没有 runtime 确认的权限状态。 |
+| Task Capsule | 跨 turn 和 subagent 有什么在运行、排队、阻塞、失败或需要注意？ | 完整 session history。 |
+| Artifact / Canvas | 交付物在哪里，如何 preview、edit、diff、save 或 export？ | 没有 artifact service 所有权的 artifact content。 |
+| Timeline / Evidence | 发生了什么，哪些事实支撑结果，如何 replay 或 review？ | 不是 evidence system 产生的 verification verdict。 |
+| Session / Tabs | 哪些 session/thread active、hydrated、stale、unread、running 或 pinned？ | 非活跃 session 的完整 detail。 |
+
+## 受控写入动作
+
+会改变状态的 UI action MUST 通过拥有该状态的系统写回：
+
+| UI action | Required fact | Write boundary |
+| --- | --- | --- |
+| Send prompt | session/thread id、draft、context refs、mode | Runtime submit API |
+| Queue input | active run 或 busy session、draft、queue policy | Runtime queue API |
+| Steer current run | active run id、steering payload、policy | Runtime steer 或 resume API |
+| Interrupt | run id、turn id、task id 或 session id | Runtime interrupt API |
+| Approve/reject | action request id、decision、optional payload | Runtime action response API |
+| Edit artifact | artifact id、version、patch/content | Artifact service |
+| Export evidence | session/run/task id | Evidence export API |
+| Open older history | session id、cursor/window | Session history API |
+
+如果写入失败，UI 应保留现有 facts，把本次 action 标为 failed，并提供可恢复路径。
+
+## Hydration 与渐进渲染
+
+旧 session 和长任务不能被 full detail 阻塞。兼容实现 SHOULD 按这个顺序加载：
+
+1. Shell、title、tab、轻量 runtime snapshot。
+2. 最近 message window。
+3. 当前 run status、pending action 和 queue summary。
+4. Timeline summary 与紧凑 tool/artifact references。
+5. Full tool output、artifact content、evidence payload 和 older history 只在按需时加载。
+
+`historyLimit`、基于 cursor 的分页、idle timeline construction 和大输出 offload 属于 UI 契约的一部分，因为它们直接决定 Agent workspace 是否可用。
+
+## Fallback states
+
+事实缺失或延迟时，必须诚实展示状态：
+
+- `loading`：请求已开始，但事实尚不可用。
+- `unknown`：客户端无法从现有事实知道状态。
+- `unavailable`：producer 不提供此事实。
+- `stale`：snapshot 可能过期。
+- `blocked`：runtime 缺少事实或动作而无法继续。
+- `needs-input`：需要用户动作。
+- `failed`：拥有系统报告失败。
+- `disputed`：evidence/review 状态冲突。
+
+兼容 UI MUST NOT 从普通正文推断 artifact kind、permission grant、success、verification pass 或 user approval。
 
 ## 校验
 
-校验器 SHOULD 至少检查：
+Validator SHOULD 校验行为和契约，而不只是检查文件：
 
-- `AGENTUI.md` 存在且包含合法 frontmatter。
-- 必需字段存在并满足长度限制。
-- `name` 匹配父目录名并使用允许字符集。
-- `type`、`profile` 和 `status` 使用标准值或合法自定义命名空间。
-- 引用文件存在，并使用相对 pack root 的路径。
-- 没有在缺少受控 action contract 的情况下声称拥有 runtime facts。
-- 验收场景覆盖 loading、missing facts、user actions，以及相关的 artifact 或 evidence handoff。
-
-参考 schema：
-
-- [`agentui-frontmatter.schema.json`](/schemas/agentui-frontmatter.schema.json)
+- Event adapter 把 lifecycle、text、reasoning、tool、action、queue、artifact、evidence 和 session events 映射为 typed projection state。
+- Final text reconciliation 防止 streamed/final output 重复。
+- Reasoning、tool output、runtime status、artifacts 和 evidence 不污染最终回答正文。
+- Missing facts 渲染诚实 fallback states。
+- User actions 通过受控 runtime/artifact/evidence APIs 写入。
+- 旧 session 以 bounded history 和按需详情渐进恢复。
+- Acceptance scenarios 覆盖 send、first status、tool call、action request、queue/steer、artifact handoff、evidence export、failure 和 old-session recovery。

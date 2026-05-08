@@ -1,11 +1,11 @@
 ---
 title: Agent UI 与 Agent Skills / Agent Knowledge
-description: 区分可执行能力、可信上下文和交互投影。
+description: 区分可执行能力、可信上下文和运行时交互投影。
 ---
 
 # Agent UI 与 Agent Skills / Agent Knowledge
 
-Agent UI 不是 Skill 包，也不是 Knowledge 包。它是面向用户侧 Agent 交互语义的第三个标准。
+Agent UI 不是可执行 Skill，也不是 Knowledge asset。它是面向用户侧 Agent 交互语义的第三个标准。
 
 - **Agent Skills** 描述 Agent 如何执行工作：工作流、脚本、工具用法和模板。
 - **Agent Knowledge** 描述有来源的资产：事实、文档、政策、状态和审计轨迹。
@@ -18,11 +18,11 @@ Agent UI 不是 Skill 包，也不是 Knowledge 包。它是面向用户侧 Agen
 ```mermaid
 flowchart TD
   Asset[候选资产] --> ActionQ{它是否告诉 Agent 如何行动?}
-  ActionQ -->|是| Skill[打包为 Agent Skill]
+  ActionQ -->|是| Skill[建模为 Agent Skill]
   ActionQ -->|否| FactQ{它是否陈述事实、来源、政策或上下文?}
-  FactQ -->|是| Knowledge[打包为 Agent Knowledge]
-  FactQ -->|否| UIQ{它是否定义 Agent 工作如何展示或控制?}
-  UIQ -->|是| UI[打包为 Agent UI]
+  FactQ -->|是| Knowledge[建模为 Agent Knowledge]
+  FactQ -->|否| UIQ{它是否定义 Agent 工作如何展示、控制、恢复或审计?}
+  UIQ -->|是| UI[建模为 Agent UI]
   UIQ -->|否| Ordinary[保留为普通项目文件]
 ```
 
@@ -37,7 +37,7 @@ flowchart TD
 | 边界 | Agent Skills | Agent Knowledge | Agent UI |
 | --- | --- | --- | --- |
 | 主要角色 | 可执行能力 | 有来源的知识 | 交互投影 |
-| 入口文件 | `SKILL.md` | `KNOWLEDGE.md` | `AGENTUI.md` |
+| 核心契约 | Skill 激活与执行指南 | Knowledge 加载、溯源和信任边界 | Event-to-surface projection 与受控用户动作 |
 | 核心内容 | 指令、脚本、工作流、工具用法。 | 事实、来源、维护文档、编译上下文。 | 表面模式、状态模型、控制、验收检查。 |
 | 运行时动词 | 执行、转换、校验、维护、应用。 | 溯源、引用、约束、核验、解析。 | 渲染、披露、折叠、审批、中断、交接。 |
 | 信任模型 | 信任和激活后可能驱动工具。 | 必须包裹为数据。 | 必须当作投影指南。 |
@@ -51,8 +51,8 @@ flowchart TD
 user request
   -> select Skill for procedure
   -> select Knowledge for facts and boundaries
-  -> select Agent UI for interaction surfaces
-  -> run agent with visible process, tasks, artifacts, and evidence
+  -> run agent runtime
+  -> project runtime facts through Agent UI surfaces
 ```
 
 规则：
@@ -76,4 +76,4 @@ user request
 
 ## 非目标
 
-Agent UI 不标准化完整 Agent runtime、模型事件协议、CSS 系统、组件库、记忆层或 artifact 存储格式。它只标准化一种文件优先方式，用来描述兼容客户端可以采用或适配的 UI 投影语义。
+Agent UI 不标准化完整 Agent runtime、模型事件协议、CSS 系统、组件库、记忆层或 artifact 存储格式。它只标准化兼容客户端如何把 runtime facts 投影成交互语义。

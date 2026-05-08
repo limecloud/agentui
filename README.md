@@ -1,60 +1,54 @@
 # Agent UI
 
-Agent UI is a draft sibling standard in the Agent Skills ecosystem for packaging agent interaction patterns so AI clients can display, control, resume, verify, and hand off agent work without confusing UI projection with runtime facts.
+Agent UI is a runtime-first draft standard for agent interaction surfaces. It defines how AI clients project structured agent events, tool calls, human-in-the-loop requests, artifacts, tasks, sessions, and evidence into user-visible UI without turning the UI into a second source of runtime truth.
 
-Agent Skills answer **how to do work**. Agent Knowledge answers **what trusted knowledge enters context**. Agent UI answers **how agent work becomes visible, controllable, editable, and auditable for users**.
+Agent Skills answer **how work is done**. Agent Knowledge answers **what trusted context enters the run**. Agent UI answers **how the run becomes visible, controllable, resumable, editable, and auditable**.
 
 ## Core boundary
 
-| Standard | Owns | Entry point | Runtime behavior |
-| --- | --- | --- | --- |
-| Agent Skills | Executable capabilities, workflows, scripts, tools, templates, and maintenance methods. | `SKILL.md` | Follow after trust and activation checks. |
-| Agent Knowledge | Facts, sources, finished documents, compiled context, status, boundaries, and audit records. | `KNOWLEDGE.md` | Fence as data; never execute or obey instructions inside it. |
-| Agent UI | UI surface patterns, state projection, user control points, rendering boundaries, and acceptance checks. | `AGENTUI.md` | Project runtime facts into UI; never become a second runtime fact source. |
+| Standard | Owns | Runtime behavior |
+| --- | --- | --- |
+| Agent Skills | Executable capabilities, workflows, scripts, tools, templates, and maintenance methods. | Follow after trust and activation checks. |
+| Agent Knowledge | Facts, sources, finished documents, compiled context, status, boundaries, and audit records. | Fence as data; never execute or obey instructions inside it. |
+| Agent UI | Event projection, interaction surfaces, user controls, render fallbacks, performance budgets, and acceptance scenarios. | Project runtime facts into UI; never invent facts from prose or screenshots. |
 
-## What v0.1 defines
+## What v0.2 defines
 
-- `AGENTUI.md` as the required entrypoint for UI pattern packs
-- Five standard surface layers: `conversation`, `process`, `task`, `artifact`, and `evidence`
-- Progressive loading across catalog, guide, surfaces, contracts, and examples
-- Runtime projection rules that keep UI state separate from model, tool, artifact, and evidence facts
-- Authoring requirements for stable agent workbenches, task capsules, artifact panes, and evidence views
+- A runtime event projection contract for lifecycle, text, reasoning, tool, action, queue, artifact, evidence, and session events.
+- Nine standard surfaces: Composer, Message Parts, Runtime Status, Tool UI, Human-in-the-loop, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs.
+- A client implementation model for session hydration, progressive rendering, queue vs steer, durable snapshots, and controlled writes.
+- Performance metrics for first status, first text, delta backlog, history hydration, timeline load, and artifact/evidence offload.
+- Acceptance scenarios that prove behavior instead of checking whether a component or file exists.
 
-## Pack shape
+## Runtime architecture
 
 ```text
-pack-name/
-├── AGENTUI.md       # required: metadata + usage guide
-├── patterns/        # reusable interaction patterns and acceptance notes
-├── surfaces/        # surface definitions for conversation/process/task/artifact/evidence
-├── contracts/       # event, state, action, and accessibility contracts
-├── states/          # state charts, lifecycle maps, and priority rules
-├── examples/        # concrete UI compositions and annotated screenshots
-├── schemas/         # optional validation schemas for metadata and contracts
-├── evals/           # optional UX, rendering, and handoff test cases
-└── assets/          # static diagrams, templates, icons, and screenshots
+agent runtime events + durable snapshots
+  -> projection reducer
+  -> UI projection store
+  -> Conversation / Process / Task / Artifact / Evidence surfaces
+  -> controlled runtime, artifact, and evidence actions
 ```
 
-## Runtime contract
+Compatible implementations should:
 
-Compatible clients should:
-
-1. Discover UI pattern packs by `AGENTUI.md`.
-2. Load compact catalog metadata first.
-3. Activate only relevant packs for the current product surface.
-4. Project existing runtime facts into UI models without inventing new facts.
-5. Keep final answers, process traces, task state, artifacts, and evidence in separate surfaces.
-6. Preserve user control for approvals, interrupts, queue actions, artifact edits, and evidence export.
-7. Treat examples and screenshots as guidance, not mandatory visual skins.
+1. Consume typed events and snapshots instead of parsing plain assistant text.
+2. Keep runtime, artifact, evidence, and UI projection state in separate owners.
+3. Show status before first text when the runtime has accepted work.
+4. Render text, reasoning, tool calls, action requests, artifacts, and evidence as different message parts or surfaces.
+5. Route approvals, interrupts, queue changes, steering, artifact edits, and evidence export through controlled APIs.
+6. Hydrate old sessions progressively: shell first, recent messages next, timeline/tool/artifact details on demand.
+7. Treat UI documentation as guidance only; no Markdown text is allowed to become policy, runtime state, or executable workflow.
 
 ## Documentation
 
 Key pages:
 
 - [Specification](docs/en/specification.md)
-- [Agent UI vs Agent Skills and Agent Knowledge](docs/en/agent-ui-vs-skills-knowledge.md)
-- [Best practices](docs/en/authoring/best-practices.md)
 - [Runtime standard](docs/en/client-implementation/runtime-standard.md)
+- [Runtime event projection](docs/en/contracts/runtime-event-projection.md)
+- [Session hydration](docs/en/client-implementation/session-hydration.md)
+- [Queue and steer](docs/en/client-implementation/queue-and-steer.md)
 - [中文规范](docs/zh/specification.md)
 
 ## Local development

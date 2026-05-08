@@ -10,6 +10,8 @@ const enNav = [
     text: 'Version',
     items: [
       { text: 'latest', link: '/en/specification' },
+      { text: 'v0.2.0 overview', link: '/en/versions/v0.2.0/overview' },
+      { text: 'v0.2.0', link: '/en/versions/v0.2.0/specification' },
       { text: 'v0.1.0 overview', link: '/en/versions/v0.1.0/overview' },
       { text: 'v0.1.0', link: '/en/versions/v0.1.0/specification' }
     ]
@@ -24,6 +26,8 @@ const zhNav = [
     text: '版本',
     items: [
       { text: 'latest', link: '/zh/specification' },
+      { text: 'v0.2.0 概览', link: '/zh/versions/v0.2.0/overview' },
+      { text: 'v0.2.0', link: '/zh/versions/v0.2.0/specification' },
       { text: 'v0.1.0 概览', link: '/zh/versions/v0.1.0/overview' },
       { text: 'v0.1.0', link: '/zh/versions/v0.1.0/specification' }
     ]
@@ -41,23 +45,49 @@ const enSidebar = [
     ]
   },
   {
-    text: 'For UI authors',
+    text: 'For implementors',
     items: [
-      { text: 'Quickstart', link: '/en/authoring/quickstart' },
-      { text: 'Best practices', link: '/en/authoring/best-practices' }
+      { text: 'Implementation quickstart', link: '/en/authoring/quickstart' },
+      { text: 'Best practices', link: '/en/authoring/best-practices' },
+      { text: 'Acceptance scenarios', link: '/en/authoring/acceptance-scenarios' }
+    ]
+  },
+  {
+    text: 'Surfaces',
+    items: [
+      { text: 'Composer', link: '/en/surfaces/composer' },
+      { text: 'Message parts', link: '/en/surfaces/message-parts' },
+      { text: 'Runtime status', link: '/en/surfaces/runtime-status' },
+      { text: 'Tool UI', link: '/en/surfaces/tool-ui' },
+      { text: 'Task capsule', link: '/en/surfaces/task-capsule' },
+      { text: 'Human-in-the-loop', link: '/en/surfaces/human-in-the-loop' },
+      { text: 'Artifact and canvas', link: '/en/surfaces/artifact-canvas' },
+      { text: 'Timeline and evidence', link: '/en/surfaces/timeline-evidence' },
+      { text: 'Session and tabs', link: '/en/surfaces/session-tabs' }
+    ]
+  },
+  {
+    text: 'Contracts',
+    items: [
+      { text: 'Runtime event projection', link: '/en/contracts/runtime-event-projection' },
+      { text: 'Backend coordination', link: '/en/contracts/backend-coordination' },
+      { text: 'Performance metrics', link: '/en/contracts/performance-metrics' }
     ]
   },
   {
     text: 'For client implementors',
     items: [
       { text: 'Runtime standard', link: '/en/client-implementation/runtime-standard' },
-      { text: 'Progressive rendering', link: '/en/client-implementation/progressive-rendering' }
+      { text: 'Progressive rendering', link: '/en/client-implementation/progressive-rendering' },
+      { text: 'Session hydration', link: '/en/client-implementation/session-hydration' },
+      { text: 'Queue and steer', link: '/en/client-implementation/queue-and-steer' }
     ]
   },
   {
     text: 'Reference',
     items: [
-      { text: 'Glossary', link: '/en/reference/glossary' }
+      { text: 'Glossary', link: '/en/reference/glossary' },
+      { text: 'Research sources', link: '/en/reference/research-sources' }
     ]
   },
   {
@@ -69,6 +99,9 @@ const enSidebar = [
   {
     text: 'Versions',
     items: [
+      { text: 'v0.2.0 overview', link: '/en/versions/v0.2.0/overview' },
+      { text: 'v0.2.0 specification', link: '/en/versions/v0.2.0/specification' },
+      { text: 'v0.2.0 changelog', link: '/en/versions/v0.2.0/changelog' },
       { text: 'v0.1.0 overview', link: '/en/versions/v0.1.0/overview' },
       { text: 'v0.1.0 specification', link: '/en/versions/v0.1.0/specification' },
       { text: 'v0.1.0 changelog', link: '/en/versions/v0.1.0/changelog' }
@@ -87,23 +120,49 @@ const zhSidebar = [
     ]
   },
   {
-    text: 'UI 作者',
+    text: '实现者',
     items: [
       { text: '快速开始', link: '/zh/authoring/quickstart' },
-      { text: '最佳实践', link: '/zh/authoring/best-practices' }
+      { text: '最佳实践', link: '/zh/authoring/best-practices' },
+      { text: '验收场景', link: '/zh/authoring/acceptance-scenarios' }
+    ]
+  },
+  {
+    text: '表面',
+    items: [
+      { text: 'Composer', link: '/zh/surfaces/composer' },
+      { text: 'Message parts', link: '/zh/surfaces/message-parts' },
+      { text: 'Runtime status', link: '/zh/surfaces/runtime-status' },
+      { text: 'Tool UI', link: '/zh/surfaces/tool-ui' },
+      { text: 'Task capsule', link: '/zh/surfaces/task-capsule' },
+      { text: 'Human-in-the-loop', link: '/zh/surfaces/human-in-the-loop' },
+      { text: 'Artifact 与 Canvas', link: '/zh/surfaces/artifact-canvas' },
+      { text: 'Timeline 与 Evidence', link: '/zh/surfaces/timeline-evidence' },
+      { text: 'Session 与 Tab', link: '/zh/surfaces/session-tabs' }
+    ]
+  },
+  {
+    text: '契约',
+    items: [
+      { text: 'Runtime event projection', link: '/zh/contracts/runtime-event-projection' },
+      { text: '后端协作', link: '/zh/contracts/backend-coordination' },
+      { text: '性能指标', link: '/zh/contracts/performance-metrics' }
     ]
   },
   {
     text: '客户端实现者',
     items: [
       { text: '运行时标准', link: '/zh/client-implementation/runtime-standard' },
-      { text: '渐进渲染', link: '/zh/client-implementation/progressive-rendering' }
+      { text: '渐进渲染', link: '/zh/client-implementation/progressive-rendering' },
+      { text: 'Session hydration', link: '/zh/client-implementation/session-hydration' },
+      { text: 'Queue 与 steer', link: '/zh/client-implementation/queue-and-steer' }
     ]
   },
   {
     text: '参考',
     items: [
-      { text: '术语表', link: '/zh/reference/glossary' }
+      { text: '术语表', link: '/zh/reference/glossary' },
+      { text: '调研来源', link: '/zh/reference/research-sources' }
     ]
   },
   {
@@ -115,6 +174,9 @@ const zhSidebar = [
   {
     text: '版本',
     items: [
+      { text: 'v0.2.0 概览', link: '/zh/versions/v0.2.0/overview' },
+      { text: 'v0.2.0 规范', link: '/zh/versions/v0.2.0/specification' },
+      { text: 'v0.2.0 变更记录', link: '/zh/versions/v0.2.0/changelog' },
       { text: 'v0.1.0 概览', link: '/zh/versions/v0.1.0/overview' },
       { text: 'v0.1.0 规范', link: '/zh/versions/v0.1.0/specification' },
       { text: 'v0.1.0 变更记录', link: '/zh/versions/v0.1.0/changelog' }
@@ -129,7 +191,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {
-    logo: '/logo.svg',
+    logo: `${base}logo.svg`,
     nav: [
       { text: 'English', items: enNav },
       { text: '中文', items: zhNav }
@@ -142,8 +204,27 @@ export default defineConfig({
       provider: 'local'
     },
     footer: {
-      message: 'Draft sibling standard in the Agent Skills ecosystem.',
+      message: 'Draft runtime-first standard for agent interaction surfaces.',
       copyright: 'Copyright © 2026'
+    }
+  },
+  markdown: {
+    lineNumbers: true,
+    config(md) {
+      const defaultFence = md.renderer.rules.fence
+      md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+        const token = tokens[idx]
+        const language = token.info.trim().split(/\s+/)[0]
+
+        if (language === 'mermaid') {
+          const encoded = encodeURIComponent(token.content)
+          return `<ClientOnly><MermaidDiagram code="${encoded}" /></ClientOnly>`
+        }
+
+        return defaultFence
+          ? defaultFence(tokens, idx, options, env, self)
+          : self.renderToken(tokens, idx, options)
+      }
     }
   }
 })

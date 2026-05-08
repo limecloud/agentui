@@ -1,21 +1,21 @@
 ---
 title: What is Agent UI?
-description: Agent UI is a file-first standard for agent interaction surface patterns.
+description: Agent UI is a runtime-first standard for agent interaction surfaces.
 ---
 
 # What is Agent UI?
 
-Agent UI defines a portable directory format for describing how agent work should appear in an AI client. It is an interoperability sibling to Agent Skills and Agent Knowledge: Skills describe executable capabilities, Knowledge describes trusted context, and Agent UI describes interaction surfaces.
+Agent UI defines how structured agent work becomes visible and controllable in an AI client. It is an interoperability sibling to Agent Skills and Agent Knowledge: Skills describe executable capabilities, Knowledge describes trusted context, and Agent UI describes runtime projection into interaction surfaces.
 
-Use Agent UI when an agent product needs repeatable UI semantics for:
+Use Agent UI when an agent product needs stable UI semantics for:
 
 - chat and final answers
 - streaming status and tool progress
-- queued or background tasks
-- human approval and interruption
+- queued, steered, or background tasks
+- human approval, structured input, and interruption
 - generated artifacts and editable canvases
 - citations, evidence, review, and replay
-- handoff between agents, users, and clients
+- handoff between agents, users, sessions, and clients
 
 Do not use it to store model prompts, tool protocols, business facts, or executable workflows. Those belong in Skills, Knowledge, or the client runtime.
 
@@ -33,18 +33,16 @@ The layers can be rendered in one page or across multiple panes. The contract is
 
 ## Projection model
 
-Agent UI is a projection layer:
-
 ```text
 runtime facts + task facts + artifact facts + evidence facts
   -> UI projection model
-  -> surfaces and user actions
+  -> surfaces and controlled user actions
 ```
 
-A UI projection may cache titles, labels, collapsed summaries, scroll windows, and open panels. It must not become the owner of the runtime identity, tool result, artifact contents, evidence verdict, or permission grant.
+A UI projection may cache titles, labels, collapsed summaries, scroll windows, open panels, and local drafts. It must not become the owner of runtime identity, tool result, artifact contents, evidence verdict, or permission grant.
 
 ## Why a standard?
 
 Agent products repeatedly solve the same UI problems: streams arrive before final answers, tools produce large outputs, users need to approve actions, generated files need editing, and audits need evidence. Without shared terms, clients blend all of this into one message column.
 
-Agent UI gives authors and clients a small vocabulary for packaging these decisions so products can interoperate without copying a visual skin.
+Agent UI gives product teams and client implementors a small vocabulary for those decisions so products can interoperate without copying a visual skin or inventing a parallel runtime.

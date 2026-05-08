@@ -1,0 +1,65 @@
+:root {
+  --vp-c-brand-1: #0f6f75;
+  --vp-c-brand-2: #12818a;
+  --vp-c-brand-3: #19a0a8;
+  --vp-c-brand-soft: rgba(25, 160, 168, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #0b3d45 0%, #12818a 50%, #d38b2d 100%);
+  --vp-home-hero-image-background-image: radial-gradient(circle at 30% 20%, rgba(25, 160, 168, 0.28), transparent 30%), radial-gradient(circle at 68% 58%, rgba(211, 139, 45, 0.22), transparent 28%);
+  --vp-home-hero-image-filter: blur(42px);
+}
+
+.VPHomeHero .text {
+  max-width: 880px;
+}
+
+.VPFeature {
+  border: 1px solid rgba(15, 111, 117, 0.14);
+}
+
+.vp-doc table {
+  display: table;
+  width: 100%;
+}
+
+.vp-doc .language-directory pre,
+.vp-doc .language-text pre {
+  white-space: pre-wrap;
+}
+
+.au-mermaid {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 18px;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(25, 160, 168, 0.08), rgba(211, 139, 45, 0.07));
+}
+
+.au-mermaid__canvas {
+  min-width: 680px;
+}
+
+.au-mermaid__canvas svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.au-mermaid__fallback {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.au-mermaid__error {
+  margin-top: 0.75rem;
+  color: var(--vp-c-danger-1);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 760px) {
+  .au-mermaid__canvas {
+    min-width: 520px;
+  }
+}

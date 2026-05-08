@@ -1,133 +1,150 @@
 ---
-title: Quickstart
-description: Create your first Agent UI pack.
+title: Implementation quickstart
+description: Build the smallest runtime-first Agent UI projection.
 ---
 
-# Quickstart
+# Implementation quickstart
 
-This guide creates a small Agent UI pack for a general-purpose agent workbench.
+This guide builds a minimal Agent UI implementation. There is no required standalone manifest. Start with the event stream and the UI projection store.
 
-## 1. Create the directory
+## 1. Define the event adapter
+
+Normalize your runtime events into the standard event classes used by the UI.
+
+```ts
+type AgentUiEvent =
+  | { type: 'run.started'; sessionId: string; runId: string }
+  | { type: 'run.status'; runId: string; stage: RuntimeStage; detail?: string }
+  | { type: 'text.delta'; runId: string; messageId: string; delta: string }
+  | { type: 'text.final'; runId: string; messageId: string; text: string }
+  | { type: 'reasoning.delta'; runId: string; partId: string; delta: string }
+  | { type: 'tool.started'; runId: string; toolCallId: string; name: string; inputSummary?: unknown }
+  | { type: 'tool.result'; runId: string; toolCallId: string; status: 'ok' | 'error'; outputRef?: string }
+  | { type: 'action.required'; runId: string; actionId: string; schema?: unknown; severity?: string }
+  | { type: 'queue.changed'; sessionId: string; queued: QueuedTurnSummary[] }
+  | { type: 'artifact.changed'; runId: string; artifactId: string; kind?: string; preview?: string }
+  | { type: 'evidence.changed'; runId: string; evidenceId: string; status?: string }
+  | { type: 'run.finished'; runId: string; outcome: 'success' | 'interrupt' | 'cancelled' }
+  | { type: 'run.failed'; runId: string; error: string; retryable?: boolean }
+```
+
+Map from your source protocol without changing its ownership. For example, lifecycle events, AI SDK UI message parts, Apps SDK tool outputs, and desktop runtime events can all feed this adapter.
+
+## 2. Create a projection store
+
+Keep facts and projection separate.
+
+```ts
+type AgentUiProjection = {
+  activeSessionId: string | null
+  activeRunId: string | null
+  messages: Record<string, ProjectedMessage>
+  runs: Record<string, ProjectedRun>
+  tools: Record<string, ProjectedToolCall>
+  actions: Record<string, ProjectedActionRequest>
+  queues: Record<string, QueuedTurnSummary[]>
+  artifacts: Record<string, ProjectedArtifactRef>
+  evidence: Record<string, ProjectedEvidenceRef>
+  ui: {
+    selectedTabId: string | null
+    focusedArtifactId: string | null
+    collapsedToolCallIds: string[]
+    visibleMessageWindow: { cursor?: string; limit: number }
+  }
+}
+```
+
+`ui` state is projection-only. It may point at facts by id, but it must not become the owner of runtime status, artifact content, approval state, or evidence verdicts.
+
+## 3. Reduce events into message parts
+
+```ts
+function applyEvent(state: AgentUiProjection, event: AgentUiEvent) {
+  switch (event.type) {
+    case 'run.status':
+      state.runs[event.runId].stage = event.stage
+      state.runs[event.runId].statusDetail = event.detail
+      return
+    case 'text.delta':
+      appendTextPartDelta(state.messages[event.messageId], event.delta)
+      return
+    case 'text.final':
+      reconcileFinalText(state.messages[event.messageId], event.text)
+      return
+    case 'reasoning.delta':
+      appendReasoningDelta(state.runs[event.runId], event.partId, event.delta)
+      return
+    case 'tool.started':
+      state.tools[event.toolCallId] = { ...event, status: 'running' }
+      return
+    case 'tool.result':
+      state.tools[event.toolCallId] = { ...state.tools[event.toolCallId], ...event }
+      return
+  }
+}
+```
+
+The important rule is not the exact reducer shape. The important rule is separation: text updates text parts, reasoning updates process parts, tools update tool UI, artifacts update artifact references, and final text reconciles instead of appending duplicate output.
+
+## 4. Render the minimum workbench
+
+A useful first version has five visible regions:
 
 ```text
-basic-agent-workbench/
-├── AGENTUI.md
-├── surfaces/
-├── contracts/
-└── examples/
+AgentWorkbench
+  SessionTabs
+  ConversationPane
+    MessageList
+    MessageParts
+  RuntimeStatusStrip
+  Composer
+  WorkbenchPane
+    ArtifactCanvas
+    EvidencePanel
 ```
 
-## 2. Add `AGENTUI.md`
+Start simple:
 
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - task-state
-    - artifact-references
----
+- Message list renders user text and final assistant text.
+- Runtime strip shows accepted, routing, preparing, streaming, retrying, cancelled, failed, and completed.
+- Tool calls appear as compressed process rows with detail expansion.
+- Action requests render as approval/input cards with explicit submit and cancel paths.
+- Artifacts open in the workbench, not as giant chat messages.
 
-# Basic Agent Workbench
+## 5. Wire controlled actions
 
-Use this pack when the client must show a long-running agent task without mixing logs into the final answer.
-
-## Load when
-
-- The product has a chat or command surface for agent work.
-- The agent can stream status, tool progress, task state, or artifact references.
-- Users need to approve, interrupt, resume, inspect, or hand off work.
-
-## Surfaces
-
-- Conversation: final messages and composer.
-- Process: runtime status, tool progress, and errors.
-- Task: queue, needs-input, plan approval, and background work.
-- Artifact: generated deliverables and previews.
-- Evidence: citations, verification, replay, and audit.
+```ts
+const actions = {
+  sendPrompt: (draft: DraftInput) => runtime.submitTurn(draft),
+  queueInput: (draft: DraftInput) => runtime.queueTurn(draft),
+  steerRun: (runId: string, payload: SteeringInput) => runtime.steerRun(runId, payload),
+  interrupt: (runId: string) => runtime.interruptRun(runId),
+  respondAction: (actionId: string, response: unknown) => runtime.respondAction(actionId, response),
+  saveArtifact: (artifactId: string, patch: unknown) => artifactService.save(artifactId, patch),
+  exportEvidence: (runId: string) => evidenceService.export(runId)
+}
 ```
 
-Keep this file short. It should help a client decide whether to activate the pack and where to load more detail.
+Do not mark approval, success, artifact save, or evidence pass in the UI until the owning API returns a fact confirming it.
 
-## 3. Define one surface
+## 6. Add old-session hydration
 
-Create `surfaces/process.md`:
+For old sessions, avoid full-detail blocking:
 
-```markdown
-# Process surface
+1. Show shell, tab, title, and cached snapshot immediately.
+2. Fetch recent messages with a bounded limit.
+3. Fetch queue, pending action, and runtime status summary.
+4. Load timeline/tool/artifact/evidence detail only after paint or user expansion.
+5. Use a cursor for older history.
 
-## Purpose
+## 7. Verify behavior
 
-Show what the agent is doing before and between final answer updates.
+A minimal implementation is acceptable when:
 
-## Inputs
-
-- `runtime.status`
-- `reasoning.summary`
-- `tool.start`
-- `tool.progress`
-- `tool.end`
-- `runtime.error`
-
-## Projection
-
-- `statusLabel`
-- `activeToolSummary`
-- `collapsedHistoryCount`
-
-## Fallbacks
-
-- If no status has arrived, show `Preparing...`.
-- If a tool output is large, show a summary and open details on demand.
-- If status is stale, show `No recent activity` and keep interrupt available.
-```
-
-## 4. Define actions separately
-
-Create `contracts/actions.md`:
-
-```markdown
-# Action contract
-
-User controls write through runtime APIs, never by editing projection state directly.
-
-| Action | Required fact | Runtime write |
-| --- | --- | --- |
-| Approve plan | `action.id` | `respond_action(approve)` |
-| Reject plan | `action.id` | `respond_action(reject)` |
-| Interrupt | `task.id` or `turn.id` | `interrupt_task` |
-| Open artifact | `artifact.id` | Read artifact through artifact service |
-```
-
-## 5. Add an acceptance example
-
-Create `examples/basic-flow.md`:
-
-```markdown
-# Basic flow
-
-1. User submits a prompt.
-2. Conversation shows the user message immediately.
-3. Process shows a preparing or routing state before first answer text.
-4. Tool output appears as a collapsed process item, not as final answer text.
-5. Generated files appear in the Artifact surface.
-6. Evidence links remain available after completion.
-```
-
-## 6. Review the pack
-
-Before sharing a pack, check:
-
-- The description says what the pattern does and when to use it.
-- Runtime facts and UI projection fields are separate.
-- Every user action names its runtime write path or says it is display-only.
-- Large tool output, missing facts, errors, and stale status have fallbacks.
-- Examples are guidance, not a required visual skin.
+- Status appears before first text when the runtime has accepted the run.
+- A tool call is visible outside final answer text.
+- A final event does not duplicate streamed text.
+- A pending approval blocks progress and resumes through a controlled action response.
+- A generated artifact opens in the artifact surface.
+- Evidence export runs as background work and links back to the same run/session.
+- Opening an old session does not wait for full timeline or all artifact contents.

@@ -1,24 +1,32 @@
 ---
 title: v0.1.0 概览
-description: Agent UI v0.1.0 的主要变化。
+description: 已被 v0.2.0 取代的历史初稿。
 ---
 
 # v0.1.0 概览
 
-v0.1.0 是 Agent UI 的第一个公开草案。Agent UI 是 Agent Skills 生态中的互补交互表面标准。
+v0.1.0 是 Agent UI 的第一个公开草案。它提出了 Agent 界面需要分离 Conversation、Process、Task、Artifact、Evidence 五类表面的想法。
 
-## 主要变化
+## 已被取代的方向
 
-- 引入 `AGENTUI.md` 作为 UI 模式包的必需入口。
-- 定义五个标准表面：Conversation、Process、Task、Artifact、Evidence。
-- 建立 projection-only runtime 边界：UI 包描述展示和控制语义，不拥有 runtime facts。
-- 增加标准 `type` 和 `profile` 值，覆盖 workbench、chat-first、artifact-first、task-first 和 embedded 产品。
-- 增加渐进披露、fallback states、user controls 和 acceptance scenarios 的作者指南。
-- 增加 discovery、activation、runtime mapping、controlled writes 和 progressive rendering 的客户端实现指南。
-- 增加基础 Agent 工作台示例和 frontmatter schema。
+第一版对 runtime events、session hydration 和 controlled actions 的定义不足。这个方向已被 v0.2.0 取代。
 
-## 兼容性
+v0.1.0 只作为历史上下文。新实现应遵循 runtime-first 的 latest 规范：
 
-- `AGENTUI.md` 是唯一必需入口。
-- Packs 是指南，不应被执行。
-- 客户端应保持 UI projection state 与 runtime、artifact、evidence facts 分离。
+```text
+typed runtime events + durable snapshots
+  -> projection reducer
+  -> UI surfaces
+  -> controlled user actions
+```
+
+## 仍然有用的部分
+
+- Conversation、Process、Task、Artifact、Evidence 仍是有用的表面分类。
+- UI projection 不应拥有 runtime facts。
+- Process details、tool output、artifacts、evidence 不应污染最终回答正文。
+
+## v0.1.0 之后的变化
+
+- 当前标准从 runtime facts 开始，而不是从文档形态开始。
+- 当前标准从 event classes、snapshots、controlled writes、progressive hydration 和 acceptance scenarios 开始。

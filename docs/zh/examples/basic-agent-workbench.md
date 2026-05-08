@@ -1,91 +1,97 @@
 ---
 title: 基础 Agent 工作台
-description: 面向五表面 Agent workspace 的 Agent UI 包示例。
+description: Runtime-first Agent UI 工作台示例。
 ---
 
 # 基础 Agent 工作台
 
-这个示例展示一个小型 Agent UI pack，用于需要 chat、progress、task control、artifact editing 和 evidence review 的客户端。
+这个示例展示一个消费 runtime events 和 durable snapshots 的最小 Agent 工作台。它不是可复用文件 bundle，可以直接存在于既有产品代码中。
 
-## 目录
+## 布局
 
 ```text
-basic-agent-workbench/
-├── AGENTUI.md
-├── surfaces/
-│   ├── conversation.md
-│   ├── process.md
-│   ├── task.md
-│   ├── artifact.md
-│   └── evidence.md
-├── contracts/
-│   └── actions.md
-└── examples/
-    └── prompt-to-artifact.md
+BasicAgentWorkbench
+  SessionTabs
+  TaskCapsuleStrip
+  ConversationPane
+    MessageList
+    RuntimeStatusStrip
+    Composer
+  WorkbenchPane
+    ArtifactCanvas
+    EvidencePanel
+  ProcessDrawer
+    ToolTimeline
+    Diagnostics
 ```
 
-## `AGENTUI.md`
+## Event adapter
 
-```markdown
----
-name: basic-agent-workbench
-description: A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence. Use when building a general-purpose agent client.
-type: agent-workbench
-profile: workbench
-status: draft
-version: 0.1.0
-language: en
-runtime:
-  projectionOnly: true
-  requires:
-    - text-parts
-    - runtime-status
-    - tool-events
-    - task-state
-    - artifact-references
-    - evidence-references
----
-
-# Basic Agent Workbench
-
-Use this pack when agent work may take multiple steps, call tools, create artifacts, or require user approval.
-
-## Surfaces
-
-- Conversation: user messages and final assistant text.
-- Process: runtime status, reasoning summary, tool progress, and errors.
-- Task: queue, background work, needs input, approvals, and interrupts.
-- Artifact: generated deliverables, previews, diffs, and editors.
-- Evidence: citations, verification, replay, and review.
-
-## Load details
-
-- Load `surfaces/process.md` when tool or runtime status events are visible.
-- Load `surfaces/artifact.md` when an artifact reference is present.
-- Load `contracts/actions.md` before wiring approval, interrupt, or artifact edit controls.
+```ts
+function normalizeRuntimeEvent(event: RuntimeEvent): AgentUiEvent[] {
+  switch (event.kind) {
+    case 'turn_started':
+      return [{ type: 'run.started', sessionId: event.sessionId, runId: event.turnId }]
+    case 'runtime_status':
+      return [{ type: 'run.status', runId: event.turnId, stage: event.stage, detail: event.detail }]
+    case 'text_delta':
+      return [{ type: 'text.delta', runId: event.turnId, messageId: event.messageId, delta: event.text }]
+    case 'thinking_delta':
+      return [{ type: 'reasoning.delta', runId: event.turnId, partId: event.partId, delta: event.text }]
+    case 'tool_start':
+      return [{ type: 'tool.started', runId: event.turnId, toolCallId: event.toolCallId, name: event.name, inputSummary: event.inputSummary }]
+    case 'artifact_snapshot':
+      return [{ type: 'artifact.changed', runId: event.turnId, artifactId: event.artifactId, kind: event.kind, preview: event.preview }]
+    default:
+      return []
+  }
+}
 ```
 
-## 表面摘要
+## Surface behavior
 
-| Surface | Required facts | Fallback |
-| --- | --- | --- |
-| Conversation | user text、assistant text parts | pending message 或 empty state |
-| Process | runtime status、tool events、errors | preparing、unknown 或 stale |
-| Task | task id、queue state、action requests | no active tasks |
-| Artifact | artifact id、kind、title、read path | unknown artifact |
-| Evidence | source、verification、replay、audit refs | evidence unavailable |
+| Surface | Behavior |
+| --- | --- |
+| Session Tabs | 非活跃 sessions 显示 title、last activity、running/queued/pending count 和 stale marker。 |
+| Task Capsule | Running 保持低调；`needs-input`、`plan-ready`、`failed` 抢注意力。 |
+| Message Parts | User text 和 assistant final text 保持可读；reasoning 和 tools 是独立 parts。 |
+| Runtime Status | `submitted`、`routing`、`preparing` 在首文本前出现。 |
+| Tool Timeline | Tool rows 展示安全输入摘要、进度、结果和详情链接。 |
+| Artifact Canvas | 最新关键 artifact 打开到 workbench surface。 |
+| Evidence Panel | Evidence export 是后台动作，并提供 durable links。 |
 
-## 验收流程
+## 发送流程
 
-1. 用户提交：“Create a migration checklist and save it as a document.”
-2. Conversation 立即显示用户消息。
-3. Process 在 first answer text 前显示 preparing 或 routing 状态。
-4. 如果工具运行，工具输出留在 Process，完成后折叠。
-5. 如果需要审批，Task 显示 `needs-input`。
-6. Artifact 显示生成文档，并提供 open/edit action。
-7. 如果 runtime 产生证据，Evidence 显示 source 或 verification entries。
-8. 最终回答总结交付物并链接 artifact；不包含 raw process logs。
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI
+  participant Runtime
+  participant Artifact
+  participant Evidence
 
-## 为什么可移植
+  User->>UI: Send prompt
+  UI->>Runtime: register listener
+  UI->>Runtime: submit turn
+  Runtime-->>UI: run.status preparing
+  Runtime-->>UI: text.delta
+  Runtime-->>UI: tool.started
+  Runtime-->>UI: artifact.changed
+  UI->>Artifact: load artifact preview
+  Runtime-->>UI: run.finished success
+  User->>UI: Export evidence
+  UI->>Evidence: export run evidence
+```
 
-这个示例定义语义，而不是视觉皮肤。终端、IDE、桌面应用或 Web 应用可以用不同方式渲染同一组表面，同时保持相同的 runtime boundaries 和 user controls。
+## 验收
+
+工作台可接受的标准：
+
+1. First runtime status 出现在 first text 之前。
+2. Tool calls 可见，但不注入最终回答正文。
+3. Reasoning 默认折叠或摘要。
+4. 生成的 artifacts 打开在 message body 外部。
+5. Queue 和 steer 视觉上不同。
+6. Pending approval 有明确受控 response path。
+7. 旧 sessions 先渲染 recent messages，再加载 timeline details。
+8. Evidence export 链接回同一 run/session facts。

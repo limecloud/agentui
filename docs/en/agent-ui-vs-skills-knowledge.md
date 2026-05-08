@@ -1,11 +1,11 @@
 ---
 title: Agent UI vs Agent Skills and Agent Knowledge
-description: Separate executable capability, trusted context, and interaction projection.
+description: Separate executable capability, trusted context, and runtime interaction projection.
 ---
 
 # Agent UI vs Agent Skills and Agent Knowledge
 
-Agent UI is not a Skill package and not a Knowledge pack. It is a third standard for user-facing agent interaction semantics.
+Agent UI is not an executable Skill and not a Knowledge asset. It is a third standard for user-facing agent interaction semantics.
 
 - **Agent Skills** describe how an agent performs work: workflows, scripts, tool usage, and templates.
 - **Agent Knowledge** describes source-grounded assets: facts, documents, policies, status, and audit trails.
@@ -18,11 +18,11 @@ This boundary matters because execution, facts, and presentation fail in differe
 ```mermaid
 flowchart TD
   Asset[Candidate asset] --> ActionQ{Does it tell an agent how to act?}
-  ActionQ -->|Yes| Skill[Package as Agent Skill]
+  ActionQ -->|Yes| Skill[Model as Agent Skill]
   ActionQ -->|No| FactQ{Does it state facts, sources, policy, or context?}
-  FactQ -->|Yes| Knowledge[Package as Agent Knowledge]
-  FactQ -->|No| UIQ{Does it define how agent work is displayed or controlled?}
-  UIQ -->|Yes| UI[Package as Agent UI]
+  FactQ -->|Yes| Knowledge[Model as Agent Knowledge]
+  FactQ -->|No| UIQ{Does it define how agent work is displayed, controlled, resumed, or audited?}
+  UIQ -->|Yes| UI[Model as Agent UI]
   UIQ -->|No| Ordinary[Keep as an ordinary project file]
 ```
 
@@ -37,7 +37,7 @@ Simplified rule:
 | Boundary | Agent Skills | Agent Knowledge | Agent UI |
 | --- | --- | --- | --- |
 | Primary role | Executable capability | Source-grounded knowledge | Interaction projection |
-| Entry file | `SKILL.md` | `KNOWLEDGE.md` | `AGENTUI.md` |
+| Core contract | Skill activation and execution guidance | Knowledge loading, provenance, and trust boundary | Event-to-surface projection and controlled user actions |
 | Core content | Instructions, scripts, workflows, tool use. | Facts, sources, maintained documents, compiled context. | Surface patterns, state models, controls, acceptance checks. |
 | Runtime verb | Execute, transform, verify, maintain, apply. | Ground, cite, constrain, verify, resolve. | Render, disclose, collapse, approve, interrupt, hand off. |
 | Trust model | May drive tools after trust and activation checks. | Must be fenced as data. | Must be treated as projection guidance. |
@@ -51,8 +51,8 @@ A client may use all three for one agent task:
 user request
   -> select Skill for procedure
   -> select Knowledge for facts and boundaries
-  -> select Agent UI for interaction surfaces
-  -> run agent with visible process, tasks, artifacts, and evidence
+  -> run agent runtime
+  -> project runtime facts through Agent UI surfaces
 ```
 
 Rules:
@@ -76,4 +76,4 @@ Rules:
 
 ## Non-goals
 
-Agent UI does not standardize a full agent runtime, model event protocol, CSS system, component library, memory layer, or artifact storage format. It standardizes a file-first way to describe UI projection semantics that compatible clients can adopt or adapt.
+Agent UI does not standardize a full agent runtime, model event protocol, CSS system, component library, memory layer, or artifact storage format. It standardizes how compatible clients project runtime facts into interaction semantics.

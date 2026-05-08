@@ -1,19 +1,25 @@
 ---
 title: v0.1.0 Specification
-description: Agent UI v0.1.0 snapshot.
+description: Superseded historical snapshot.
 ---
 
 # Agent UI v0.1.0 Specification
 
-The v0.1.0 specification snapshot is aligned with the current [latest specification](/en/specification).
+This page is a historical note. The v0.1.0 specification is superseded by the runtime-first [latest specification](/en/specification).
 
-## v0.1.0 changes
+## Current guidance
 
-- Agent UI is introduced as an interoperable companion standard to Agent Skills and Agent Knowledge.
-- `AGENTUI.md` is defined as the required package entrypoint.
-- Standard directories are defined: `patterns/`, `surfaces/`, `contracts/`, `states/`, `examples/`, `schemas/`, `evals`, and `assets/`.
-- Standard surfaces are defined: Conversation, Process, Task, Artifact, and Evidence.
-- Runtime projection rules require UI state to remain separate from runtime facts.
-- Progressive loading tiers are defined for catalog, guide, surface, contract, and example content.
+New implementations should ignore v0.1.0 manifest mechanics and implement:
 
-See the [latest specification](/en/specification) for the full field, directory, and runtime rules.
+- typed runtime event projection
+- message part separation
+- tool UI and human-in-the-loop surfaces
+- artifact/canvas handoff
+- timeline/evidence surfaces
+- progressive old-session hydration
+- queue vs steer behavior
+- controlled writes through runtime, artifact, and evidence APIs
+
+## Preserved concept
+
+The preserved idea is surface separation: Conversation, Process, Task, Artifact, and Evidence answer different user questions and should not be collapsed into one plain transcript.

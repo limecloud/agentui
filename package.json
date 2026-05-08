@@ -1,6 +1,6 @@
 {
   "name": "agentui-standard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Draft documentation for the Agent UI standard.",
   "homepage": "https://limecloud.github.io/agentui/",
@@ -16,7 +16,7 @@
     "standard"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "docs/public/schemas/",
@@ -31,6 +31,7 @@
     "preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "mermaid": "^11.14.0",
     "vitepress": "^1.6.4"
   }
 }

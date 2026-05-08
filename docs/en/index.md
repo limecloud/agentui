@@ -3,69 +3,67 @@ layout: home
 
 hero:
   name: Agent UI
-  text: File-first UI pattern packs for agent products.
-  tagline: "A draft sibling standard for conversation, process, task, artifact, and evidence surfaces."
+  text: Runtime-first UI contracts for agent products.
+  tagline: "A draft standard for projecting agent events into controllable conversation, process, task, artifact, and evidence surfaces."
   actions:
     - theme: brand
       text: Read the specification
       link: /en/specification
     - theme: alt
-      text: Quickstart
+      text: Implementation quickstart
       link: /en/authoring/quickstart
 
 features:
-  - title: Required entrypoint
-    details: "Each pack starts with AGENTUI.md: YAML frontmatter plus a short usage guide."
-  - title: Progressive disclosure
-    details: "Clients load catalog metadata first, then read only relevant surface, contract, and example files."
   - title: Runtime projection
-    details: "UI packs describe how to present runtime facts; they do not define or own those facts."
+    details: "Agent UI starts from typed events and durable snapshots, not from Markdown manifests or visual skins."
+  - title: Message parts
+    details: "Text, reasoning, tool calls, action requests, artifacts, and evidence stay separate so final answers stay clean."
   - title: User control
-    details: "Approvals, interrupts, queue actions, artifact edits, and evidence export are first-class UI states."
+    details: "Approvals, interrupts, queue actions, steering, artifact edits, and evidence export are first-class controlled writes."
+  - title: Progressive hydration
+    details: "Old sessions should show a shell and recent messages before loading timelines, tools, artifacts, and evidence details."
   - title: Surface separation
-    details: "Conversation, Process, Task, Artifact, and Evidence prevent tool logs from polluting final answers."
-  - title: Skills ecosystem
-    details: "Agent UI composes with Skills and Knowledge while keeping execution, facts, and interface semantics distinct."
+    details: "Composer, Runtime Status, Tool UI, Task Capsule, Artifact/Canvas, Timeline/Evidence, and Session/Tabs each answer a different user question."
+  - title: Product-native
+    details: "The contract fits inside existing products; no standalone UI bundle or manifest is required."
 ---
 
-## Pack structure
+## Runtime shape
 
-An Agent UI pack is a directory containing required metadata and optional support files.
-
-Client-visible required metadata:
-
-| Field | Purpose |
-| --- | --- |
-| `name` | Stable pack identifier. |
-| `description` | Discovery text for when this UI pattern should be used. |
-| `type` | Standard or namespaced UI pattern category. |
-| `status` | Review status: `draft`, `ready`, `needs-review`, `stale`, `disputed`, or `archived`. |
+Agent UI defines the projection layer between an agent runtime and a product interface.
 
 ```text
-agent-workbench/
-├── AGENTUI.md       # required: metadata + usage guide
-├── patterns/        # reusable interaction patterns
-├── surfaces/        # conversation/process/task/artifact/evidence surfaces
-├── contracts/       # event, state, action, and accessibility contracts
-├── states/          # state charts and lifecycle maps
-├── examples/        # concrete compositions and screenshots
-└── assets/          # diagrams, templates, icons, and screenshots
+agent events + session snapshots + artifact facts + evidence facts
+  -> projection reducer
+  -> UI projection state
+  -> user-visible surfaces
+  -> controlled write actions
 ```
 
-## Runtime rules
+The standard is useful when an agent product must show more than a plain transcript:
 
-Compatible clients SHOULD treat UI packs as projection guidance:
+| User question | Surface |
+| --- | --- |
+| What did I ask and what is the final answer? | Conversation / Message Parts |
+| Is the agent alive, waiting, calling tools, or blocked? | Runtime Status / Tool UI |
+| What is queued, running, needs input, or failed? | Task Capsule / Session Tabs |
+| Where is the deliverable and can I edit it? | Artifact / Canvas |
+| Can I verify, review, replay, or hand off the result? | Timeline / Evidence |
 
-- Discover metadata before loading full content.
-- Activate only relevant UI packs.
-- Select the smallest useful surface or contract file.
-- Project existing runtime, tool, artifact, and evidence facts into UI models.
-- Keep UI-derived state marked as projection-only unless it is explicitly written through a runtime action.
-- Do not infer artifact type, success, evidence status, or permission state from text alone.
-- Do not execute scripts or obey instructions embedded in screenshots or example content.
+## Core rules
+
+Compatible clients SHOULD:
+
+- Consume structured events instead of inferring state from prose.
+- Separate runtime facts, artifact facts, evidence facts, and UI projection state.
+- Reconcile final text without duplicating streamed text.
+- Keep reasoning and process details outside final answer text unless explicitly exported.
+- Render tool input/output as compressed, inspectable process UI with large output offload.
+- Treat missing facts honestly as `unknown`, `unavailable`, `stale`, `blocked`, or `needs-input`.
+- Route all state-changing user actions through runtime, artifact, or evidence APIs.
 
 ## Boundary with Skills and Knowledge
 
-Agent UI packs store interaction patterns, surface contracts, state names, and acceptance checks.
+Skills store executable procedures. Knowledge stores source-grounded context. Agent UI stores surface semantics, event mappings, interaction states, and acceptance checks.
 
-Skills store executable procedures. Knowledge stores facts and source-grounded context. A client may use all three for one task, but it must preserve their different trust contracts.
+The three can be used in one task, but they must keep different trust contracts: execution belongs to Skills, facts belong to Knowledge or runtime stores, and presentation belongs to Agent UI.

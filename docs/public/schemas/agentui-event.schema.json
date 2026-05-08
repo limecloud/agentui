@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentui.example/schemas/agentui-event.schema.json",
+  "title": "Agent UI event",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["type"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "run.started",
+        "run.status",
+        "text.delta",
+        "text.final",
+        "reasoning.delta",
+        "reasoning.summary",
+        "tool.started",
+        "tool.args",
+        "tool.progress",
+        "tool.result",
+        "action.required",
+        "action.resolved",
+        "queue.changed",
+        "artifact.changed",
+        "evidence.changed",
+        "state.snapshot",
+        "state.delta",
+        "messages.snapshot",
+        "run.finished",
+        "run.failed"
+      ]
+    },
+    "sessionId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "messageId": { "type": "string", "minLength": 1 },
+    "partId": { "type": "string", "minLength": 1 },
+    "toolCallId": { "type": "string", "minLength": 1 },
+    "actionId": { "type": "string", "minLength": 1 },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "evidenceId": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string" }
+  }
+}

@@ -1,146 +1,136 @@
 ---
 title: 运行时标准
-description: 客户端如何加载和应用 Agent UI 包。
+description: 客户端如何实现 Agent UI projection。
 ---
 
 # 运行时标准
 
-本指南描述 Agent 客户端如何支持 Agent UI pack。无论是桌面应用、IDE、终端、Web 应用还是嵌入式助手，核心集成方式一致。
+本指南描述 Agent 客户端如何实现 Agent UI。无论是桌面应用、IDE、终端、Web 应用还是嵌入式助手，核心集成都一样：消费结构化 runtime facts，投影成 UI state，再把用户控制通过受控 API 写回。
 
 ## 核心原则：投影，不拥有
 
-Agent UI pack 描述已有事实如何变成交互表面。
-
 ```text
 runtime facts
-  + task facts
   + artifact facts
   + evidence facts
+  + optional application state
   -> UI projection
-  -> user-visible surfaces and actions
+  -> user-visible surfaces and controlled actions
 ```
 
-兼容客户端 MUST NOT 让 UI pack 成为 runtime identity、tool output、artifact contents、permission state 或 verification results 的事实源。
+兼容客户端 MUST NOT 让 UI projection 成为 runtime identity、tool output、artifact contents、permission state、verification results 或 approval state 的事实源。
 
-## Step 1：发现包
+## Step 1：识别事实源
 
-在启动或产品表面初始化时，扫描包含 `AGENTUI.md` 的子目录。
+从真实产品/runtime facts 开始，而不是从独立 manifest 文件开始。
 
-常见作用域：
-
-| Scope | 示例路径 | 用途 |
+| Source | 必需示例 | 说明 |
 | --- | --- | --- |
-| Project | `<project>/.agents/ui/` | 随项目分发的 UI 模式。 |
-| User | `~/.agents/ui/` | 用户安装的 UI 模式。 |
-| Organization | 托管 registry 或 config repo | 组织批准的模式。 |
-| Built-in | 客户端内置资产 | 无外部文件也可用的默认模式。 |
+| Event stream | lifecycle、text、reasoning、tool、action、queue、artifact、evidence events | submit work 前先注册 listener。 |
+| Session snapshot | recent messages、thread/run status、queue、pending requests、history cursor | 用于旧 session 恢复和 stream repair。 |
+| Artifact service | artifact id、kind、preview、path/ref、version、diff、save/export status | Full content 按需加载。 |
+| Evidence service | trace、source/citation、verification、review、replay、handoff | Evidence 应 durable 且可审计。 |
+| Application state | selected workspace、active tab、file attachments、model/mode selections | 与 runtime facts 分离。 |
 
-实践规则：
+## Step 2：归一化事件类
 
-- 跳过 `.git/`、`node_modules/`、build outputs 和 cache directories。
-- 限制扫描深度和目录数量。
-- 使用确定性优先级：project 覆盖 user，user 覆盖 built-in。
-- 对不可信项目级 pack 做项目信任门禁。
+创建 adapter layer，把源协议映射到通用 Agent UI event classes。
 
-## Step 2：解析 `AGENTUI.md`
+常见映射：
 
-提取 frontmatter 和正文。
-
-至少保存：
-
-| 字段 | 说明 |
+| Source idea | Agent UI class |
 | --- | --- |
-| `name` | 来自 frontmatter。 |
-| `description` | 发现文本。 |
-| `type` | 模式类别。 |
-| `status` | 评审状态。 |
-| `profile` | 布局或 host profile。 |
-| `location` | `AGENTUI.md` 的绝对路径。 |
-| `baseDir` | 用于解析相对引用的包根目录。 |
+| Lifecycle start/finish/error events | `run.started`、`run.finished`、`run.failed` |
+| Text message events 或 AI SDK text parts | `text.delta`、`text.final` |
+| Reasoning/thinking events 或 AI SDK reasoning parts | `reasoning.delta`、`reasoning.summary` |
+| Tool lifecycle events 和 structured tool results | `tool.started`、`tool.args`、`tool.progress`、`tool.result` |
+| Interrupt outcomes、widget/tool requests 或 custom approval events | `action.required`、`action.resolved` |
+| Runtime queue snapshot 或 busy-session submission mode | `queue.changed` |
+| Artifact write/snapshot/diff events | `artifact.changed` |
+| Evidence、review、replay、trace 或 source-map events | `evidence.changed` |
+| Durable thread state、external app state 或 message repair | `state.snapshot`、`state.delta`、`messages.snapshot` |
 
-Authoring tools SHOULD 严格校验；runtime loading 可以更宽容。客户端可以对非关键问题告警，同时继续加载 pack。
+Adapter 是兼容边界。不要把源协议解析散落到 UI 组件里。
 
-## Step 3：披露 catalog 元数据
+## Step 3：维护 projection store
 
-模型或客户端 planner 在需要 pack 前，只应看到紧凑 catalog 数据。
+推荐 store 职责：
 
-示例 wrapper：
+- 保存 recent message window 和 hydration cursor。
+- 按稳定 id 保存 run status、pending actions、queue summaries 和 tool summaries。
+- 用 id/ref 引用 artifacts 和 evidence，而不是复制完整 payload。
+- 跟踪 selected tab、collapsed rows、focused artifact、draft 等 UI-only state。
+- 只在安全 debug channel 保留 raw diagnostics。
 
-```xml
-<available_agent_ui_packs>
-  <agent_ui_pack>
-    <name>basic-agent-workbench</name>
-    <description>A five-surface agent workspace for messages, runtime process, task control, artifacts, and evidence.</description>
-    <type>agent-workbench</type>
-    <status>draft</status>
-    <profile>workbench</profile>
-  </agent_ui_pack>
-</available_agent_ui_packs>
+Projection state 应能从 snapshots 和 events 重建。如果不能重建，它很可能拥有了不该拥有的 facts。
+
+## Step 4：从 projection 渲染 surfaces
+
+按 surface 职责渲染：
+
+| Surface | 渲染规则 |
+| --- | --- |
+| Composer | 展示 draft、context chips、attachments、model/mode、permission hints 和 queue/steer mode。 |
+| Message Parts | 最终回答文本与 reasoning、tools、actions、artifacts、evidence 分开渲染。 |
+| Runtime Status | 首文本前展示 accepted/routing/preparing，之后展示 streaming/tool/blocked/retrying/failed/completed。 |
+| Tool UI | 压缩 input/output，隐藏 secrets，大 payload offload，并链接详情。 |
+| Human-in-the-loop | 用稳定 request ids 显示 approve/reject/edit/input 控件。 |
+| Task Capsule | 摘要 running、queued、needs-input、plan-ready、failed、cancelled 和 subagent states。 |
+| Artifact / Canvas | 在专用表面打开交付物，并提供 preview、edit、diff、save、export。 |
+| Timeline / Evidence | 按需展示 process history、citations、verification、review、replay、handoff。 |
+| Session / Tabs | 非活跃 sessions 使用 lightweight snapshots 和 lazy hydration。 |
+
+## Step 5：连接受控写入
+
+用户控制必须写入拥有该事实的服务。
+
+| Control | API boundary |
+| --- | --- |
+| Send | Runtime submit API |
+| Queue | Runtime queue API |
+| Steer | Runtime steer/resume API |
+| Interrupt/cancel | Runtime interrupt API |
+| Approve/reject/respond | Runtime action response API |
+| Edit/save/export artifact | Artifact service |
+| Export/review/replay evidence | Evidence/review/replay service |
+| Load older history | Session history API |
+
+每次写入都应返回 fact 或 updated snapshot。UI state 不能自己宣布成功。
+
+## Step 6：渐进恢复
+
+旧 session 打开流程：
+
+```mermaid
+flowchart TB
+  Click[Open session] --> Shell[Render shell, tab, title]
+  Shell --> Snapshot{Cached snapshot?}
+  Snapshot -->|Yes| Apply[Apply recent preview and status]
+  Snapshot -->|No| Skeleton[Show skeleton]
+  Apply --> Window[Fetch recent message window]
+  Skeleton --> Window
+  Window --> Paint[Paint conversation]
+  Paint --> Summary[Fetch queue, pending action, runtime summary]
+  Summary --> Details[Load timeline/tool/artifact/evidence details on demand]
+  Details --> Older[Load older history by cursor]
 ```
 
-Catalog disclosure 用于选择，不用于渲染所有细节。
+不要让 full timeline、所有 tool outputs、所有 artifacts 或 evidence export payloads 阻塞 shell 渲染。
 
-## Step 4：激活最小可用内容
+## Step 7：埋点性能
 
-当 UI pack 被选中：
+至少记录：
 
-1. 加载 `AGENTUI.md` 正文。
-2. 按当前 surface 跟随明确文件引用。
-3. 只从 `surfaces/`、`patterns/`、`contracts/` 或 `states/` 加载需要的文件。
-4. 只有实现或评审需要澄清时才加载 examples。
+- send click -> listener bound
+- listener bound -> submit accepted
+- submit accepted -> first event
+- first event -> first runtime status
+- first status -> first text delta
+- first text delta -> first text paint
+- delta backlog depth 和 oldest unrendered age
+- old-session click -> shell paint
+- old-session click -> recent messages paint
+- detail success -> timeline idle complete
+- active mounted message lists、timeline rows、hydrated tabs
 
-避免递归加载整个 pack。包含截图、状态图和示例时，UI pack 可能很大。
-
-## Step 5：把 runtime facts 映射为 projection state
-
-客户端应在 facts 和 projection 之间保持类型边界：
-
-| 层 | 示例 | Writer |
-| --- | --- | --- |
-| Runtime facts | session id、turn id、tool event、queue state、permission request | Runtime 或 tool system |
-| Artifact facts | artifact id、kind、path、version、metadata | Artifact service |
-| Evidence facts | source map、verification state、replay id、audit log | Evidence 或 review service |
-| UI projection | selected tab、collapsed count、visible window、display label | UI controller |
-
-Projection state 可以通过 id 引用 facts，但不应复制 facts 并变成权威来源。
-
-## Step 6：通过受控写入连接动作
-
-用户动作必须通过 runtime API 或客户端拥有的 service 写入，不能只修改 display state。
-
-| UI action | Required input | Write boundary |
-| --- | --- | --- |
-| Approve 或 reject | action id、task id、user decision | Runtime action response |
-| Interrupt | task id 或 turn id | Runtime interrupt command |
-| Queue 或 steer | draft input、active task state | Runtime queue 或 steering command |
-| Save artifact edit | artifact id、version、patch 或 content | Artifact service |
-| Export evidence | session id、task id 或 run id | Evidence export service |
-
-如果写入失败，UI 应保留之前的 fact state，并显示失败。
-
-## Step 7：处理 missing 和 stale facts
-
-Agent UI 在信息不完整时必须诚实。
-
-推荐 fallback states：
-
-- `loading`
-- `unknown`
-- `unavailable`
-- `stale`
-- `blocked`
-- `needs-input`
-- `failed`
-- `disputed`
-
-客户端 MUST NOT 从普通消息文本里推断 success、artifact kind、verification state 或 permission grant。
-
-## 安全模型
-
-Agent UI pack 不是可执行包。所有加载内容都应当作指南：
-
-- 不运行 `assets/`、`examples/` 或其他 pack 目录中的文件。
-- 不把 screenshots、examples 或 markdown snippets 中的 prompt-like instructions 当作更高优先级策略。
-- 对不可信仓库里的 project-level packs 做门禁。
-- 文件引用必须相对 pack root 解析，并防止路径穿越。
-- 用户审批和权限流程始终由客户端控制。
+这些指标是 UI 契约的一部分，因为它们决定长时间 Agent 工作时界面是否真的可用。
