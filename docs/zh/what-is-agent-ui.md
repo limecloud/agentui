@@ -1,0 +1,50 @@
+---
+title: 什么是 Agent UI？
+description: Agent UI 是面向 Agent 交互表面模式的文件优先标准。
+---
+
+# 什么是 Agent UI？
+
+Agent UI 定义一种可移植目录格式，用于描述 Agent 工作应该如何出现在 AI 客户端里。它是 Agent Skills 和 Agent Knowledge 的互操作伙伴标准：Skills 描述可执行能力，Knowledge 描述可信上下文，Agent UI 描述交互表面。
+
+适用于需要稳定 UI 语义的 Agent 产品：
+
+- 对话和最终回答
+- 流式状态和工具进度
+- 排队或后台任务
+- 人类审批和中断
+- 生成产物和可编辑画布
+- 引用、证据、评审和重放
+- Agent、用户、客户端之间的交接
+
+不要用它保存模型 prompt、工具协议、业务事实或可执行工作流。这些内容属于 Skills、Knowledge 或客户端 runtime。
+
+## 表面分层
+
+| 层 | 用户问题 | 常见 UI | 运行事实来源 |
+| --- | --- | --- | --- |
+| `conversation` | 我和 Agent 说了什么，最终回答是什么？ | 消息、输入区、最终答复、分支控制。 | 用户输入和助手 text parts。 |
+| `process` | Agent 现在在做什么？ | 状态条、推理摘要、工具步骤、时间线。 | runtime status、reasoning、tool events、errors。 |
+| `task` | 哪些工作在运行、排队、阻塞或等我处理？ | task capsule、queue panel、approval card、subagent strip。 | queue、turn、task、action-required records。 |
+| `artifact` | 交付物在哪里，如何继续编辑？ | canvas、preview、diff、file card、workbench。 | artifact graph、file store、generated object metadata。 |
+| `evidence` | 结果能否信任、重放或审计？ | sources、evidence pack、verification、review decision。 | trace、source map、validation、replay、audit records。 |
+
+这些层可以在同一页面渲染，也可以分布在多个面板。标准约束的是职责分离，不是固定布局。
+
+## 投影模型
+
+Agent UI 是投影层：
+
+```text
+runtime facts + task facts + artifact facts + evidence facts
+  -> UI projection model
+  -> surfaces and user actions
+```
+
+UI projection 可以缓存标题、标签、折叠摘要、滚动窗口和打开面板。它不能成为 runtime identity、tool result、artifact contents、evidence verdict 或 permission grant 的 owner。
+
+## 为什么需要标准？
+
+Agent 产品会反复遇到同类 UI 问题：流式内容早于最终回答到达，工具产生大输出，用户需要审批动作，生成文件需要继续编辑，审计需要证据。如果没有共享术语，客户端很容易把这些都塞进单列消息流。
+
+Agent UI 给作者和客户端一套小词表，用来打包这些决策；产品可以互操作，而不需要复制同一种视觉皮肤。

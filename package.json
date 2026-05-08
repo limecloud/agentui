@@ -1,0 +1,36 @@
+{
+  "name": "agentui-standard",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Draft documentation for the Agent UI standard.",
+  "homepage": "https://limecloud.github.io/agentui/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/limecloud/agentui.git"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "agent",
+    "ui",
+    "llm",
+    "standard"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "docs/public/schemas/",
+    "docs/en/",
+    "docs/zh/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
