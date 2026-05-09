@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+## v0.5.0 - 2026-05-09
+
+### Added
+
+- Adds a full Agent UI flow and taxonomy reference covering session/thread lifecycle, composer, run phases, ordered message parts, tool/action loops, artifacts, evidence, task/subagent state, context, permissions, hydration, diagnostics, and validation.
+- Adds a dedicated source index for traceable citations, including Agent Skills specification style, AG-UI events, AI SDK UIMessage parts, assistant-ui parts, LangGraph streaming/HITL, OpenAI ChatKit thread events, Apps SDK tool UI boundaries, Codex, Claude Code, and Lime roadmap research.
+- Extends the public event schema with taxonomy fields (`owner`, `scope`, `phase`, `surface`, `persistence`, `control`) and additional session, plan, tool, task, agent, context, permission, diagnostics, and metrics event classes.
+- Clarifies live message part rendering: active turns preserve typed event/part order, so reasoning, tools, and answer text can interleave.
+- Defines running process visibility and completed process archiving: running tool/reasoning steps stay visible, then collapse into timeline summaries after completion.
+- Adds acceptance coverage for avoiding duplicate inline process and timeline rendering of the same runtime fact.
+
 ## v0.4.8 - 2026-05-08
 
 - Adds Agent Context to the current standards ecosystem map.

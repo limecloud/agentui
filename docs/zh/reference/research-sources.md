@@ -7,6 +7,10 @@ description: Agent UI v0.2 背后的外部参考。
 
 Agent UI 参考了现有 Agent UI 协议、SDK 和产品实现模式。标准不复制它们的 API，而是抽取其中反复出现的稳定 UI 要求。
 
+## 可追溯性
+
+规范与实现引用统一维护在专门的[引用索引](./source-index)。修改 requirements、schemas、acceptance scenarios 或 release notes 时，优先回到该页面。
+
 ## 主要外部参考
 
 | Source | 相关模式 | Agent UI 如何吸收 |
@@ -30,6 +34,8 @@ Agent UI 也吸收了桌面 Agent 工作台规划中的经验：
 - Artifact cards、previews、versions、diffs、exports 和 handoff links 是 UI 语义；完整内容存储仍在 Agent UI 之外。
 - Evidence export、review、replay 应消费同一组 runtime facts，而不是 UI 猜测。
 - 旧 session hydration 应 shell-first、recent-message-first、timeline-on-demand。
+- Claude Code 与 Codex 这类 agent workbench 的实现经验表明，active live process 应与 completed transcript/archive 分离；running thinking/tool progress 保持可见，历史 reasoning 默认摘要化或按用户设置展开。
+- AI SDK `UIMessage.parts` 的顺序渲染模式表明，reasoning、tool 和 answer text 应能按 part 顺序穿插，而不是被聚合到单一“思考区”。
 
 ## 调研后的非目标
 

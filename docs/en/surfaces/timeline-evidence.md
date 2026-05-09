@@ -20,6 +20,18 @@ Timeline and Evidence surfaces explain how agent work happened and whether it ca
 
 Not every event belongs in the user-facing timeline. Store detailed facts, but project only the useful summary until the user asks for details.
 
+## Inline process and timeline archive
+
+Inline process owns the live state of the current active turn. Turn timeline owns inspectable archives for completed or historical turns. They SHOULD use the same runtime facts, but they should not display two detailed copies of the same fact on the same screen.
+
+Recommended rules:
+
+- Current running turn: reasoning, tool progress, action-required, and runtime status render live in inline process, with key running steps expanded by default.
+- After turn completion: process items move into the turn timeline, collapsed by default behind a stable summary and expandable on demand.
+- Old-session hydration: restore recent messages and compact process summary first; defer detailed timeline until idle or user expansion.
+- Timeline summaries should prefer tool summaries, turn summaries, artifact/action labels, or complete reasoning summaries; do not use partial streaming tokens as titles.
+- If the same tool/reasoning item is expanded in inline process, timeline may show only a placeholder summary or hide that detail until the run completes.
+
 ## Evidence facts
 
 Evidence surfaces SHOULD consume explicit evidence facts:
@@ -66,3 +78,5 @@ This lets users move from answer to source, from artifact to generating turn, an
 3. Citations appear only when source facts exist.
 4. Evidence export runs without blocking the active turn.
 5. Review and replay views use the same underlying evidence facts.
+6. Process details for the current running turn are not expanded in both inline process and timeline.
+7. Running process is expanded; completed process is collapsed into the archive by default.

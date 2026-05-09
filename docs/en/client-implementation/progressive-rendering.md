@@ -39,6 +39,29 @@ Do not merge every event into one Markdown string.
 | artifact reference | Artifact | Show summary card and open in Artifact Workspace. |
 | evidence reference | Evidence | Show source, verification, or replay entry. |
 
+## Interleaved live rendering
+
+For an interactive run, the primary column SHOULD project the active turn in event/part order instead of grouping all process content before or after the answer. A typical order may be:
+
+```text
+reasoning.delta
+  -> tool.started
+  -> tool.progress
+  -> text.delta
+  -> reasoning.summary
+  -> text.delta
+```
+
+The UI should render the corresponding process/text parts in that order. This lets users see why the agent paused, which tool is running, and how the answer continues after the tool finishes.
+
+Default behavior:
+
+- Running reasoning/thinking expands to show streaming content; if policy forbids raw reasoning, show a live summary or status text.
+- Running tool calls expand to show safe input summary, progress, and current phase; collapse to a tool row after completion.
+- Completed process moves into the turn timeline or process archive, collapsed by default with a stable summary.
+- Active inline process and completed timeline are two projection modes for the same facts; they should not duplicate the same detail on screen.
+- Do not use half streaming tokens as process group titles; wait for a stable summary, tool name, or complete semantic label.
+
 ## Hydrate history progressively
 
 When opening existing work:
@@ -57,7 +80,7 @@ Process data should be searchable and inspectable, not always expanded.
 
 Default behavior:
 
-- active step expanded or summarized
+- active step expanded or showing a live summary
 - completed tool steps collapsed
 - large outputs summarized with an open-details action
 - errors and needs-input states promoted
@@ -100,3 +123,5 @@ A basic progressive rendering implementation should pass these scenarios:
 4. Opening old work shows shell or recent content before full process history loads.
 5. Switching between two sessions does not let stale hydration overwrite the active view.
 6. A missing artifact kind is shown as unknown rather than guessed from message text.
+7. Reasoning, tool progress, and answer text render in event/part order during a running turn.
+8. Running tool/process content is not collapsed by default; it collapses into timeline or archive only after completion.

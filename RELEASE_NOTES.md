@@ -1,17 +1,19 @@
-# Agent UI v0.4.8
+# Agent UI v0.5.0
 
-Agent UI v0.4.8 is a patch release that refreshes the Agent standards ecosystem after Agent Context became a current published standard.
+Agent UI v0.5.0 promotes the full Agent UI lifecycle and taxonomy into the current standard. It aligns the standard with Agent Skills-style specification writing and adds a traceable source index for future requirement changes.
 
 ## Highlights
 
-- Adds Agent Context to the current standards table and boundary map.
-- Removes Agent Context from the future-candidate list.
-- Adds Agent Context to README related-standard links.
-- Updates `llms.txt`, `llms-full.txt`, and public LLM copies so AI clients can discover Agent Context.
-- Adds version snapshot pages for v0.4.8.
+- Adds `Flow and taxonomy` as the complete lifecycle, event envelope, classification, and validation reference.
+- Adds `Source index` as a dedicated citation register for Agent Skills, AG-UI, AI SDK, assistant-ui, LangGraph, OpenAI ChatKit/Apps SDK, Codex, Claude Code, and Lime roadmap research.
+- Extends `agentui-event.schema.json` with taxonomy fields and broader event classes for session, plan, tool, task, agent, context, permission, diagnostics, and metrics.
+- Refreshes runtime projection, runtime standard, message parts, progressive rendering, timeline/evidence, and acceptance scenarios around ordered active-run parts and process archiving.
+- Publishes v0.5.0 English and Simplified Chinese version snapshots.
 
 ## Links
 
 - Documentation: https://limecloud.github.io/agentui/
-- Agent Context: https://limecloud.github.io/agentcontext/
+- Flow and taxonomy: https://limecloud.github.io/agentui/en/reference/flow-and-taxonomy
+- Source index: https://limecloud.github.io/agentui/en/reference/source-index
+- Event schema: https://limecloud.github.io/agentui/schemas/agentui-event.schema.json
 - LLM context: https://limecloud.github.io/agentui/llms-full.txt

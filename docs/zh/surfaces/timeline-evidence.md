@@ -20,6 +20,18 @@ Timeline 和 Evidence surfaces 解释 Agent 工作如何发生，以及结果是
 
 不是每个事件都属于用户可见 timeline。详细 facts 可以存储，但 UI 在用户请求细节前只投影有用摘要。
 
+## Inline process 与 timeline 归档
+
+Inline process 负责当前 active turn 的 live 状态。Turn timeline 负责 completed 或历史 turn 的可检查归档。两者 SHOULD 使用相同 runtime facts，但不应在同屏展示同一 fact 的两份详情。
+
+推荐规则：
+
+- 当前 running turn：reasoning、tool progress、action-required 和 runtime status 在 inline process 中实时显示，并默认展开关键 running step。
+- Turn 完成后：process items 移入 turn timeline，默认折叠为稳定摘要，用户需要时再展开。
+- 旧 session hydration：先恢复 recent messages 与 compact process summary，详细 timeline 延迟到 idle 或用户展开。
+- Timeline summary 应优先使用 tool summary、turn summary、artifact/action label 或完整 reasoning summary；不要使用流式碎片 token 作为标题。
+- 如果同一 tool/reasoning item 已在 inline process 展开，timeline 可以显示占位 summary 或完全隐藏该详情，直到 run 完成。
+
 ## Evidence facts
 
 Evidence surfaces SHOULD 消费明确 evidence facts：
@@ -66,3 +78,5 @@ replay case -> runtime trace
 3. 只有 source facts 存在时才显示 citations。
 4. Evidence export 不阻塞 active turn。
 5. Review 和 replay views 使用同一底层 evidence facts。
+6. 当前 running turn 的 process 详情不在 inline process 和 timeline 中双重展开。
+7. Running process 展开，completed process 默认折叠归档。

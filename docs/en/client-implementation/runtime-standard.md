@@ -5,7 +5,7 @@ description: How clients should implement Agent UI projection.
 
 # Runtime standard
 
-This guide describes how an agent client should implement Agent UI. The core integration is the same across desktop apps, IDEs, terminals, web apps, and embedded assistants: consume structured runtime facts, project them into UI state, and route user controls back through controlled APIs.
+This guide describes how an agent client should implement Agent UI. The core integration is the same across desktop apps, IDEs, terminals, web apps, and embedded assistants: consume structured runtime facts, project them into UI state, and route user controls back through controlled APIs. The complete lifecycle and classification vocabulary is defined in [Flow and taxonomy](../reference/flow-and-taxonomy).
 
 ## Core principle: projection, not ownership
 
@@ -40,16 +40,23 @@ Common mappings:
 
 | Source idea | Agent UI class |
 | --- | --- |
+| Session/thread metadata events | `session.opened`, `session.updated`, `session.hydrated` |
 | Lifecycle start/finish/error events | `run.started`, `run.finished`, `run.failed` |
+| Runtime phase/status events | `run.status` |
 | Text message events or AI SDK text parts | `text.delta`, `text.final` |
 | Reasoning/thinking events or AI SDK reasoning parts | `reasoning.delta`, `reasoning.summary` |
-| Tool lifecycle events and structured tool results | `tool.started`, `tool.args`, `tool.progress`, `tool.result` |
+| Plan/proposed-plan events | `plan.delta`, `plan.final` |
+| Tool lifecycle events and structured tool results | `tool.started`, `tool.args`, `tool.progress`, `tool.output.delta`, `tool.result`, `tool.failed` |
 | Interrupt outcomes, widget/tool requests, or custom approval events | `action.required`, `action.resolved` |
 | Runtime queue snapshot or busy-session submission mode | `queue.changed` |
-| Artifact created/updated/preview/version/diff/export events | `artifact.created`, `artifact.updated`, `artifact.preview.ready`, `artifact.version.created`, `artifact.diff.ready`, `artifact.export.started`, `artifact.export.completed` |
+| Background task, subagent, or team updates | `task.changed`, `agent.changed` |
+| Context, retrieval, memory, or compaction facts | `context.changed`, `context.compaction.started`, `context.compaction.completed` |
+| Permission, risk, sandbox, or policy facts | `permission.changed` |
+| Artifact created/updated/preview/version/diff/export events | `artifact.created`, `artifact.updated`, `artifact.preview.ready`, `artifact.version.created`, `artifact.diff.ready`, `artifact.export.started`, `artifact.export.completed`, `artifact.failed`, `artifact.deleted` |
 | Collapsed artifact adapter events | `artifact.changed` |
 | Evidence, review, replay, trace, or source-map events | `evidence.changed` |
 | Durable thread state, external app state, or message repair | `state.snapshot`, `state.delta`, `messages.snapshot` |
+| Safe diagnostics or metrics | `diagnostic.changed`, `metric.changed` |
 
 The adapter is a compatibility boundary. Do not spread source-specific event parsing across UI components.
 

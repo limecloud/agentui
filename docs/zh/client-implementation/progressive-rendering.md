@@ -39,6 +39,29 @@ Shell 不应该等待完整历史或所有次要面板。
 | artifact reference | Artifact | 展示摘要卡，并在 Artifact 工作区打开。 |
 | evidence reference | Evidence | 展示 source、verification 或 replay 入口。 |
 
+## 穿插式 live rendering
+
+交互式 run 的主列 SHOULD 以 event/part 顺序投影 active turn，而不是把 process 全部集中到回答前面或回答后面。典型顺序可以是：
+
+```text
+reasoning.delta
+  -> tool.started
+  -> tool.progress
+  -> text.delta
+  -> reasoning.summary
+  -> text.delta
+```
+
+UI 应按这个顺序展示对应 process/text parts。这样用户能看到 Agent 当前为什么停顿、哪个工具正在运行、工具结束后回答如何继续。
+
+默认行为：
+
+- running reasoning/thinking 展开显示正在流式到达的内容；如果 policy 禁止 raw reasoning，则展示 live summary 或状态文本。
+- running tool call 展开显示安全输入摘要、progress 和当前阶段；完成后折叠为 tool row。
+- completed process 进入 turn timeline 或 process archive，默认折叠，只保留稳定摘要。
+- active inline process 与 completed timeline 是同一组 facts 的两个投影模式，不应在同屏重复显示同一条详情。
+- 不用半截 streaming token 作为 process group 标题；标题应等到稳定摘要、工具名或完整语义可用。
+
 ## 渐进恢复历史
 
 打开已有工作时：
@@ -57,7 +80,7 @@ Shell 不应该等待完整历史或所有次要面板。
 
 默认行为：
 
-- active step 展开或摘要化
+- active step 展开或显示 live 摘要
 - completed tool steps 折叠
 - large outputs 摘要化并提供 open-details action
 - errors 和 needs-input states 提升显示
@@ -100,3 +123,5 @@ Shell 不应该等待完整历史或所有次要面板。
 4. 打开旧工作时，shell 或 recent content 先于完整 process history 出现。
 5. 两个 session 之间切换时，过期 hydrate 结果不会覆盖 active view。
 6. 缺少 artifact kind 时显示 unknown，而不是从 message text 猜测。
+7. Running turn 的 reasoning、tool progress 和 answer text 按 event/part 顺序穿插渲染。
+8. Running tool/process 不默认折叠；完成后才折叠进 timeline 或 archive。

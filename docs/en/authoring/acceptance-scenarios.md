@@ -20,13 +20,23 @@ Pass condition: the user can tell the agent is alive before text streaming begin
 ## 2. Text/reasoning separation
 
 1. Runtime emits reasoning/thinking content and final answer text.
-2. Reasoning renders as process content, collapsed or summarized by default.
+2. Running reasoning renders as process content and remains live-visible; completed reasoning is collapsed or summarized by default.
 3. Final answer renders as clean message text.
 4. Completed reasoning is not replayed as final answer text after hydration.
 
 Pass condition: no `<think>` text, raw reasoning log, or process status pollutes the final answer.
 
-## 3. Final reconciliation
+## 3. Interleaved active turn
+
+1. Runtime emits reasoning, tool, text, reasoning summary, then more text in sequence.
+2. UI renders those parts interleaved in event/part order.
+3. Running tool/process content is expanded by default or shows its live body.
+4. Timeline does not expand a duplicate copy of the same fact already shown by inline process.
+5. After turn completion, process content archives into collapsed timeline summaries by default.
+
+Pass condition: the user sees live execution order, not a top-heavy thinking stack or double-nested process blocks.
+
+## 4. Final reconciliation
 
 1. Runtime streams text deltas.
 2. Runtime later emits final answer content.
@@ -34,7 +44,7 @@ Pass condition: no `<think>` text, raw reasoning log, or process status pollutes
 
 Pass condition: final text is not duplicated or appended twice.
 
-## 4. Tool call
+## 5. Tool call
 
 1. Runtime emits tool start with stable tool call id.
 2. UI shows a compressed tool row with safe input summary.
@@ -44,7 +54,7 @@ Pass condition: final text is not duplicated or appended twice.
 
 Pass condition: tool execution is visible, inspectable, and not mixed into final answer prose.
 
-## 5. Human-in-the-loop
+## 6. Human-in-the-loop
 
 1. Runtime emits an action request with id, type, scope, and optional schema.
 2. UI promotes the request to an approval/input surface.
@@ -54,7 +64,7 @@ Pass condition: tool execution is visible, inspectable, and not mixed into final
 
 Pass condition: high-risk or blocked work has explicit, auditable user control.
 
-## 6. Queue and steer
+## 7. Queue and steer
 
 1. A run is active.
 2. User enters another prompt.
@@ -64,7 +74,7 @@ Pass condition: high-risk or blocked work has explicit, auditable user control.
 
 Pass condition: the user can distinguish “run this next” from “change what is happening now.”
 
-## 7. Artifact workspace
+## 8. Artifact workspace
 
 1. Runtime emits artifact created/updated with stable artifact id.
 2. Conversation shows a compact artifact card or reference.
@@ -74,7 +84,7 @@ Pass condition: the user can distinguish “run this next” from “change what
 
 Pass condition: deliverables leave the chat body and become editable, versioned, exportable artifacts.
 
-## 8. Evidence export
+## 9. Evidence export
 
 1. User or system triggers evidence export.
 2. UI shows background progress or task capsule.
@@ -83,7 +93,7 @@ Pass condition: deliverables leave the chat body and become editable, versioned,
 
 Pass condition: evidence is traceable to runtime facts and does not block chat streaming.
 
-## 9. Old-session recovery
+## 10. Old-session recovery
 
 1. User opens an old session.
 2. Shell, tab, title, and cached snapshot appear immediately when available.
@@ -93,10 +103,37 @@ Pass condition: evidence is traceable to runtime facts and does not block chat s
 
 Pass condition: old sessions do not require full history or all artifacts before first paint.
 
-## 10. Missing facts
+## 11. Missing facts
 
 1. Runtime omits artifact kind, verification status, or provider stage.
 2. UI shows `unknown`, `unavailable`, or `stale` rather than guessing.
 3. User controls remain safe and recoverable.
 
 Pass condition: UI never fabricates success, approval, artifact type, or evidence verdict.
+
+## 12. Task and multi-agent state
+
+1. Runtime emits a queued turn, background task, or subagent update with a stable task/agent id.
+2. UI updates task capsules or task center without creating fake assistant prose.
+3. Needs-input, failed, and plan-ready states are promoted above normal running state.
+4. Completed task details archive into timeline summaries or task history.
+
+Pass condition: long-running and multi-agent work is observable and controllable outside the final answer transcript.
+
+## 13. Context and compaction
+
+1. Runtime emits context selection, missing context, budget, retrieval, or compaction facts.
+2. UI shows context chips, budget state, missing-context fallback, or compaction boundary.
+3. Compaction does not replay old reasoning as final answer text.
+4. Source refs and citations remain linked to evidence or context facts.
+
+Pass condition: context and memory changes are explicit facts, not hidden text mutations.
+
+## 14. Diagnostics and metrics
+
+1. Runtime or client emits safe diagnostics or performance metrics.
+2. UI keeps them in diagnostics surfaces or trace views.
+3. Normal conversation text stays free of raw debug logs.
+4. Metrics can explain submit-to-status, first-text, paint, hydration, and detail-load latency.
+
+Pass condition: debugging remains traceable without polluting the user-facing transcript.

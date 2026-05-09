@@ -7,6 +7,10 @@ description: External references behind Agent UI v0.2.
 
 Agent UI is informed by existing agent UI protocols, SDKs, and product implementation patterns. The standard does not copy their APIs. It extracts stable UI requirements that appear across them.
 
+## Traceability
+
+Normative and implementation references are maintained in the dedicated [Source index](./source-index). Use that page when changing requirements, schemas, acceptance scenarios, or release notes.
+
 ## Primary external references
 
 | Source | Relevant pattern | How Agent UI uses it |
@@ -30,6 +34,8 @@ Agent UI also folds in lessons from desktop agent workbench planning:
 - Artifact cards, previews, versions, diffs, exports, and handoff links are UI semantics; full content storage remains outside Agent UI.
 - Evidence export, review, and replay should consume the same runtime facts rather than UI guesses.
 - Old session hydration should be shell-first, recent-message-first, and timeline-on-demand.
+- Agent workbench implementations such as Claude Code and Codex show that active live process should stay separate from the completed transcript/archive; running thinking/tool progress stays visible, while historical reasoning defaults to summaries or user-controlled expansion.
+- AI SDK `UIMessage.parts` order-based rendering shows that reasoning, tools, and answer text should be able to interleave by part order instead of collapsing into a single thinking area.
 
 ## Non-goals from research
 

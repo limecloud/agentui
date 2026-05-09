@@ -11,8 +11,16 @@
     "type": {
       "type": "string",
       "enum": [
+        "session.opened",
+        "session.hydrated",
+        "session.updated",
+        "session.closed",
         "run.started",
         "run.status",
+        "run.finished",
+        "run.failed",
+        "plan.delta",
+        "plan.final",
         "text.delta",
         "text.final",
         "reasoning.delta",
@@ -20,10 +28,18 @@
         "tool.started",
         "tool.args",
         "tool.progress",
+        "tool.output.delta",
         "tool.result",
+        "tool.failed",
         "action.required",
         "action.resolved",
         "queue.changed",
+        "task.changed",
+        "agent.changed",
+        "context.changed",
+        "context.compaction.started",
+        "context.compaction.completed",
+        "permission.changed",
         "artifact.created",
         "artifact.updated",
         "artifact.preview.ready",
@@ -38,8 +54,8 @@
         "state.snapshot",
         "state.delta",
         "messages.snapshot",
-        "run.finished",
-        "run.failed"
+        "diagnostic.changed",
+        "metric.changed"
       ]
     },
     "sessionId": {
@@ -128,6 +144,167 @@
       "items": {
         "type": "string"
       }
+    },
+    "threadId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turnId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "diagnosticId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "owner": {
+      "type": "string",
+      "enum": [
+        "runtime",
+        "model",
+        "tool",
+        "action",
+        "artifact",
+        "evidence",
+        "context",
+        "policy",
+        "task",
+        "session",
+        "diagnostics",
+        "ui_projection",
+        "unknown"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "application",
+        "workspace",
+        "session",
+        "thread",
+        "run",
+        "turn",
+        "message",
+        "part",
+        "task",
+        "agent",
+        "tool_call",
+        "action_request",
+        "artifact",
+        "evidence",
+        "unknown"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "accepted",
+        "routing",
+        "preparing",
+        "planning",
+        "reasoning",
+        "acting",
+        "waiting",
+        "producing",
+        "reconciling",
+        "completed",
+        "failed",
+        "cancelled",
+        "interrupted",
+        "archived",
+        "hydrating",
+        "unknown"
+      ]
+    },
+    "surface": {
+      "type": "string",
+      "enum": [
+        "composer",
+        "conversation",
+        "inline_process",
+        "runtime_status",
+        "tool_ui",
+        "hitl",
+        "task_capsule",
+        "artifact_workspace",
+        "timeline_evidence",
+        "session_tabs",
+        "diagnostics",
+        "custom",
+        "unknown"
+      ]
+    },
+    "persistence": {
+      "type": "string",
+      "enum": [
+        "ephemeral_live",
+        "transcript",
+        "snapshot",
+        "archive",
+        "artifact_store",
+        "evidence_pack",
+        "diagnostics_log",
+        "ui_local",
+        "unknown"
+      ]
+    },
+    "control": {
+      "type": "string",
+      "enum": [
+        "send",
+        "queue",
+        "steer",
+        "interrupt",
+        "approve",
+        "reject",
+        "answer",
+        "edit",
+        "retry",
+        "rollback",
+        "export",
+        "open_detail",
+        "none",
+        "unknown"
+      ]
+    },
+    "payload": {
+      "type": [
+        "object",
+        "array",
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "refs": {
+      "type": [
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "rawEventRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metricName": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

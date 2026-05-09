@@ -5,7 +5,7 @@ description: 客户端如何实现 Agent UI projection。
 
 # 运行时标准
 
-本指南描述 Agent 客户端如何实现 Agent UI。无论是桌面应用、IDE、终端、Web 应用还是嵌入式助手，核心集成都一样：消费结构化 runtime facts，投影成 UI state，再把用户控制通过受控 API 写回。
+本指南描述 Agent 客户端如何实现 Agent UI。无论是桌面应用、IDE、终端、Web 应用还是嵌入式助手，核心集成都一样：消费结构化 runtime facts，投影成 UI state，再把用户控制通过受控 API 写回。完整 lifecycle 与分类词汇见[全流程与分类](../reference/flow-and-taxonomy)。
 
 ## 核心原则：投影，不拥有
 
@@ -40,16 +40,23 @@ runtime facts
 
 | Source idea | Agent UI class |
 | --- | --- |
+| Session/thread metadata events | `session.opened`、`session.updated`、`session.hydrated` |
 | Lifecycle start/finish/error events | `run.started`、`run.finished`、`run.failed` |
+| Runtime phase/status events | `run.status` |
 | Text message events 或 AI SDK text parts | `text.delta`、`text.final` |
 | Reasoning/thinking events 或 AI SDK reasoning parts | `reasoning.delta`、`reasoning.summary` |
-| Tool lifecycle events 和 structured tool results | `tool.started`、`tool.args`、`tool.progress`、`tool.result` |
+| Plan/proposed-plan events | `plan.delta`、`plan.final` |
+| Tool lifecycle events 和 structured tool results | `tool.started`、`tool.args`、`tool.progress`、`tool.output.delta`、`tool.result`、`tool.failed` |
 | Interrupt outcomes、widget/tool requests 或 custom approval events | `action.required`、`action.resolved` |
 | Runtime queue snapshot 或 busy-session submission mode | `queue.changed` |
-| Artifact created/updated/preview/version/diff/export events | `artifact.created`、`artifact.updated`、`artifact.preview.ready`、`artifact.version.created`、`artifact.diff.ready`、`artifact.export.started`、`artifact.export.completed` |
+| Background task、subagent 或 team updates | `task.changed`、`agent.changed` |
+| Context、retrieval、memory 或 compaction facts | `context.changed`、`context.compaction.started`、`context.compaction.completed` |
+| Permission、risk、sandbox 或 policy facts | `permission.changed` |
+| Artifact created/updated/preview/version/diff/export events | `artifact.created`、`artifact.updated`、`artifact.preview.ready`、`artifact.version.created`、`artifact.diff.ready`、`artifact.export.started`、`artifact.export.completed`、`artifact.failed`、`artifact.deleted` |
 | 折叠后的 artifact adapter events | `artifact.changed` |
 | Evidence、review、replay、trace 或 source-map events | `evidence.changed` |
 | Durable thread state、external app state 或 message repair | `state.snapshot`、`state.delta`、`messages.snapshot` |
+| Safe diagnostics 或 metrics | `diagnostic.changed`、`metric.changed` |
 
 Adapter 是兼容边界。不要把源协议解析散落到 UI 组件里。
 
