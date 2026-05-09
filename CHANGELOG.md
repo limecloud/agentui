@@ -7,6 +7,10 @@
 - Adds a runnable Agent UI examples gallery covering all standard patterns with event playback, real controls, projected surface state, payloads, and acceptance checks.
 - Adds an interactive frontend workbench demo that projects one ordered Agent UI event stream into conversation, process, tool, HITL, artifact, evidence, task, and raw event surfaces.
 
+### Changed
+
+- Converts the basic agent workbench example from a prose/code listing into a runnable frontend workbench page.
+
 ## v0.5.0 - 2026-05-09
 
 ### Added

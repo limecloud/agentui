@@ -70,7 +70,7 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 - [v0.4.5 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.5/specification): Previous released specification snapshot.
 - [Runnable Agent UI examples](https://limecloud.github.io/agentui/en/examples/): Frontend gallery covering all standard Agent UI patterns with event playback and controls.
 - [Interactive workbench demo](https://limecloud.github.io/agentui/en/examples/interactive-workbench): Live frontend projection demo for ordered runtime events.
-- [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Reference workbench example.
+- [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Runnable frontend workbench example.
 - [v0.4.4 overview](https://limecloud.github.io/agentui/en/versions/v0.4.4/overview): Previous released version overview.
 - [v0.4.4 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.4/specification): Previous released specification snapshot.
 - [v0.4.3 overview](https://limecloud.github.io/agentui/en/versions/v0.4.3/overview): Previous released version overview.
