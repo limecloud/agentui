@@ -4,12 +4,13 @@
 
 ### Added
 
-- Adds a runnable Agent UI examples gallery covering all standard patterns with event playback, real controls, projected surface state, payloads, and acceptance checks.
-- Adds an interactive frontend workbench demo that projects one ordered Agent UI event stream into conversation, process, tool, HITL, artifact, evidence, task, and raw event surfaces.
+- Adds a standalone runnable Agent UI workbench demo application at `/examples/agent-workbench/`, covering session/thread shell, composer, runtime status, ordered message parts, live process, tool lifecycle, HITL, artifacts, evidence/replay, context, policy, diagnostics, and timeline archive.
 
 ### Changed
 
-- Converts the basic agent workbench example from a prose/code listing into a runnable frontend workbench page.
+- Moves examples out of embedded documentation components: docs pages now link to the standalone demo app, while the demo owns its layout, reducer, scenarios, controls, and projected surfaces.
+- Removes the embedded VitePress demo components now that examples are standalone applications.
+- Converts the basic agent workbench example from a prose/code listing into a standalone runnable frontend workbench link.
 
 ## v0.5.0 - 2026-05-09
 

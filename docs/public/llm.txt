@@ -58,6 +58,7 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 
 ## Examples and versions
 
+- [Standalone Agent UI Workbench demo](https://limecloud.github.io/agentui/examples/agent-workbench/): Complete runnable demo application outside the documentation shell.
 - [v0.5.0 overview](https://limecloud.github.io/agentui/en/versions/v0.5.0/overview): Latest released version overview.
 - [v0.5.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.5.0/specification): Latest released specification snapshot.
 - [v0.4.8 overview](https://limecloud.github.io/agentui/en/versions/v0.4.8/overview): Previous released version overview.
@@ -68,9 +69,9 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 - [v0.4.6 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.6/specification): Previous released specification snapshot.
 - [v0.4.5 overview](https://limecloud.github.io/agentui/en/versions/v0.4.5/overview): Previous released version overview.
 - [v0.4.5 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.5/specification): Previous released specification snapshot.
-- [Runnable Agent UI examples](https://limecloud.github.io/agentui/en/examples/): Frontend gallery covering all standard Agent UI patterns with event playback and controls.
-- [Interactive workbench demo](https://limecloud.github.io/agentui/en/examples/interactive-workbench): Live frontend projection demo for ordered runtime events.
-- [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Runnable frontend workbench example.
+- [Agent UI examples](https://limecloud.github.io/agentui/en/examples/): Documentation entry point for standalone runnable demos.
+- [Interactive workbench demo](https://limecloud.github.io/agentui/en/examples/interactive-workbench): Notes and launch link for the standalone workbench demo.
+- [Basic agent workbench](https://limecloud.github.io/agentui/en/examples/basic-agent-workbench): Architecture boundary and launch link for the standalone workbench demo.
 - [v0.4.4 overview](https://limecloud.github.io/agentui/en/versions/v0.4.4/overview): Previous released version overview.
 - [v0.4.4 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.4/specification): Previous released specification snapshot.
 - [v0.4.3 overview](https://limecloud.github.io/agentui/en/versions/v0.4.3/overview): Previous released version overview.

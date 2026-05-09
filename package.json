@@ -27,6 +27,7 @@
     "docs/public/llm-full.txt",
     "docs/public/llms.txt",
     "docs/public/llms-full.txt",
+    "docs/public/examples/",
     "docs/public/schemas/",
     "docs/en/",
     "docs/zh/",

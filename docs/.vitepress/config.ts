@@ -106,8 +106,9 @@ const enSidebar = [
   {
     text: 'Examples',
     items: [
-      { text: 'Runnable examples', link: '/en/examples/' },
-      { text: 'Interactive workbench demo', link: '/en/examples/interactive-workbench' },
+      { text: 'Examples overview', link: '/en/examples/' },
+      { text: 'Standalone workbench demo', link: '/examples/agent-workbench/' },
+      { text: 'Interactive workbench notes', link: '/en/examples/interactive-workbench' },
       { text: 'Basic agent workbench', link: '/en/examples/basic-agent-workbench' }
     ]
   },
@@ -179,8 +180,9 @@ const zhSidebar = [
   {
     text: '示例',
     items: [
-      { text: '可运行示例', link: '/zh/examples/' },
-      { text: '交互式工作台演示', link: '/zh/examples/interactive-workbench' },
+      { text: '示例概览', link: '/zh/examples/' },
+      { text: '独立 Workbench demo', link: '/examples/agent-workbench/?lang=zh' },
+      { text: '交互式工作台说明', link: '/zh/examples/interactive-workbench' },
       { text: '基础 Agent 工作台', link: '/zh/examples/basic-agent-workbench' }
     ]
   },

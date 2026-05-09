@@ -1,17 +1,25 @@
 ---
 title: 基础 Agent 工作台
-description: 可运行的 Runtime-first Agent UI 工作台示例。
+description: 独立 Runtime-first Agent UI 工作台 demo。
 ---
 
 # 基础 Agent 工作台
 
-这个页面是可运行的前端工作台。使用控件逐步播放一条有序事件流，验证 runtime facts 如何投影到 conversation、process、tool、HITL、artifact、evidence、task 与 timeline surfaces。
+Workbench demo 已经移出文档壳。它是完整独立页面，自己拥有 layout、reducer、scenario library、controls 与 projected surfaces。
 
-<ClientOnly>
-  <AgentWorkbenchDemo locale="zh" />
-</ClientOnly>
+<p>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh">打开独立 Agent UI Workbench demo</a>
+</p>
 
-## 相关示例
+## 架构边界
 
-- [可运行示例 Gallery](./index.md)
-- [交互式工作台演示](./interactive-workbench.md)
+- 文档页面负责描述 Agent UI contract，并链接到可运行 demo。
+- 独立 demo 自己拥有 runtime fixture、reducer、UI shell、controls 与 projected state。
+- demo 继续使用标准里的事件语义：ordered events、typed surfaces、controlled actions、artifact/evidence separation 与 completed-process archive。
+
+## 相关页面
+
+- [可运行示例](./index.md)
+- [全流程与分类](../reference/flow-and-taxonomy.md)
+- [Message parts](../surfaces/message-parts.md)
+- [Timeline and evidence](../surfaces/timeline-evidence.md)

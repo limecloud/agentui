@@ -1,17 +1,25 @@
 ---
 title: Basic agent workbench
-description: Runnable runtime-first Agent UI workbench example.
+description: Standalone runtime-first Agent UI workbench demo.
 ---
 
 # Basic agent workbench
 
-This page is a runnable frontend workbench. Use the controls to step through one ordered event stream and verify how runtime facts project into conversation, process, tool, HITL, artifact, evidence, task, and timeline surfaces.
+The workbench demo now lives outside the documentation shell. It is a complete standalone page that owns its layout, reducer, scenario library, controls, and projected surfaces.
 
-<ClientOnly>
-  <AgentWorkbenchDemo />
-</ClientOnly>
+<p>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/">Open standalone Agent UI Workbench demo</a>
+</p>
 
-## Related examples
+## Architecture boundary
 
-- [Runnable examples gallery](./index.md)
-- [Interactive workbench demo](./interactive-workbench.md)
+- Documentation pages describe the Agent UI contract and link to the running demo.
+- The standalone demo owns the runtime fixture, reducer, UI shell, controls, and projected state.
+- The demo still uses the same event semantics as the standard: ordered events, typed surfaces, controlled actions, artifact/evidence separation, and completed-process archive.
+
+## Related pages
+
+- [Runnable examples](./index.md)
+- [Flow and taxonomy](../reference/flow-and-taxonomy.md)
+- [Message parts](../surfaces/message-parts.md)
+- [Timeline and evidence](../surfaces/timeline-evidence.md)
