@@ -53,3 +53,7 @@ Related pages:
 - [Runtime event projection](../contracts/runtime-event-projection.md)
 - [Message parts](../surfaces/message-parts.md)
 - [Timeline and evidence](../surfaces/timeline-evidence.md)
+
+## Catalog
+
+- [Runnable examples](./index.md)

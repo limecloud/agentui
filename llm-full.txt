@@ -2039,6 +2039,23 @@ Pass condition: context and memory changes are explicit facts, not hidden text m
 
 Pass condition: debugging remains traceable without polluting the user-facing transcript.
 
+# Runnable Agent UI examples
+Source: https://limecloud.github.io/agentui/en/examples/
+
+# Runnable Agent UI examples
+
+This page is a runnable frontend gallery. Each card plays standard Agent UI events and exposes controls that mutate the projected surface state.
+
+<ClientOnly>
+  <AgentExamplesGallery />
+</ClientOnly>
+
+## Related examples
+
+- [Interactive workbench demo](./interactive-workbench.md)
+- [Basic agent workbench](./basic-agent-workbench.md)
+
+
 # Interactive workbench demo
 Source: https://limecloud.github.io/agentui/en/examples/interactive-workbench
 

@@ -99,3 +99,7 @@ The workbench is acceptable when:
 ## Live demo
 
 - [Interactive workbench demo](./interactive-workbench.md)
+
+## Catalog
+
+- [Runnable examples](./index.md)

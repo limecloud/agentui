@@ -19,7 +19,7 @@ const zhVersionItems = versions.flatMap((version) => [
 const enNav = [
   { text: 'Guide', link: '/en/what-is-agent-ui' },
   { text: 'Specification', link: '/en/specification' },
-  { text: 'Examples', link: '/en/examples/interactive-workbench' },
+  { text: 'Examples', link: '/en/examples/' },
   { text: 'Ecosystem', link: '/en/reference/agent-ecosystem' },
   {
     text: 'Version',
@@ -33,7 +33,7 @@ const enNav = [
 const zhNav = [
   { text: '指南', link: '/zh/what-is-agent-ui' },
   { text: '规范', link: '/zh/specification' },
-  { text: '示例', link: '/zh/examples/interactive-workbench' },
+  { text: '示例', link: '/zh/examples/' },
   { text: '生态', link: '/zh/reference/agent-ecosystem' },
   {
     text: '版本',
@@ -106,6 +106,7 @@ const enSidebar = [
   {
     text: 'Examples',
     items: [
+      { text: 'Runnable examples', link: '/en/examples/' },
       { text: 'Interactive workbench demo', link: '/en/examples/interactive-workbench' },
       { text: 'Basic agent workbench', link: '/en/examples/basic-agent-workbench' }
     ]
@@ -178,6 +179,7 @@ const zhSidebar = [
   {
     text: '示例',
     items: [
+      { text: '可运行示例', link: '/zh/examples/' },
       { text: '交互式工作台演示', link: '/zh/examples/interactive-workbench' },
       { text: '基础 Agent 工作台', link: '/zh/examples/basic-agent-workbench' }
     ]

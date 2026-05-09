@@ -18,8 +18,8 @@ hero:
       text: 标准生态
       link: /zh/reference/agent-ecosystem
     - theme: alt
-      text: 交互演示
-      link: /zh/examples/interactive-workbench
+      text: 可运行示例
+      link: /zh/examples/
     - theme: alt
       text: LLM 完整上下文
       link: ../llms-full.txt
@@ -55,6 +55,7 @@ features:
 - [什么是 Agent UI？](./what-is-agent-ui.md)
 - [最新规范](./specification.md)
 - [实现快速开始](./authoring/quickstart.md)
+- [可运行示例](./examples/index.md)
 - [交互式工作台演示](./examples/interactive-workbench.md)
 - [Runtime event projection](./contracts/runtime-event-projection.md)
 - [Artifact Workspace](./surfaces/artifact-canvas.md)

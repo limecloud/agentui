@@ -18,8 +18,8 @@ hero:
       text: Standards ecosystem
       link: /en/reference/agent-ecosystem
     - theme: alt
-      text: Interactive demo
-      link: /en/examples/interactive-workbench
+      text: Runnable examples
+      link: /en/examples/
     - theme: alt
       text: LLM full context
       link: ../llms-full.txt
@@ -55,6 +55,7 @@ features:
 - [What is Agent UI?](./what-is-agent-ui.md)
 - [Latest specification](./specification.md)
 - [Implementation quickstart](./authoring/quickstart.md)
+- [Runnable examples](./examples/index.md)
 - [Interactive workbench demo](./examples/interactive-workbench.md)
 - [Runtime event projection](./contracts/runtime-event-projection.md)
 - [Artifact Workspace](./surfaces/artifact-canvas.md)
