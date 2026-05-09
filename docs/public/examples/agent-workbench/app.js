@@ -3,7 +3,8 @@ const locales = {
     eyebrow: 'Standalone runnable demo',
     title: 'Agent UI Workbench',
     subtitle: 'A full product-shaped demo: one event reducer projects runtime facts into conversation, process, tools, approvals, artifacts, evidence, context, policy, diagnostics, and history.',
-    docs: 'Back to docs',
+    home: 'Home',
+    examples: 'Examples',
     language: '中文',
     play: 'Play',
     pause: 'Pause',
@@ -37,13 +38,15 @@ const locales = {
     send: 'Send',
     queue: 'Queue',
     steer: 'Steer active run',
-    scenarioHint: 'Choose a scenario, then play or step through events.'
+    scenarioHint: 'Choose a scenario, then play or step through events.',
+    noProcess: 'No process part yet. Status and context can arrive before reasoning, tools, or text.'
   },
   zh: {
     eyebrow: '独立可运行 Demo',
     title: 'Agent UI 工作台',
     subtitle: '完整产品形态 demo：同一个 event reducer 把 runtime facts 投影到 conversation、process、tools、approvals、artifacts、evidence、context、policy、diagnostics 与 history。',
-    docs: '返回文档',
+    home: '返回主页',
+    examples: '示例',
     language: 'English',
     play: '播放',
     pause: '暂停',
@@ -77,24 +80,25 @@ const locales = {
     send: '发送',
     queue: '排队',
     steer: '转向 active run',
-    scenarioHint: '选择一个场景，然后播放或逐事件前进。'
+    scenarioHint: '选择一个场景，然后播放或逐事件前进。',
+    noProcess: '暂无 process part；状态和上下文可以先于 reasoning、tools 或 text 到达。'
   }
 }
 
 const coverage = [
-  ['session', 'Session / Thread Shell'],
-  ['composer', 'Composer'],
-  ['status', 'Runtime Status'],
-  ['parts', 'Ordered Message Parts'],
-  ['process', 'Inline Process'],
-  ['tool', 'Tool UI'],
-  ['hitl', 'Human-in-the-loop'],
-  ['task', 'Task Capsule'],
-  ['artifact', 'Artifact Workspace'],
-  ['evidence', 'Evidence / Replay / Review'],
-  ['context', 'Context / Memory / Compaction'],
-  ['policy', 'Permission / Security / Policy'],
-  ['diagnostics', 'Diagnostics / Metrics / Repair']
+  { key: 'session', en: 'Session / Thread Shell', zh: 'Session / Thread 壳' },
+  { key: 'composer', en: 'Composer', zh: '输入区' },
+  { key: 'status', en: 'Runtime Status', zh: '运行状态' },
+  { key: 'parts', en: 'Ordered Message Parts', zh: '有序消息部件' },
+  { key: 'process', en: 'Inline Process', zh: '内联运行过程' },
+  { key: 'tool', en: 'Tool UI', zh: '工具 UI' },
+  { key: 'hitl', en: 'Human-in-the-loop', zh: '人类介入' },
+  { key: 'task', en: 'Task Capsule', zh: '任务胶囊' },
+  { key: 'artifact', en: 'Artifact Workspace', zh: '产物工作区' },
+  { key: 'evidence', en: 'Evidence / Replay / Review', zh: '证据 / 回放 / 评审' },
+  { key: 'context', en: 'Context / Memory / Compaction', zh: '上下文 / 记忆 / 压缩' },
+  { key: 'policy', en: 'Permission / Security / Policy', zh: '权限 / 安全 / 策略' },
+  { key: 'diagnostics', en: 'Diagnostics / Metrics / Repair', zh: '诊断 / 指标 / 修复' }
 ]
 
 const baseProjection = {
@@ -389,39 +393,108 @@ function escapeHtml(raw) {
     .replaceAll("'", '&#039;')
 }
 
+function progressPercent() {
+  return Math.round((app.cursor / Math.max(scenario().events.length, 1)) * 100)
+}
+
 function eventRows() {
   return scenario().events.map((item, index) => {
     const state = index < app.cursor ? 'is-done' : index === app.cursor ? 'is-next' : ''
-    return `<li class="${state}"><span>${escapeHtml(item.type)}</span><small>${escapeHtml(item.phase)}</small></li>`
+    return `
+      <li class="${state}">
+        <i>${index + 1}</i>
+        <span><b>${escapeHtml(item.type)}</b><em>${escapeHtml(item.title)}</em></span>
+        <small>${escapeHtml(item.phase)}</small>
+      </li>
+    `
   }).join('')
 }
 
+function activeSurfaceKeys() {
+  const active = new Set(['session', 'composer', 'status', 'task'])
+  if (app.applied.length) active.add('parts')
+  if (app.projection.plan || app.projection.reasoning || app.projection.tool || app.projection.action) active.add('process')
+  if (app.projection.tool) active.add('tool')
+  if (app.projection.action || app.blockedBy) active.add('hitl')
+  if (app.projection.artifact) active.add('artifact')
+  if (app.projection.evidence || app.projection.replay) active.add('evidence')
+  if (app.projection.context !== 'none' || app.projection.memory !== 'unchanged') active.add('context')
+  if (app.projection.permission || app.projection.risk !== 'low') active.add('policy')
+  if (app.projection.diagnostics !== 'nominal' || app.projection.metrics !== 'not measured') active.add('diagnostics')
+  return active
+}
+
+function coverageMap() {
+  const active = activeSurfaceKeys()
+  return coverage.map((item) => {
+    const label = app.locale === 'zh' ? item.zh : item.en
+    return `<span class="surface-chip ${active.has(item.key) ? 'is-active' : ''}"><b>${item.key}</b>${escapeHtml(label)}</span>`
+  }).join('')
+}
+
+function scenarioStrip() {
+  return scenarios.map((item) => `
+    <button type="button" class="scenario-card ${item.id === app.scenarioId ? 'active' : ''}" data-scenario="${item.id}">
+      <small>${escapeHtml(item.category)}</small>
+      <strong>${escapeHtml(scenarioTitle(item))}</strong>
+      <span>${escapeHtml(scenarioSummary(item))}</span>
+    </button>
+  `).join('')
+}
+
 function processParts() {
-  const parts = []
-  if (app.projection.plan) parts.push(['plan.delta', app.projection.plan])
-  if (app.projection.reasoning) parts.push(['reasoning.delta', app.projection.reasoning])
-  if (app.projection.tool) parts.push(['tool.*', `${app.projection.tool} (${app.projection.toolProgress}%)`])
-  if (app.projection.action) parts.push(['action.*', app.projection.action])
-  if (!parts.length) return `<p class="empty">${labels().scenarioHint}</p>`
-  return parts.map(([kind, text]) => `<div class="part"><b>${escapeHtml(kind)}</b><span>${escapeHtml(text)}</span></div>`).join('')
+  const rows = []
+  if (app.projection.plan) {
+    rows.push(`<div class="part part-plan"><b>plan.delta</b><span>${escapeHtml(app.projection.plan)}</span></div>`)
+  }
+  if (app.projection.reasoning) {
+    rows.push(`<div class="part part-reasoning"><b>reasoning.delta</b><span>${escapeHtml(app.projection.reasoning)}</span></div>`)
+  }
+  if (app.projection.tool) {
+    const running = Number(app.projection.toolProgress) < 100 && app.projection.status !== 'done'
+    rows.push(`
+      <div class="part part-tool ${running ? 'is-running' : 'is-complete'}">
+        <b>tool.lifecycle</b>
+        <span>${escapeHtml(app.projection.tool)}</span>
+        <progress max="100" value="${Number(app.projection.toolProgress) || 0}"></progress>
+      </div>
+    `)
+  }
+  if (app.projection.action || app.blockedBy) {
+    rows.push(`<div class="part part-action"><b>action.required</b><span>${escapeHtml(app.projection.action || app.blockedBy)}</span></div>`)
+  }
+  if (!rows.length) {
+    const message = app.applied.length ? labels().noProcess : labels().scenarioHint
+    return `<p class="empty">${message}</p>`
+  }
+  return `<div class="process-stack">${rows.join('')}</div>`
 }
 
 function conversationParts() {
   const rows = [
-    `<div class="bubble user"><strong>User</strong><p>${escapeHtml(labels().draft)}</p></div>`
+    `<div class="bubble user"><small>User</small><strong>${escapeHtml(labels().draft)}</strong></div>`
   ]
-  if (app.projection.reasoning) rows.push(`<div class="bubble process"><strong>reasoning.delta</strong><p>${escapeHtml(app.projection.reasoning)}</p></div>`)
-  if (app.projection.tool) rows.push(`<div class="bubble process"><strong>tool UI</strong><p>${escapeHtml(app.projection.tool)} · ${app.projection.toolProgress}%</p></div>`)
-  if (app.projection.action) rows.push(`<div class="bubble action"><strong>action.required</strong><p>${escapeHtml(app.projection.action)}</p></div>`)
-  rows.push(`<div class="bubble assistant"><strong>Assistant text</strong><p>${escapeHtml(app.projection.text || '...')}</p></div>`)
-  if (app.projection.artifact) rows.push(`<div class="bubble ref"><strong>artifact ref</strong><p>${escapeHtml(app.projection.artifact)}</p></div>`)
-  if (app.projection.evidence) rows.push(`<div class="bubble ref"><strong>evidence ref</strong><p>${escapeHtml(app.projection.evidence)}</p></div>`)
+  if (app.projection.plan) rows.push(`<div class="bubble process"><small>plan.delta</small><strong>${escapeHtml(app.projection.plan)}</strong></div>`)
+  if (app.projection.reasoning) rows.push(`<div class="bubble process reasoning"><small>reasoning.delta</small><strong>${escapeHtml(app.projection.reasoning)}</strong></div>`)
+  if (app.projection.tool) rows.push(`<div class="bubble process tool"><small>tool UI</small><strong>${escapeHtml(app.projection.tool)} · ${app.projection.toolProgress}%</strong></div>`)
+  if (app.projection.action) rows.push(`<div class="bubble action"><small>action.required</small><strong>${escapeHtml(app.projection.action)}</strong></div>`)
+  rows.push(`<div class="bubble assistant"><small>Assistant text</small><strong>${escapeHtml(app.projection.text || '...')}</strong></div>`)
+  if (app.projection.artifact) rows.push(`<div class="bubble ref"><small>artifact ref</small><strong>${escapeHtml(app.projection.artifact)}</strong></div>`)
+  if (app.projection.evidence) rows.push(`<div class="bubble ref"><small>evidence ref</small><strong>${escapeHtml(app.projection.evidence)}</strong></div>`)
   return rows.join('')
 }
 
 function projectionList() {
   const keys = ['session', 'hydrated', 'queue', 'status', 'task', 'context', 'memory', 'permission', 'risk', 'metrics', 'diagnostics', 'archive']
   return keys.map((key) => `<span><b>${key}</b>${escapeHtml(value(app.projection[key]))}</span>`).join('')
+}
+
+function metricCards() {
+  return `
+    <span><b>${app.cursor}/${scenario().events.length}</b><small>events applied</small></span>
+    <span><b>${progressPercent()}%</b><small>projection progress</small></span>
+    <span><b>${activeSurfaceKeys().size}</b><small>surfaces active</small></span>
+  `
 }
 
 function render() {
@@ -431,72 +504,83 @@ function render() {
   const payload = Object.keys(app.payload).length ? JSON.stringify(app.payload, null, 2) : t.noPayload
   const docsHref = app.locale === 'zh' ? '../../zh/reference/flow-and-taxonomy' : '../../en/reference/flow-and-taxonomy'
   const examplesHref = app.locale === 'zh' ? '../../zh/examples/' : '../../en/examples/'
+  const homeHref = app.locale === 'zh' ? '../../zh/' : '../../en/'
   document.documentElement.lang = app.locale === 'zh' ? 'zh-CN' : 'en'
   document.querySelector('#app').innerHTML = `
     <main class="shell">
-      <header class="hero">
-        <div>
+      <header class="topbar">
+        <a class="brand" href="${homeHref}">
+          <span class="brand-mark">AUI</span>
+          <span><strong>Agent UI</strong><small>v0.5.0 workbench</small></span>
+        </a>
+        <nav class="top-actions" aria-label="Workbench navigation">
+          <a href="${homeHref}">${t.home}</a>
+          <a href="${examplesHref}">${t.examples}</a>
+          <a href="${docsHref}">${t.launchDocs}</a>
+          <button type="button" data-action="language">${t.language}</button>
+        </nav>
+      </header>
+
+      <section class="run-header">
+        <div class="run-copy">
           <p class="eyebrow">${t.eyebrow}</p>
           <h1>${t.title}</h1>
           <p>${t.subtitle}</p>
         </div>
-        <div class="hero-actions">
-          <a href="${docsHref}">${t.launchDocs}</a>
-          <button type="button" data-action="language">${t.language}</button>
-          <a href="${examplesHref}">${t.docs}</a>
+        <div class="run-summary">
+          <div class="status-pill" data-state="${escapeHtml(app.blockedBy ? 'waiting' : app.projection.status)}">
+            <small>${escapeHtml(current.category)}</small>
+            <strong data-ui="status-text">${escapeHtml(statusLabel())}</strong>
+          </div>
+          <div class="metrics">${metricCards()}</div>
         </div>
-      </header>
+      </section>
 
-      <section class="command-bar">
-        <div class="status-pill" data-state="${escapeHtml(app.blockedBy ? 'waiting' : app.projection.status)}">
-          <small>${escapeHtml(current.category)}</small>
-          <strong>${escapeHtml(statusLabel())}</strong>
+      <section class="scenario-strip" aria-label="${t.scenarios}">
+        ${scenarioStrip()}
+      </section>
+
+      <section class="control-deck">
+        <div>
+          <strong>${escapeHtml(scenarioTitle(current))}</strong>
+          <span>${escapeHtml(scenarioSummary(current))}</span>
         </div>
-        <button type="button" class="primary" data-action="play">${app.playing ? t.pause : t.play}</button>
-        <button type="button" data-action="step" ${app.blockedBy ? 'disabled' : ''}>${t.step}</button>
-        <button type="button" data-action="reset">${t.reset}</button>
-        ${controls}
+        <div class="control-actions">
+          <button type="button" class="primary" data-action="play">${app.playing ? t.pause : t.play}</button>
+          <button type="button" data-action="step" ${app.blockedBy ? 'disabled' : ''}>${t.step}</button>
+          <button type="button" data-action="reset">${t.reset}</button>
+          ${controls}
+        </div>
       </section>
 
       ${app.blockedBy ? `<p class="blocked">${t.blocked} <code>${escapeHtml(app.blockedBy)}</code></p>` : ''}
 
-      <section class="workspace">
-        <aside class="sidebar panel">
-          <div class="panel-head"><span>${t.scenarios}</span></div>
-          <p class="hint">${t.scenarioHint}</p>
-          <nav class="scenario-list">
-            ${scenarios.map((item) => `
-              <button type="button" class="${item.id === app.scenarioId ? 'active' : ''}" data-scenario="${item.id}">
-                <strong>${escapeHtml(scenarioTitle(item))}</strong>
-                <small>${escapeHtml(scenarioSummary(item))}</small>
-              </button>
-            `).join('')}
-          </nav>
-          <div class="coverage">
-            <div class="panel-head"><span>${t.coverage}</span></div>
-            ${coverage.map(([key, label]) => `<span><b>${key}</b>${label}</span>`).join('')}
-          </div>
+      <section class="studio-grid">
+        <aside class="rail panel">
+          <div class="panel-head"><span>${t.eventStream}</span><code>${app.cursor}/${current.events.length}</code></div>
+          <ol class="event-list">${eventRows()}</ol>
+          <div class="panel-head coverage-head"><span>${t.coverage}</span><code>${activeSurfaceKeys().size}/${coverage.length}</code></div>
+          <div class="coverage-map">${coverageMap()}</div>
         </aside>
 
-        <section class="main-column">
+        <section class="stage">
+          <article class="panel conversation">
+            <div class="panel-head"><span>${t.conversation}</span><code>${escapeHtml(current.id)}</code></div>
+            <div class="conversation-feed">${conversationParts()}</div>
+          </article>
+
           <article class="panel composer">
             <div class="panel-head"><span>${t.composer}</span><code>${escapeHtml(app.projection.permission)}</code></div>
             <div class="composer-box">${escapeHtml(t.draft)}</div>
             <div class="chips"><span>${escapeHtml(app.projection.context)}</span><span>${escapeHtml(app.projection.queue)}</span><span>${escapeHtml(app.projection.risk)}</span></div>
             <div class="composer-actions"><button>${t.send}</button><button>${t.queue}</button><button>${t.steer}</button></div>
           </article>
-
-          <article class="panel conversation">
-            <div class="panel-head"><span>${t.conversation}</span><code>${escapeHtml(current.id)}</code></div>
-            ${conversationParts()}
-          </article>
         </section>
 
-        <section class="right-column">
+        <aside class="inspector">
           <article class="panel live-process">
             <div class="panel-head"><span>${t.process}</span><code>${escapeHtml(app.projection.status)}</code></div>
             ${processParts()}
-            <progress max="100" value="${Number(app.projection.toolProgress) || 0}"></progress>
           </article>
 
           <article class="panel artifact">
@@ -508,22 +592,17 @@ function render() {
             <div class="panel-head"><span>${t.evidence}</span><code>${escapeHtml(app.projection.replay || 'none')}</code></div>
             ${app.projection.evidence ? `<div class="evidence-card"><b>${escapeHtml(app.projection.evidence)}</b><p>${escapeHtml(app.projection.replay)}</p></div>` : `<p class="empty">${t.noEvidence}</p>`}
           </article>
-        </section>
-      </section>
 
-      <section class="bottom-grid">
-        <article class="panel">
-          <div class="panel-head"><span>${t.eventStream}</span><code>${app.cursor}/${current.events.length}</code></div>
-          <ol class="event-list">${eventRows()}</ol>
-        </article>
-        <article class="panel">
-          <div class="panel-head"><span>${t.inspector}</span><code>projection</code></div>
-          <div class="projection-list">${projectionList()}</div>
-        </article>
-        <article class="panel">
-          <div class="panel-head"><span>${t.payload}</span><code>json</code></div>
-          <pre>${escapeHtml(payload)}</pre>
-        </article>
+          <article class="panel">
+            <div class="panel-head"><span>${t.inspector}</span><code>projection</code></div>
+            <div class="projection-list">${projectionList()}</div>
+          </article>
+
+          <article class="panel payload-panel">
+            <div class="panel-head"><span>${t.payload}</span><code>json</code></div>
+            <pre>${escapeHtml(payload)}</pre>
+          </article>
+        </aside>
       </section>
     </main>
   `
@@ -537,6 +616,8 @@ document.addEventListener('click', (event) => {
   if (target.dataset.action === 'reset') reset()
   if (target.dataset.action === 'language') {
     app.locale = app.locale === 'zh' ? 'en' : 'zh'
+    const next = app.locale === 'zh' ? '?lang=zh' : '?lang=en'
+    window.history.replaceState(null, '', next)
     render()
   }
   if (target.dataset.scenario) reset(target.dataset.scenario)
