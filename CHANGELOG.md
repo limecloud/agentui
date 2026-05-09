@@ -2,15 +2,22 @@
 
 ## Unreleased
 
+## v0.6.0 - 2026-05-09
+
 ### Added
 
-- Adds a standalone runnable Agent UI workbench demo application at `/examples/agent-workbench/`, covering session/thread shell, composer, runtime status, ordered message parts, live process, tool lifecycle, HITL, artifacts, evidence/replay, context, policy, diagnostics, and timeline archive.
+- Adds Team Workbench to the Agent UI standard: team roster, work board, delegation graph, handoff lane, worker notifications, review lane, teammate transcript, background teammate, remote teammate, and team policy surfaces.
+- Adds a team topology taxonomy covering `coordinator_team`, `parallel_workers`, `specialist_handoff`, `review_team`, `human_agent_board`, `background_teammate`, and `remote_teammate`.
+- Adds a standalone runnable Agent UI workbench demo application at `/examples/agent-workbench/`, covering the full core surface matrix plus team/workbench scenarios.
+- Extends the public event schema with team/agent/work/review event classes, team surfaces, team controls, parent/child ids, topology fields, `runtimeEntity`, runtime status, team phase, and queue/parallelism fields.
 
 ### Changed
 
+- Reframes multi-agent UI around team/teammate/workbench behavior rather than hierarchy-first models.
 - Moves examples out of embedded documentation components: docs pages now link to the standalone demo app, while the demo owns its layout, reducer, scenarios, controls, and projected surfaces.
 - Removes the embedded VitePress demo components now that examples are standalone applications.
 - Converts the basic agent workbench example from a prose/code listing into a standalone runnable frontend workbench link.
+- Aligns the source index with Claude Code team/coordinator behavior, Codex collaborative agent tools, Lime Team Runtime, A2A remote task semantics, Paperclip background heartbeat patterns, and Agent Skills-style specification writing.
 
 ## v0.5.0 - 2026-05-09
 

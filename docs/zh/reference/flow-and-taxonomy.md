@@ -1,11 +1,11 @@
 ---
 title: 全流程与分类
-description: Agent UI lifecycle 与 taxonomy 的完整参考。
+description: Agent UI lifecycle、taxonomy 与 team workbench 的完整参考。
 ---
 
 # 全流程与分类
 
-本页是 Agent UI 的完整 lifecycle 与 taxonomy 参考。写法采用规范文档风格：直接列字段、约束、生命周期阶段和验收项。调研依据集中记录在[引用索引](./source-index)。
+本页是 Agent UI 的完整 lifecycle 与 taxonomy 参考。写法采用规范文档风格：直接列字段、约束、生命周期阶段、表面、Team 工作台规则和验收项。调研依据集中记录在[引用索引](./source-index)。
 
 ## 核心契约
 
@@ -14,18 +14,21 @@ Agent UI 是 Agent 工作台的投影协议。兼容客户端消费有序 runtim
 兼容客户端 MUST：
 
 - 为 active run 保留 runtime event order。
-- 把最终回答文本与 reasoning、tools、actions、artifacts、evidence、status、diagnostics 分离。
+- 把最终回答文本与 reasoning、tools、actions、artifacts、evidence、status、diagnostics、team events 分离。
 - 工作运行中保持 process 可见；完成后默认归档为折叠摘要。
-- 用户写操作必须通过 runtime、policy、artifact、evidence 或 session 的拥有方 API。
+- 当 runtime 暴露 coordinator、teammates、child sessions 或 remote agents 时，保留 team ownership。
+- 用户写操作必须通过 runtime、policy、artifact、evidence、session 或 team-control 的拥有方 API。
 - 对 unknown 或 missing facts 渲染 `unknown`、`unavailable`、`stale` 或 `blocked`，不要从正文猜。
-- 支持旧 session 和长任务的渐进 hydration。
+- 支持旧 session、child sessions、remote tasks 和长任务的渐进 hydration。
 
 兼容客户端 MUST NOT：
 
-- 从 assistant prose 推断 tool success、permission grants、artifact kind、evidence verdicts 或 approval state。
+- 从 assistant prose 推断 tool success、permission grants、artifact kind、evidence verdicts、approval state 或 teammate completion。
 - 在同屏把同一个 runtime fact 同时作为 expanded inline process 和 expanded timeline detail 展示。
 - 在已流式输出文本后，未经 reconciliation 直接追加 final completion text。
-- 把 UI collapse state、selected tab 或 local draft 当作 runtime truth。
+- 把 UI collapse state、selected tab、active pane 或 local draft 当作 runtime truth。
+- 即使来源 transport 把 worker notification 放进 user-role channel，也不能把它当成真实用户消息。
+- 当 runtime 已暴露 agent、task、thread 或 team identity 时，不能把所有 worker 压平成一个匿名 assistant。
 
 ## Lifecycle overview
 
@@ -38,7 +41,7 @@ session/thread open
   -> submit or queue or steer
   -> run accepted
   -> active turn stream
-  -> tool/action loop
+  -> tool/action/team loop
   -> answer/artifact/evidence production
   -> final reconciliation
   -> timeline archive
@@ -54,7 +57,7 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | Field | Required | Constraints | Purpose |
 | --- | --- | --- | --- |
 | `type` | Yes | 字符串 event class。 | 驱动 reducer 行为。 |
-| `sequence` | Recommended | run 或 thread stream 内单调递增。 | 保留 active-run order 与 repair。 |
+| `sequence` | Recommended | run、thread、task 或 child-agent stream 内单调递增。 | 保留 active-run order 与 repair。 |
 | `timestamp` | Recommended | producer timestamp。 | Timeline、latency、replay。 |
 | `sessionId` | Recommended | 稳定 id。 | Session 与 tab projection。 |
 | `threadId` | Recommended | 与 session 不同时提供。 | Conversation recovery 与 branching。 |
@@ -62,7 +65,10 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `turnId` | Recommended | user turn 或 model turn 的稳定 id。 | Message/process grouping。 |
 | `messageId` | Conditional | message parts 需要。 | Text reconciliation。 |
 | `partId` | Conditional | 有序 message parts 可用时需要。 | 穿插式渲染。 |
-| `taskId` | Conditional | background task 或 subagent 需要。 | Task capsule 与 task center。 |
+| `taskId` | Conditional | background task、work item 或 subagent task 需要。 | Task capsule、work board、task center。 |
+| `agentId` | Conditional | fact 属于 child agent、teammate 或 remote agent 时需要。 | Team roster、delegation graph、transcript zoom。 |
+| `parentSessionId` | Conditional | child session 可用时需要。 | Parent/child lineage 与 hydration。 |
+| `parentThreadId` | Conditional | child thread 可用时需要。 | Delegation graph 与 replay。 |
 | `toolCallId` | Conditional | tool lifecycle events 需要。 | Tool state 与 progress。 |
 | `actionId` | Conditional | human-in-the-loop events 需要。 | Approval/input resolution。 |
 | `artifactId` | Conditional | artifact events 需要。 | Artifact workspace routing。 |
@@ -73,31 +79,34 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `surface` | Optional | 主投影表面。 | 渲染 hint，不是 fact owner。 |
 | `persistence` | Optional | 下文 persistence 值之一。 | Hydration 与 retention hint。 |
 | `control` | Optional | 与该 fact 关联的用户动作。 | Controlled write mapping。 |
+| `topology` | Optional | 下文 team topology 值之一。 | 说明工作组织方式。 |
 | `payload` | Optional | 结构化数据。 | Producer-owned fact body。 |
-| `refs` | Optional | ids/refs 数组或映射。 | 链接 artifact、evidence、file 或 raw diagnostics。 |
+| `refs` | Optional | ids/refs 数组或映射。 | 链接 artifact、evidence、transcript、file 或 raw diagnostics。 |
 | `rawEventRef` | Optional | 安全引用，不是带 secret 的原始 payload。 | Debug 与 replay，避免污染 UI。 |
 
 最小示例：
 
 ```json
 {
-  "type": "tool.progress",
+  "type": "agent.spawned",
   "sequence": 42,
-  "sessionId": "session-1",
-  "threadId": "thread-1",
-  "runId": "run-1",
-  "turnId": "turn-1",
-  "messageId": "assistant-1",
-  "partId": "part-tool-1",
-  "toolCallId": "tool-1",
-  "owner": "tool",
-  "scope": "tool_call",
+  "sessionId": "session-lead",
+  "threadId": "thread-lead",
+  "taskId": "task-research",
+  "agentId": "researcher@delivery-team",
+  "parentSessionId": "session-lead",
+  "parentThreadId": "thread-lead",
+  "owner": "agent",
+  "scope": "agent",
   "phase": "acting",
-  "surface": "tool_ui",
-  "persistence": "ephemeral_live",
+  "surface": "team_roster",
+  "persistence": "snapshot",
+  "topology": "coordinator_team",
   "payload": {
-    "label": "Searching",
-    "progress": 0.4
+    "agentName": "researcher",
+    "teamName": "delivery-team",
+    "role": "researcher",
+    "status": "running"
   }
 }
 ```
@@ -118,7 +127,8 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `evidence` | Evidence、review 或 replay service。 | Citations、traces、verdicts、replay ids、review decisions。 |
 | `context` | Context、memory 或 retrieval service。 | Context refs、budgets、missing context、compaction。 |
 | `policy` | Policy、permission、sandbox 或 security service。 | Risk、permission mode、sandbox、waiver、retention。 |
-| `task` | Task scheduler 或 subagent runtime。 | Background job、subagent、team task、queue item。 |
+| `task` | Task scheduler、work-board service 或 subagent runtime。 | Queue item、background teammate、work item、subagent task。 |
+| `agent` | Agent runtime、team runtime 或 remote-agent adapter。 | Teammate identity、availability、handoff、transcript refs。 |
 | `session` | Session/history service。 | Thread metadata、hydration cursor、stale state。 |
 | `diagnostics` | Runtime 或 client diagnostics channel。 | 非用户正文的 debug 与 performance records。 |
 | `ui_projection` | Client UI controller only。 | Collapse state、focused tab、local draft、selected artifact。 |
@@ -131,14 +141,15 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | --- | --- |
 | `application` | 全局健康、provider availability 或 account state。 |
 | `workspace` | Workspace-local context、policy 或 artifact store state。 |
+| `team` | Named team、roster、team preset 或 team memory boundary。 |
 | `session` | Chat session、task session 或 app tab。 |
 | `thread` | 可恢复或可 branch 的 conversation thread。 |
 | `run` | 一次 runtime execution boundary。 |
 | `turn` | thread 内的一次 user turn 或 model turn。 |
-| `message` | 一条 user、assistant、system 或 tool message。 |
+| `message` | 一条 user、assistant、system、tool 或 notification message。 |
 | `part` | 一个有序 message part。 |
-| `task` | Queue item、background job 或 subagent task。 |
-| `agent` | Child agent、collaborator 或 team member。 |
+| `task` | Queue item、work item、background job 或 subagent task。 |
+| `agent` | Child agent、collaborator、teammate 或 remote agent。 |
 | `tool_call` | 一次 tool invocation。 |
 | `action_request` | 一次 human-in-the-loop request。 |
 | `artifact` | 一个 durable deliverable。 |
@@ -153,19 +164,20 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `draft` | 用户正在本地输入。 | 只有持久化 draft 才使用 `state.delta`。 |
 | `submitted` | UI 已提交或排队输入。 | `run.started`、`queue.changed`。 |
 | `accepted` | Runtime 已接受任务。 | `run.status`。 |
-| `routing` | Runtime 正在选择 model、mode、tool surface 或 worker。 | `run.status`、`task.changed`。 |
+| `routing` | Runtime 正在选择 model、mode、tool surface、worker 或 teammate。 | `run.status`、`task.changed`、`team.changed`。 |
 | `preparing` | Runtime 正在组装 context 或 request。 | `run.status`、`context.changed`。 |
 | `planning` | Agent 正在生成或更新计划。 | `plan.delta`、`plan.final`。 |
 | `reasoning` | 正在产生 reasoning/thinking。 | `reasoning.delta`、`reasoning.summary`。 |
-| `acting` | Tool、command、browser、workflow 或 subagent 正在运行。 | `tool.*`、`task.changed`、`agent.changed`。 |
-| `waiting` | Runtime 被用户、权限、依赖或队列阻塞。 | `action.required`、`queue.changed`、`run.status`。 |
+| `acting` | Tool、command、browser、workflow、teammate 或 subagent 正在运行。 | `tool.*`、`task.changed`、`agent.changed`。 |
+| `waiting` | Runtime 被用户、权限、依赖、teammate 或队列阻塞。 | `action.required`、`queue.changed`、`run.status`、`agent.changed`。 |
+| `reviewing` | Reviewer 或 verifier 正在检查结果。 | `review.requested`、`review.completed`、`evidence.changed`。 |
 | `producing` | 正在产生最终文本、artifact 或 evidence。 | `text.delta`、`artifact.*`、`evidence.changed`。 |
 | `reconciling` | 正在合并 streamed facts 与 final facts。 | `text.final`、`messages.snapshot`。 |
-| `completed` | 拥有系统报告成功。 | `run.finished`、`tool.result`。 |
-| `failed` | 拥有系统报告失败。 | `run.failed`、`tool.failed`、`artifact.failed`。 |
+| `completed` | 拥有系统报告成功。 | `run.finished`、`tool.result`、`agent.completed`。 |
+| `failed` | 拥有系统报告失败。 | `run.failed`、`tool.failed`、`artifact.failed`、`agent.completed`。 |
 | `cancelled` | 用户或 runtime 取消任务。 | `run.finished`、`task.changed`。 |
-| `interrupted` | 工作停止，但可从 bookmark 恢复。 | `run.finished`、`state.snapshot`。 |
-| `archived` | 完成后的详情进入 timeline summary。 | `messages.snapshot`、`evidence.changed`。 |
+| `interrupted` | 工作停止，但可从 bookmark 恢复。 | `run.finished`、`state.snapshot`、`agent.handoff`。 |
+| `archived` | 完成后的详情进入 timeline summary。 | `messages.snapshot`、`evidence.changed`、`worker.notification`。 |
 | `hydrating` | Client 正在从 snapshot/history 恢复状态。 | `session.hydrated`、`messages.snapshot`。 |
 
 ### Surface
@@ -185,6 +197,16 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `timeline_evidence` | Process archive、citations、verification、replay、review、audit。 |
 | `session_tabs` | Active、pinned、stale、unread、hydrated、running sessions。 |
 | `diagnostics` | Debug payloads、performance metrics、raw event refs。 |
+| `team_roster` | Human 与 agent teammates、role、source、capability、status、model、policy。 |
+| `work_board` | Human/agent work items、assignee、priority、blocker、progress、dependency。 |
+| `delegation_graph` | Parent/child tasks、coordinator-worker fanout、wait edges、handoff edges。 |
+| `handoff_lane` | Active owner transfer、handoff reason、resume target、memory boundary。 |
+| `worker_notifications` | Completed/failed/killed worker summaries、result refs、usage、duration。 |
+| `review_lane` | Reviewer/verifier verdicts、evidence links、requested fixes。 |
+| `teammate_transcript` | Zoomed teammate conversation、recent messages、tool activity、pending input。 |
+| `background_teammate` | Scheduled 或 triggered background agent 作为 teammate：wake reason、run record、sleep state。 |
+| `remote_teammate` | Remote agent card/capability、task status、input/auth needs、messages、artifacts。 |
+| `team_policy` | 每个 teammate 的 permission、approval、sandbox、plan mode、budget 与 termination controls。 |
 
 ### Persistence
 
@@ -193,7 +215,7 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `ephemeral_live` | 只在 run active 时有价值。 |
 | `transcript` | 作为 conversation history 恢复。 |
 | `snapshot` | 存为有界 recent state 或 session summary。 |
-| `archive` | 存为 timeline/process history。 |
+| `archive` | 存为 timeline/process/team history。 |
 | `artifact_store` | 由 artifact service 存储。 |
 | `evidence_pack` | 由 evidence/replay/review service 存储。 |
 | `diagnostics_log` | 只用于 debug 或性能分析。 |
@@ -207,13 +229,20 @@ Agent UI event adapter SHOULD 把来源事件归一化为以下 envelope。Publi
 | `queue` | Runtime queue API。 |
 | `steer` | Runtime steer/resume API。 |
 | `interrupt` | Runtime interrupt API。 |
+| `delegate` | 创建 teammate/subagent/remote task 的 runtime 或 team-control API。 |
+| `assign` | Work-board 或 team-control API。 |
+| `continue_agent` | 给已有 teammate 发送输入的 runtime/team API。 |
+| `wait` | 等待一个或多个 teammate 的 runtime/team API。 |
+| `stop` | 停止 running teammate 或 task 的 runtime/team API。 |
+| `close` | 关闭或归档 teammate 的 runtime/team API。 |
+| `request_review` | Review/evidence service 或 runtime review API。 |
 | `approve` / `reject` | Runtime 或 policy action response API。 |
 | `answer` | Runtime action response API for structured input。 |
 | `edit` | Artifact service 或 runtime action API。 |
-| `retry` | Runtime retry、tool retry 或 artifact retry API。 |
+| `retry` | Runtime retry、tool retry、artifact retry 或 teammate retry API。 |
 | `rollback` | Artifact 或 session history API。 |
 | `export` | Artifact 或 evidence export API。 |
-| `open_detail` | 只读 session、artifact、evidence 或 diagnostics API。 |
+| `open_detail` | 只读 session、artifact、evidence、transcript 或 diagnostics API。 |
 
 ## 标准事件类
 
@@ -240,8 +269,13 @@ Event class list 可扩展。以下类是便携 baseline。
 | `tool.failed` | Tool 以错误完成。 |
 | `action.required` / `action.resolved` | Runtime 因用户或 policy 决策暂停，然后恢复。 |
 | `queue.changed` | Queued turns、steer state 或 queue order 变化。 |
-| `task.changed` | Background task、subagent 或 team task 变化。 |
-| `agent.changed` | Child agent/collaborator 状态变化。 |
+| `task.changed` | Background task、subagent、work item 或 team task 变化。 |
+| `agent.changed` | Child agent、teammate、collaborator 或 remote-agent 状态变化。 |
+| `agent.spawned` / `agent.completed` | Teammate/worker/remote collaborator 启动或返回。 |
+| `agent.handoff` | Active agent 或 task owner 因明确原因切换，并带 resume target。 |
+| `team.changed` | Team roster、selected team、work board、team memory 或 team policy 变化。 |
+| `worker.notification` | Worker result、failure、kill、usage 或 summary notification 到达。 |
+| `review.requested` / `review.completed` | Reviewer/verifier request 或 verdict 变化。 |
 | `context.changed` | Context selection、budget、retrieval 或 missing context 变化。 |
 | `context.compaction.started` / `context.compaction.completed` | Memory/context compaction boundary。 |
 | `permission.changed` | Policy、sandbox、approval、waiver 或 risk projection 变化。 |
@@ -275,7 +309,11 @@ Message parts 是有序序列。Client SHOULD 按 active parts arrival order 渲
 | `artifact_ref` | `artifact` | `artifact_workspace` | Conversation/process 中是紧凑卡片，正文进入 workspace。 |
 | `evidence_ref` | `evidence` | `timeline_evidence` | 只有 evidence facts 支撑时才展示 citation/trace/review link。 |
 | `context_event` | `context` | `inline_process` 或 `diagnostics` | Budget、retrieval、missing context 或 compaction summary。 |
-| `agent_task` | `task` | `task_capsule` | Subagent/team/background job 摘要。 |
+| `agent_task` | `task` | `task_capsule` 或 `work_board` | Subagent/team/background job 摘要。 |
+| `agent_roster` | `agent` | `team_roster` | Teammates、roles、status 与 capability boundaries。 |
+| `agent_handoff` | `agent` | `handoff_lane` 或 `delegation_graph` | 展示 active-agent transfer，但不重写 transcript authorship。 |
+| `worker_notification` | `agent` 或 `task` | `worker_notifications` 或 `timeline_evidence` | 内部 worker result；不是用户消息，也不是 final prose。 |
+| `remote_agent_status` | `agent` 或 `task` | `remote_teammate` | Remote task、input/auth need、artifact update 或 terminal state。 |
 | `file_change` | `artifact` 或 `tool` | `artifact_workspace` 或 `timeline_evidence` | Diff/review surface，不放最终 prose。 |
 | `error` | Owning system | `runtime_status`、`tool_ui` 或 `task_capsule` | 可恢复 diagnostic 与下一步动作。 |
 | `diagnostic` | `diagnostics` | `diagnostics` | 默认从正常 transcript 隐藏。 |
@@ -302,9 +340,11 @@ Message parts 是有序序列。Client SHOULD 按 active parts arrival order 渲
 | --- | --- | --- |
 | `tool_approval` | `policy` 或 `runtime` | Approve/reject，带 tool name、scope、risk 和 safe input。 |
 | `plan_decision` | `runtime` | 接受、拒绝或要求修改 proposed plan。 |
+| `teammate_plan_decision` | `agent` 或 `runtime` | 标明请求审批的 teammate，并把 response 路由回该 teammate，而不是父对话。 |
 | `structured_input` | `action` | 带 stable schema 与 request id 的 form/options。 |
 | `clarification` | `runtime` | 回答问题，但不能假装 run 已完成。 |
 | `permission_grant` | `policy` | Runtime 确认后的限时/限域 permission state。 |
+| `delegated_permission` | `policy` 或 `runtime` | Approval card 必须展示触发请求的 delegated teammate/subagent。 |
 | `credential_request` | `policy` 或 secret store | 绝不在 message text 或 diagnostics 暴露 secret values。 |
 | `artifact_review` | `artifact` 或 `evidence` | Review diff、version、export 或 handoff result。 |
 
@@ -312,17 +352,72 @@ UI MUST 只在 owning runtime 或 policy system 确认后，才把 action 标为
 
 ## Task 与 multi-agent taxonomy
 
-Agent UI SHOULD 把长任务从 conversation transcript 分离出来分类。
+Agent UI SHOULD 把长任务和 multi-agent work 从 conversation transcript 分离出来分类。
 
 | Item | Scope | Default surface | Status values |
 | --- | --- | --- | --- |
 | Queued turn | `task` | `task_capsule` | `queued`、`promoted`、`removed`、`started`。 |
-| Background job | `task` | `task_capsule` | `running`、`blocked`、`failed`、`completed`。 |
-| Subagent | `agent` | `task_capsule` 或 `session_tabs` | `spawning`、`running`、`waiting`、`failed`、`completed`。 |
-| Team/collaboration | `agent` | `task_capsule` 或 team panel | `invited`、`active`、`handed_off`、`done`。 |
-| Review mode | `task` 或 `evidence` | `timeline_evidence` | `entered`、`exited`、`decision_recorded`。 |
+| Work item | `task` | `work_board` | `open`、`claimed`、`running`、`blocked`、`reviewing`、`done`。 |
+| Background job | `task` | `task_capsule` 或 `background_teammate` | `scheduled`、`sleeping`、`waking`、`running`、`blocked`、`paused`、`failed`、`completed`。 |
+| Teammate/subagent | `agent` | `team_roster`、`task_capsule` 或 `session_tabs` | `spawning`、`running`、`waiting`、`needs_input`、`plan_ready`、`idle`、`failed`、`completed`、`killed`、`closed`。 |
+| Coordinator team | `team` 或 `agent` | `team_roster`、`delegation_graph`、`worker_notifications` | `forming`、`active`、`waiting`、`merging`、`done`。 |
+| Specialist handoff | `agent` | `handoff_lane` 或 `delegation_graph` | `handoff_requested`、`accepted`、`active`、`returned`、`resumed`。 |
+| Review teammate | `agent` 或 `evidence` | `review_lane` | `requested`、`reviewing`、`passed`、`changes_requested`、`failed`。 |
+| Human/agent board | `task` 或 `team` | `work_board` | `assigned`、`claimed`、`blocked`、`commented`、`done`。 |
+| Remote teammate task | `task` 或 `agent` | `remote_teammate` | `submitted`、`working`、`input_required`、`auth_required`、`completed`、`failed`、`canceled`、`rejected`。 |
 
-Conversation text 可以说明 task outcome，但 task status 本身属于 task/runtime facts。
+Conversation text 可以说明 task outcome，但 task status 本身属于 task/runtime facts。当来源 runtime 暴露 agent/task ownership 时，multi-agent status MUST NOT 被压平成单一 assistant 作者。
+
+## Runtime execution alignment
+
+Agent UI 不要求所有 runtime 使用同一套内部 taxonomy。但 UI projection 不能在 runtime 已经暴露更小一组 durable entities 时继续发明额外执行分类。兼容 adapter SHOULD 按下面方式映射：
+
+| Runtime entity | Agent UI mapping | Required fields | UI rule |
+| --- | --- | --- | --- |
+| Foreground agent turn | 带 `runtimeEntity=agent_turn` 的 `run.*`、`queue.changed`、`task.changed`。 | `sessionId`、`threadId`、`turnId` 或 `runId`、`runtimeStatus`，可选 `queuedTurnCount`。 | 展示在 runtime status、composer queue 与 task capsule；不要创建额外 teammate。 |
+| Child subagent 或 teammate turn | 带 `runtimeEntity=subagent_turn` 的 `agent.spawned`、`agent.changed`、`task.changed`、`team.changed`。 | `agentId`、`agentName`、`parentSessionId`、可选 `parentThreadId`、`teamName`、`runtimeStatus`、`latestTurnStatus`。 | 作为 teammate/child session 展示并保留 lineage；保留 coordinator-worker 分离。 |
+| Durable automation job | 带 `runtimeEntity=automation_job` 的 `task.changed`，若由 agent 拥有则同时有 `agent.changed`。 | `taskId`、schedule 或 wake reason、`runtimeStatus`、last run ref，可选 `agentId`。 | 作为 background teammate 或 task capsule 展示；不要创建第四类本地 runtime taxonomy。 |
+| Remote protocol task | 带 `runtimeEntity=external_task` 的 `agent.changed`、`task.changed`、`artifact.changed`、`action.required`。 | `agentId`、`remoteTaskId`、remote capability/card ref、`runtimeStatus`、input/auth needs。 | 保留 remote truth，同时投影到 `remote_teammate`。 |
+| Board work item | 带 `runtimeEntity=work_item` 的 `task.changed` 或 `team.changed`。 | `workItemId`、owner/assignee、status、blocker、artifact/evidence refs。 | 展示在 `work_board`；assignment 通过 board/team APIs 写回，不用 runtime status hack。 |
+
+Adapter SHOULD 在 runtime 提供时保留 `teamPhase`、`teamParallelBudget`、`teamActiveCount`、`teamQueuedCount`、`providerConcurrencyGroup`、`providerParallelBudget`、`queueReason` 与 `retryableOverload` 等队列和并发事实。
+
+## Team topology taxonomy
+
+Agent UI SHOULD 描述产出工作的 topology，因为不同 topology 需要不同控制表面。主心智模型是 team/workbench：teammates 协同、交接 owner、请求 review，并保留 evidence。Hierarchy-first 隐喻是具体产品实现选项，不是 Agent UI 的必需 topology。
+
+| Topology | Required UI projection | Typical facts |
+| --- | --- | --- |
+| `solo_run` | 一个 active run，包含 process、tools、artifacts 与 evidence。 | `run.*`、`tool.*`、`artifact.*`。 |
+| `coordinator_team` | Coordinator 加 roster、worker tasks、worker result notifications 与 synthesis boundary。 | `team.changed`、`agent.spawned`、`worker.notification`。 |
+| `parallel_workers` | Fanout/fanin graph、per-worker state、wait controls、partial failures、merge/retry controls。 | `agent.spawned`、`task.changed`、`worker.notification`、`agent.completed`。 |
+| `specialist_handoff` | Active owner indicator、handoff reason、resume target、memory/context boundary。 | `agent.handoff`、`agent.changed`、`messages.snapshot`。 |
+| `review_team` | Reviewer/verifier lane、verdicts、evidence links、requested fixes。 | `review.requested`、`review.completed`、`evidence.changed`。 |
+| `human_agent_board` | Human 与 agent assignees 的 board，包含 comments、blockers、claims、progress。 | `team.changed`、`task.changed`、`state.delta`。 |
+| `background_teammate` | Wake reason、schedule、background run record、pause/resume、sleep state。 | `task.changed`、`agent.changed`、`evidence.changed`。 |
+| `remote_teammate` | Remote Agent Card/capability、task lifecycle、input/auth required、messages、artifacts。 | `agent.changed`、`task.changed`、`artifact.changed`、`action.required`。 |
+
+Topology 是描述工作组织方式的 metadata。它不替代 `owner`、`scope`、`phase`、`surface` 或 `persistence`。
+
+## Team workbench contract
+
+当 runtime 暴露相关事实时，兼容 Team 工作台 SHOULD 投影这些事实：
+
+| Fact | Required fields | UI rule |
+| --- | --- | --- |
+| Teammate identity | `agentId`、`agentName`、`teamName`、role/source、可选 color/avatar、model、policy。 | 展示在 `team_roster`；不要并入匿名 assistant。 |
+| Parent/child lineage | `parentSessionId`、`parentThreadId`、child `sessionId`/`threadId`、`taskId`、spawn reason。 | 保留到 `delegation_graph`、history、evidence 与 replay。 |
+| Worker notification | `taskId`、`agentId`、status、summary、result ref、可选 usage/duration/tool count。 | 展示到 `worker_notifications`；可以归档，但不能伪装成 user speech。 |
+| Teammate status | `runtimeStatus`、`latestTurnStatus`、queue counts，以及可用时的 `needs_input`、`plan_ready`、`idle`、`shutdown_requested`、`closed`。 | `needs_input` 和 `plan_ready` 优先级高于普通 running；展示 queue/parallel limits，但不要把它们当成 failure。 |
+| Teammate transcript | Transcript ref 或有界 recent messages、tool activity、pending input queue。 | 按需在 `teammate_transcript` 打开；为性能保持有界。 |
+| Work board item | Title、assignee、status、blocker、priority、dependencies、artifact/evidence refs。 | 展示到 `work_board`；用户 assignment 通过 board/team API 写回。 |
+| Handoff | From、to、reason、resume target、memory/context boundary、accepted time。 | 展示到 `handoff_lane`；不重写历史 message authorship。 |
+| Review verdict | Reviewer、target、verdict、evidence refs、requested fixes。 | 展示到 `review_lane`；最终回答可以总结，但 verdict 属于 evidence/review facts。 |
+| Delegated approval | Action id、requesting teammate、policy scope、safe input、parent routing。 | Approval card 必须标明请求动作的 teammate/subagent。 |
+| Remote teammate | Agent Card/capability ref、remote task id、status、messages、artifact updates、auth/input needs。 | 映射到 `remote_teammate`；不能把单次 idle tick 当作 terminal completion。 |
+| Background teammate | Schedule/wake trigger、current run、last run record、pause/terminate controls。 | 作为 teammate-owned background work 展示，不引入额外 hierarchy。 |
+
+Coordinator synthesis 与 worker results 是不同事实。Coordinator 可以向用户总结 worker output，但 worker result、usage 和 transcript refs 仍作为 task/agent/evidence facts 保留。
 
 ## Context、memory 与 compaction taxonomy
 
@@ -333,6 +428,7 @@ Conversation text 可以说明 task outcome，但 task status 本身属于 task/
 | Missing context | `context` | 展示 `blocked` 或 `unknown`，不要伪造可用性。 |
 | Retrieval result | `context` 或 `tool` | Source ids/citations 与 final text 分离。 |
 | Memory write | `context` | 只有用户可见 policy 要求时才展示。 |
+| Team memory | `context` 或 `team` | 展示 repo/team scoped memory refs；脱敏 secrets；保留明确冲突优先级。 |
 | Compaction boundary | `context` | 展示紧凑边界或摘要；保留 resume metadata。 |
 
 ## Permission 与 security taxonomy
@@ -341,7 +437,9 @@ Conversation text 可以说明 task outcome，但 task status 本身属于 task/
 | --- | --- | --- |
 | Risk level | `policy` | 仅在影响用户控制或 required approval 时展示。 |
 | Sandbox/access mode | `policy` | 展示当前约束和 escalation requests。 |
+| Per-teammate permission mode | `policy` 或 `agent` | 当 teammate permission 与 coordinator 不同时展示。 |
 | Approval state | `policy` 或 `runtime` | 不从 prose 推断；必须有 action confirmation。 |
+| Delegated approval source | `policy` 或 `runtime` | 保留触发 approval 的 teammate/subagent。 |
 | Secret-bearing payload | `policy` 或 secret store | 不持久化进 projection state；使用 refs/redaction。 |
 | Retention/waiver | `policy` | 只展示 durable policy facts 或 evidence refs。 |
 
@@ -351,9 +449,9 @@ Conversation text 可以说明 task outcome，但 task status 本身属于 task/
 
 1. 渲染 shell、tab、title 和轻量 snapshot。
 2. 应用 recent message window。
-3. 应用 current run status、queue、pending action 和 task summary。
-4. 应用 compact process/timeline/artifact/evidence references。
-5. Full tool output、artifact body、evidence payload 和 older history 按需加载。
+3. 应用 current run status、queue、pending action、task summary 和 team summary。
+4. 应用 compact process/timeline/artifact/evidence/team references。
+5. Teammate transcripts、full tool output、artifact body、evidence payload、remote task details 和 older history 按需加载。
 
 Hydration events MUST stale-safe。用户切换 session 后，迟到 hydration result 不得覆盖 active view。
 
@@ -371,8 +469,12 @@ Hydration events MUST stale-safe。用户切换 session 后，迟到 hydration r
 8. Queue 与 steer 在视觉和语义上可区分。
 9. Artifact body 默认在 Artifact Workspace，而不是 transcript。
 10. Evidence、replay、review 与 citations 链接到 evidence facts。
-11. Multi-agent 与 background tasks 使用 task/agent facts，不靠 assistant prose。
-12. Context 与 compaction 作为 facts 或 boundaries 展示，不是隐藏文本突变。
-13. Missing facts 渲染诚实 fallback states。
-14. Old sessions 渐进 hydrate，并安全忽略 stale results。
-15. Diagnostics 与 metrics 保持在正常 conversation text 之外。
+11. Multi-agent 与 background tasks 使用 task/agent/team facts，不靠 assistant prose。
+12. 当 runtime 暴露 coordinator、worker、handoff、board、background、review 或 remote-agent facts 时，Team topology 可见。
+13. Worker notifications 能与真实用户消息和 coordinator final text 区分。
+14. Parent/child session/thread/task ids 在 hydration、replay、evidence export 与 transcript zoom 中保留。
+15. Delegated approvals 标明请求动作的 teammate/subagent。
+16. Context 与 compaction 作为 facts 或 boundaries 展示，不是隐藏文本突变。
+17. Missing facts 渲染诚实 fallback states。
+18. Old sessions 渐进 hydrate，并安全忽略 stale results。
+19. Diagnostics 与 metrics 保持在正常 conversation text 之外。

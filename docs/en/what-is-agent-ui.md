@@ -5,7 +5,7 @@ description: Agent UI is a runtime-first standard for agent interaction surfaces
 
 # What is Agent UI?
 
-Agent UI defines how structured agent work becomes visible and controllable in an AI client. It interoperates with runtimes, model streams, tools, workflows, context stores, permission systems, artifact services, evidence stores, sessions, and the host product interface.
+Agent UI defines how structured agent work becomes visible and controllable in an AI client. It interoperates with runtimes, model streams, tools, workflows, context stores, permission systems, artifact services, evidence stores, sessions, teams, and the host product interface.
 
 Use Agent UI when an agent product needs stable UI semantics for:
 
@@ -16,6 +16,7 @@ Use Agent UI when an agent product needs stable UI semantics for:
 - generated artifacts and editable canvases
 - citations, evidence, review, and replay
 - handoff between agents, users, sessions, and clients
+- coordinator teams, parallel workers, teammate transcripts, background teammates, and remote teammates
 
 Do not use it to store model prompts, tool protocols, business facts, executable workflows, artifact contents, evidence records, or permission policy. Those belong to adjacent runtime, workflow, context, artifact, evidence, or policy systems.
 
@@ -26,6 +27,7 @@ Do not use it to store model prompts, tool protocols, business facts, executable
 | `conversation` | What did I ask and what was the final answer? | Messages, composer, final response, branch controls. | User input and assistant text parts. |
 | `process` | What is the agent doing now? | Status strip, thinking summary, tool step, timeline. | Runtime status, reasoning, tool events, errors. |
 | `task` | What work is running, queued, blocked, or awaiting me? | Task capsule, queue panel, approval card, subagent strip. | Queue, turn, task, and action-required records. |
+| `team` | Who is doing the work, who owns the next action, and how do workers hand results back? | Team roster, work board, delegation graph, handoff lane, worker notifications, teammate transcript. | Agent, task, parent/child session, team policy, and worker notification facts. |
 | `artifact` | Where is the deliverable and how can I keep working on it? | Artifact Workspace, preview, editor/canvas, diff, version rail, export. | Artifact service, file store, generated object metadata. |
 | `evidence` | Can I trust, replay, or audit the result? | Sources, evidence pack, verification, review decision. | Trace, source map, validation, replay, audit records. |
 
@@ -34,7 +36,7 @@ The layers can be rendered in one page or across multiple panes. The contract is
 ## Projection model
 
 ```text
-runtime facts + task facts + artifact facts + evidence facts
+runtime facts + task facts + team facts + artifact facts + evidence facts
   -> UI projection model
   -> surfaces and controlled user actions
 ```

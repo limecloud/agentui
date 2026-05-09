@@ -9,7 +9,7 @@ Agent UI v0.6 是 runtime-first 的 Agent 交互表面标准。核心契约是 A
 
 Agent UI 定义 runtime、tool、workflow、context、permission、artifact、evidence、session、task 和 team facts 如何变得可见、可控制、可恢复、可编辑和可审计，同时不让 UI 变成这些事实的权威来源。
 
-完整 lifecycle、event envelope、owner/scope/phase/surface taxonomy 与 validation checklist 见[全流程与分类](./reference/flow-and-taxonomy)。可追溯引用见[引用索引](./reference/source-index)。
+完整 lifecycle、event envelope、owner/scope/phase/surface taxonomy 与 validation checklist 见[全流程与分类](../../reference/flow-and-taxonomy)。可追溯引用见[引用索引](../../reference/source-index)。
 
 ## 范围
 

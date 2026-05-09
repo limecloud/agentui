@@ -15,7 +15,7 @@ The workbench demo now lives outside the documentation shell. It is a complete s
 
 - Documentation pages describe the Agent UI contract and link to the running demo.
 - The standalone demo owns the runtime fixture, reducer, UI shell, controls, and projected state.
-- The demo still uses the same event semantics as the standard: ordered events, typed surfaces, controlled actions, artifact/evidence separation, and completed-process archive.
+- The demo still uses the same event semantics as the standard: ordered events, typed surfaces, controlled actions, artifact/evidence separation, completed-process archive, and team/workbench projection.
 
 ## Related pages
 

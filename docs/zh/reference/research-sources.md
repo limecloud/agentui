@@ -1,6 +1,6 @@
 ---
 title: 调研来源
-description: Agent UI v0.2 背后的外部参考。
+description: Agent UI 背后的外部与实现参考。
 ---
 
 # 调研来源
@@ -22,6 +22,9 @@ Agent UI 参考了现有 Agent UI 协议、SDK 和产品实现模式。标准不
 | [OpenAI ChatKit guides](https://developers.openai.com/api/docs/guides/custom-chatkit.md) | Client tools、file store integration、long-running tool progress、widgets、thread metadata。 | 证明 Agent UI 需要 tool progress、file/artifact contracts 和 chat text 之外的 thread state。 |
 | [Claude Artifacts help](https://support.anthropic.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them) | substantial standalone content 会在主对话之外的 dedicated artifact area 打开。 | 证明 durable deliverables 需要 Artifact 工作区，而不是只停留在 assistant text。 |
 | [Vercel AI SDK `UIMessage`](https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message) | `UIMessage.parts` 包含 text、reasoning、tool、file、source 和 typed data parts。 | 证明 artifacts 应表示为 typed references 或 files，而不是从正文推断。 |
+| [Agent2Agent Protocol specification](https://a2aproject.github.io/A2A/latest/specification/) | Agent Cards、tasks、messages、parts、artifacts 与 remote task states。 | 证明 remote agents 应投影为 remote teammates，并保留明确 task/input/auth/artifact facts。 |
+| [Paperclip heartbeat protocol](https://docs.paperclip.ing/guides/agent-developer/heartbeat-protocol) | Background wakes、heartbeat loop 与 background task records。 | 启发 background teammate surfaces，但 Agent UI 不把 hierarchy-first 模型设为规范隐喻。 |
+| [Agent Skills specification](https://agentskills.io/specification.md) | 用 fields、constraints、examples 与 validation 写出的紧凑协议风格。 | 证明 Agent UI 文档应像可追溯标准，而不是纯设计说明。 |
 
 ## 产品实现参考
 
@@ -35,6 +38,8 @@ Agent UI 也吸收了桌面 Agent 工作台规划中的经验：
 - Evidence export、review、replay 应消费同一组 runtime facts，而不是 UI 猜测。
 - 旧 session hydration 应 shell-first、recent-message-first、timeline-on-demand。
 - Claude Code 与 Codex 这类 agent workbench 的实现经验表明，active live process 应与 completed transcript/archive 分离；running thinking/tool progress 保持可见，历史 reasoning 默认摘要化或按用户设置展开。
+- Claude Code 与 Codex 的 multi-agent 实现表明，coordinator/team work 需要明确 teammate identity、worker notifications、spawn/send/wait/close controls、parent/child thread ids、delegated approvals 与 transcript refs。
+- Lime 当前实现已经在走 Team Workspace 方向：`agent turn`、`subagent turn`、`automation job` 是执行 taxonomy；child subagent sessions、team phase、queue/parallelism facts 与 team memory 应引导 Agent UI，而不是另造 hierarchy-first 模型。
 - AI SDK `UIMessage.parts` 的顺序渲染模式表明，reasoning、tool 和 answer text 应能按 part 顺序穿插，而不是被聚合到单一“思考区”。
 
 ## 调研后的非目标

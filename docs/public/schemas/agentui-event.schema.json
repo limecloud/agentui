@@ -55,7 +55,14 @@
         "state.delta",
         "messages.snapshot",
         "diagnostic.changed",
-        "metric.changed"
+        "metric.changed",
+        "agent.spawned",
+        "agent.completed",
+        "agent.handoff",
+        "team.changed",
+        "worker.notification",
+        "review.requested",
+        "review.completed"
       ]
     },
     "sessionId": {
@@ -184,7 +191,9 @@
         "session",
         "diagnostics",
         "ui_projection",
-        "unknown"
+        "unknown",
+        "agent",
+        "team"
       ]
     },
     "scope": {
@@ -204,7 +213,8 @@
         "action_request",
         "artifact",
         "evidence",
-        "unknown"
+        "unknown",
+        "team"
       ]
     },
     "phase": {
@@ -227,7 +237,8 @@
         "interrupted",
         "archived",
         "hydrating",
-        "unknown"
+        "unknown",
+        "reviewing"
       ]
     },
     "surface": {
@@ -245,7 +256,17 @@
         "session_tabs",
         "diagnostics",
         "custom",
-        "unknown"
+        "unknown",
+        "team_roster",
+        "work_board",
+        "delegation_graph",
+        "handoff_lane",
+        "worker_notifications",
+        "review_lane",
+        "teammate_transcript",
+        "background_teammate",
+        "remote_teammate",
+        "team_policy"
       ]
     },
     "persistence": {
@@ -278,7 +299,14 @@
         "export",
         "open_detail",
         "none",
-        "unknown"
+        "unknown",
+        "delegate",
+        "assign",
+        "continue_agent",
+        "wait",
+        "stop",
+        "close",
+        "request_review"
       ]
     },
     "payload": {
@@ -305,6 +333,172 @@
     "metricName": {
       "type": "string",
       "minLength": 1
+    },
+    "parentSessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parentThreadId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "teamName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "teamId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentRole": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workerNotificationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remoteTaskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transcriptRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "topology": {
+      "type": "string",
+      "enum": [
+        "solo_run",
+        "coordinator_team",
+        "parallel_workers",
+        "specialist_handoff",
+        "review_team",
+        "human_agent_board",
+        "background_teammate",
+        "remote_teammate",
+        "unknown"
+      ]
+    },
+    "runtimeEntity": {
+      "type": "string",
+      "enum": [
+        "agent_turn",
+        "subagent_turn",
+        "automation_job",
+        "external_task",
+        "work_item",
+        "unknown"
+      ]
+    },
+    "runtimeStatus": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "queued",
+        "submitted",
+        "accepted",
+        "preparing",
+        "running",
+        "waiting",
+        "needs_input",
+        "plan_ready",
+        "completed",
+        "failed",
+        "aborted",
+        "cancelled",
+        "closed",
+        "not_found",
+        "unknown"
+      ]
+    },
+    "latestTurnStatus": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "queued",
+        "submitted",
+        "accepted",
+        "preparing",
+        "running",
+        "waiting",
+        "needs_input",
+        "plan_ready",
+        "completed",
+        "failed",
+        "aborted",
+        "cancelled",
+        "closed",
+        "not_found",
+        "unknown"
+      ]
+    },
+    "teamPhase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "teamParallelBudget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "teamActiveCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "teamQueuedCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "queuedTurnCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "queueReason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "providerConcurrencyGroup": {
+      "type": "string",
+      "minLength": 1
+    },
+    "providerParallelBudget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retryableOverload": {
+      "type": "boolean"
+    },
+    "workItemId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "handoffId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workerUsage": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "teamPolicy": {
+      "type": [
+        "object",
+        "null"
+      ]
     }
   }
 }

@@ -20,6 +20,7 @@ description: 独立 Agent UI workbench demo 说明。
 - HITL 使用明确的 `action.required` -> `action.resolved` control path。
 - Artifact 与 evidence facts 路由到最终回答正文之外。
 - Ordered event stream 保持可见，用于 debugging 与 conformance checks。
+- Team 场景展示 roster、work board、delegation graph、handoff lane、worker notifications、review lane、teammate transcript、background teammate 与 remote teammate surfaces。
 
 ## 相关页面
 

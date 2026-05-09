@@ -15,7 +15,7 @@ Workbench demo 已经移出文档壳。它是完整独立页面，自己拥有 l
 
 - 文档页面负责描述 Agent UI contract，并链接到可运行 demo。
 - 独立 demo 自己拥有 runtime fixture、reducer、UI shell、controls 与 projected state。
-- demo 继续使用标准里的事件语义：ordered events、typed surfaces、controlled actions、artifact/evidence separation 与 completed-process archive。
+- demo 继续使用标准里的事件语义：ordered events、typed surfaces、controlled actions、artifact/evidence separation、completed-process archive 与 team/workbench projection。
 
 ## 相关页面
 

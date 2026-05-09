@@ -39,6 +39,9 @@ description: Agent UI requirements 的可追溯来源登记。
 | `SRC-OPENAI-APPS-SDK` | [OpenAI Apps SDK reference](https://developers.openai.com/apps-sdk/reference/) | Tool descriptors、structured tool results、component resources、widget bridge concepts。 | Rich tool UI 应挂在 structured tool/component boundaries 上，而不是从 assistant text 推断。 |
 | `SRC-COPILOTKIT` | [CopilotKit docs](https://docs.copilotkit.ai/) | Frontend actions、generative UI、shared state 与 human-in-the-loop patterns。 | UI tools 与 shared state updates 需要 controlled runtime boundaries。 |
 | `SRC-CLAUDE-ARTIFACTS` | [Claude Artifacts help](https://support.anthropic.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them) | 重要生成内容会在主对话外的 dedicated artifact area 打开。 | Durable deliverables 属于 Artifact Workspace，conversation 中只保留 reference。 |
+| `SRC-A2A-PROTOCOL` | [Agent2Agent Protocol specification](https://a2aproject.github.io/A2A/latest/specification/) | Agent Card、task lifecycle、messages、parts、artifacts、input-required/auth-required 风格的 remote progress。 | Remote teammates 应把 remote agent/task truth 映射到 Agent UI surfaces，而不是替代本地 runtime owner model。 |
+| `SRC-PAPERCLIP-HEARTBEAT` | [Paperclip heartbeat protocol](https://docs.paperclip.ing/guides/agent-developer/heartbeat-protocol) | Background wake/sleep、heartbeat、task/background coordination patterns。 | Background agent work 应作为 scheduled/triggered teammate work；Paperclip 风格的 hierarchy language 不是 Agent UI 规范隐喻。 |
+| `SRC-VITEPRESS-PUBLIC` | [VitePress asset handling and deploy docs](https://vitepress.dev/guide/asset-handling) | `public` 目录 assets 会复制到站点根，仓库 base path 部署需要 base-aware URLs。 | 独立可运行 demo 放在 `docs/public/examples/`，docs 页面只链接，不嵌入 demo 组件。 |
 
 ## 本地实现调研
 
@@ -49,6 +52,9 @@ description: Agent UI requirements 的可追溯来源登记。
 | `SRC-LIME-ROADMAP-AGENTUI` | Lime `docs/roadmap/agentui/` | Conversation/process/task/artifact/evidence 架构、event flow、hydration 与 performance constraints。 | Agent UI 应覆盖完整工作台流程，而不只是 thinking blocks。 |
 | `SRC-CODEX-PROTOCOL` | 本地 OpenAI Codex checkout：`codex-rs/docs/protocol_v1.md` 与 app-server protocol schema | Turn lifecycle、text deltas、plan deltas、approval/input requests、command output deltas、typed thread item categories。 | 标准 taxonomy 应包含 plan、reasoning、command execution、file changes、MCP/dynamic tools、web search、image view/generation、review mode、context compaction 与 collaborative agent calls。 |
 | `SRC-CLAUDECODE-LOCAL` | 本地 Claude Code checkout：message adapter 与 message rendering components | Streaming assistant content blocks、thinking visibility policy、tool progress、tool result grouping、compact boundary handling。 | Active thinking/tool progress 应保持可见，completed history 应降噪，tool results 不应污染 final text。 |
+| `SRC-CLAUDECODE-TEAM` | 本地 Claude Code checkout：`src/Task.ts`、`src/coordinator/coordinatorMode.ts`、`src/tasks/InProcessTeammateTask/types.ts`、`src/tasks/LocalAgentTask/LocalAgentTask.tsx`、`src/tasks/RemoteAgentTask/RemoteAgentTask.tsx`、SDK hook schemas。 | Task types 包含 local/remote agents 与 in-process teammates；coordinator mode 把 worker results 视为内部通知；teammate identity 携带 `agentId`、`agentName`、`teamName`、color、parent session、plan approval、permission、recent messages、pending user messages、idle/shutdown/progress。 | Agent UI v0.6 标准化 team roster、worker notifications、teammate transcript zoom、delegated plan/permission prompts、parent/child lineage，以及 coordinator synthesis 与 worker result 分离。 |
+| `SRC-CODEX-COLLAB` | 本地 Codex checkout：`codex-rs/tui/src/multi_agents.rs`、`codex-rs/protocol/src/protocol.rs`、`codex-rs/app-server-protocol/src/protocol/event_mapping.rs`、`codex-rs/analytics/src/*`。 | Collaborative tools 包含 spawn/send/resume/wait/close；TUI 渲染 spawned/sent/waiting/closed history rows；subagents 跟踪 source、parent thread id、nickname、role、depth；delegated approvals 与 subagent tool-call counts 被追踪。 | Agent UI v0.6 新增 delegate/continue/wait/stop/close controls、parent/child thread metadata、delegated approval source 与 parallel worker fanout/fanin surfaces。 |
+| `SRC-LIME-TEAM-RUNTIME` | Lime checkout：`docs/aiprompts/task-agent-taxonomy.md`、`docs/aiprompts/state-history-telemetry.md`、`src-tauri/src/commands/aster_agent_cmd/subagent_runtime.rs`、`src-tauri/crates/agent/src/session_store.rs`、`src/components/agent/chat/teamWorkspaceRuntime.ts`、`src/lib/teamMemorySync.ts`。 | Lime 将执行分类收敛为 `agent turn`、`subagent turn` 与 `automation job`；child subagent sessions 暴露 role、profile、team preset、runtime status、queue 与 team phase；request telemetry 通过 session/thread/turn/pending/queued/subagent keys 关联；team memory 使用 repo-scoped `team.selection`、`team.subagents`、`team.parent_context`。 | Agent UI v0.6 与 Lime 对齐：把 teammates 视为 child sessions/workbench facts，保留 request/session lineage，携带 `runtimeEntity`/queue/parallelism facts，并把 background work 收敛在 agent/subagent/automation 边界内，而不是创造第四类 runtime taxonomy。 |
 
 ## Requirement traceability
 
@@ -62,3 +68,7 @@ description: Agent UI requirements 的可追溯来源登记。
 | Artifact workspace | `SRC-CLAUDE-ARTIFACTS`、`SRC-OPENAI-APPS-SDK`、`SRC-LIME-ROADMAP-AGENTUI` |
 | Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`、`SRC-CODEX-PROTOCOL` |
 | Spec writing style | `SRC-AGENTSKILLS-SPEC` |
+| Team workbench 与 teammate identity | `SRC-CLAUDECODE-TEAM`、`SRC-CODEX-COLLAB`、`SRC-LIME-TEAM-RUNTIME` |
+| Remote teammate mapping | `SRC-A2A-PROTOCOL`、`SRC-CLAUDECODE-TEAM` |
+| Background teammate mapping | `SRC-PAPERCLIP-HEARTBEAT`、`SRC-LIME-TEAM-RUNTIME` |
+| Standalone runnable examples | `SRC-VITEPRESS-PUBLIC` |

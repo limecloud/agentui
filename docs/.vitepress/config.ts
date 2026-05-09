@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 const base = process.env.VITEPRESS_BASE || '/'
 
-const versions = ['0.5.0', '0.4.8', '0.4.7', '0.4.6', '0.4.5', '0.4.4', '0.4.3', '0.4.2', '0.4.1', '0.4.0', '0.3.0', '0.2.0', '0.1.0']
+const versions = ['0.6.0', '0.5.0', '0.4.8', '0.4.7', '0.4.6', '0.4.5', '0.4.4', '0.4.3', '0.4.2', '0.4.1', '0.4.0', '0.3.0', '0.2.0', '0.1.0']
 
 const enVersionItems = versions.flatMap((version) => [
   { text: `v${version} overview`, link: `/en/versions/v${version}/overview` },

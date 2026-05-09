@@ -17,8 +17,9 @@ The adapter MUST:
 
 - Normalize source events into Agent UI event classes.
 - Preserve per-run or per-thread order with `sequence` when the source provides order.
-- Attach stable ids: `sessionId`, `threadId`, `runId`, `turnId`, `messageId`, `partId`, `toolCallId`, `actionId`, `artifactId`, and `evidenceId` when available.
+- Attach stable ids: `sessionId`, `threadId`, `runId`, `turnId`, `messageId`, `partId`, `taskId`, `agentId`, `parentSessionId`, `parentThreadId`, `toolCallId`, `actionId`, `artifactId`, and `evidenceId` when available.
 - Classify events with `owner`, `scope`, `phase`, `surface`, and `persistence` when the source contains enough information.
+- Preserve runtime execution shape with `runtimeEntity`, `runtimeStatus`, `latestTurnStatus`, `teamPhase`, queue counts, and provider/team concurrency facts when available.
 - Keep raw or secret-bearing payloads out of normal projection state; store only safe summaries or refs.
 
 The adapter SHOULD NOT spread provider-specific parsing into message, tool, artifact, or timeline components.
@@ -37,6 +38,11 @@ The adapter SHOULD NOT spread provider-specific parsing into message, tool, arti
 | Approval, interrupt, elicitation, structured input | `action.required`, `action.resolved` |
 | Queue item or steer state | `queue.changed` |
 | Background job, subagent, team member | `task.changed`, `agent.changed` |
+| Teammate spawned/completed or worker result notification | `agent.spawned`, `agent.completed`, `worker.notification` |
+| Team roster, work board, selected team, team memory, policy | `team.changed` |
+| Active owner or specialist handoff | `agent.handoff` |
+| Reviewer/verifier request or verdict | `review.requested`, `review.completed`, `evidence.changed` |
+| Remote agent task or background teammate state | `agent.changed`, `task.changed`, `artifact.changed`, `action.required` |
 | Context selection, retrieval, budget, missing context | `context.changed` |
 | Memory/context compaction | `context.compaction.started`, `context.compaction.completed` |
 | Permission, sandbox, policy, risk state | `permission.changed` |
@@ -55,11 +61,14 @@ The adapter SHOULD NOT spread provider-specific parsing into message, tool, arti
 3. Plan events update process or human-in-the-loop plan review surfaces.
 4. Tool events update inline process and timeline projections; full output loads on demand.
 5. Action events update task attention state and human-in-the-loop surfaces.
-6. Queue, task, and agent events update task capsules and session/task surfaces.
+6. Queue, task, and agent events update task capsules and session/task/team surfaces.
 7. Context and permission events update context chips, status, policy controls, or diagnostics; they do not become final answer text.
 8. Artifact events update artifact cards, workspace panels, versions, diffs, and export state.
 9. Evidence events update citations, review, replay, verification, and evidence surfaces.
-10. Final events reconcile content; they do not blindly append duplicate text.
+10. Team events update roster, board, delegation, handoff, worker notification, review, transcript, background, remote, or team-policy surfaces.
+11. Worker notifications remain task/agent facts even when the source transport uses a user-role channel.
+12. Runtime entity facts classify foreground turns, child teammate turns, automation jobs, external tasks, and board work items without creating extra local runtime categories.
+13. Final events reconcile content; they do not blindly append duplicate text.
 
 ## Identity requirements
 
@@ -73,6 +82,13 @@ Runtime facts SHOULD carry stable identifiers:
 - content part id
 - task id
 - agent id
+- team id or team name
+- runtime entity kind
+- runtime status and latest turn status
+- team phase, queue reason, and parallelism counts when available
+- parent session id
+- parent thread id
+- remote task id when applicable
 - queued turn id
 - action request id
 - tool call id
@@ -100,6 +116,8 @@ If an event lacks required fields, the UI SHOULD:
 5. Missing artifact metadata renders as `unknown` rather than guessed from prose.
 6. An artifact export event updates export state without copying binary payload into message text.
 7. A queued turn updates task capsules without creating fake assistant prose.
-8. A subagent event updates task/agent state without being flattened into the final answer.
-9. Context compaction creates a boundary or summary without replaying old reasoning as answer text.
-10. Safe diagnostics remain inspectable without entering normal conversation text.
+8. A subagent event updates task/agent/team state without being flattened into the final answer.
+9. A worker notification is distinguishable from a real user message and links to worker result/transcript refs.
+10. A delegated approval card identifies the teammate/subagent that requested the action.
+11. Context compaction creates a boundary or summary without replaying old reasoning as answer text.
+12. Safe diagnostics remain inspectable without entering normal conversation text.

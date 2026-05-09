@@ -113,14 +113,78 @@ Pass condition: UI never fabricates success, approval, artifact type, or evidenc
 
 ## 12. Task and multi-agent state
 
-1. Runtime emits a queued turn, background task, or subagent update with a stable task/agent id.
-2. UI updates task capsules or task center without creating fake assistant prose.
-3. Needs-input, failed, and plan-ready states are promoted above normal running state.
-4. Completed task details archive into timeline summaries or task history.
+1. Runtime emits a queued turn, background task, teammate, subagent, or remote-agent update with a stable task/agent id.
+2. UI updates task capsules, team roster, work board, or task center without creating fake assistant prose.
+3. Needs-input, failed, plan-ready, and delegated-approval states are promoted above normal running state.
+4. Completed task details archive into timeline summaries, worker notifications, or task history.
 
 Pass condition: long-running and multi-agent work is observable and controllable outside the final answer transcript.
 
-## 13. Context and compaction
+## 13. Coordinator team
+
+1. A coordinator delegates work to one or more teammates.
+2. UI shows the coordinator, teammates, roles, statuses, and parent/child session or thread ids.
+3. Worker results arrive as worker notifications, not as real user messages.
+4. Coordinator synthesis remains separate from worker result facts and transcript refs.
+
+Pass condition: the user can see who did what and can trace worker results without confusing them with user speech.
+
+## 14. Parallel workers
+
+1. Runtime spawns multiple workers for independent tasks.
+2. UI shows fanout/fanin state, wait state, partial completion, failures, and retry/continue controls.
+3. UI shows queue/parallelism facts such as team phase, active count, queued count, and provider concurrency group when available.
+4. Running workers remain visible while active.
+5. Completed worker details archive into timeline/evidence without flattening the team to one assistant.
+
+Pass condition: parallel delegation is visible, resumable, and auditable.
+
+## 15. Specialist handoff
+
+1. Runtime changes active owner from one teammate to another.
+2. UI shows from, to, reason, resume target, and memory/context boundary.
+3. Past transcript authorship is not rewritten.
+4. The new owner can continue with its own policy and context constraints.
+
+Pass condition: the user can tell who owns the work now and why.
+
+## 16. Review team
+
+1. Runtime or user requests review from a reviewer/verifier teammate.
+2. UI shows reviewer, target, status, evidence refs, verdict, and requested fixes.
+3. Review verdict stays in review/evidence facts rather than final prose only.
+4. Requested fixes can be assigned back to a teammate or work item.
+
+Pass condition: review is a first-class lane with traceable evidence and follow-up ownership.
+
+## 17. Human/agent work board
+
+1. Work items are assigned to humans and agents.
+2. UI shows assignee, status, blocker, comments, dependencies, and progress.
+3. User assignment or status changes write through a board/team API.
+4. Completed work links to artifacts or evidence.
+
+Pass condition: mixed human/agent work is managed as tasks, not hidden in the chat transcript.
+
+## 18. Background teammate
+
+1. Runtime schedules or wakes a background teammate.
+2. UI shows wake reason, schedule, current run, last run record, pause/resume, and termination controls.
+3. Background results archive as timeline/evidence facts.
+4. The UI does not introduce a separate hierarchy for background work.
+
+Pass condition: background agent work is understandable as teammate-owned work.
+
+## 19. Remote teammate
+
+1. Runtime creates or connects to a remote agent task.
+2. UI shows remote agent card/capability, task id, status, messages, input/auth needs, and artifact updates.
+3. Input-required and auth-required states are promoted to user controls.
+4. A transient idle status is not treated as terminal completion without remote task confirmation.
+
+Pass condition: remote agent work follows the same team surfaces while preserving remote protocol truth.
+
+## 20. Context and compaction
 
 1. Runtime emits context selection, missing context, budget, retrieval, or compaction facts.
 2. UI shows context chips, budget state, missing-context fallback, or compaction boundary.
@@ -129,7 +193,7 @@ Pass condition: long-running and multi-agent work is observable and controllable
 
 Pass condition: context and memory changes are explicit facts, not hidden text mutations.
 
-## 14. Diagnostics and metrics
+## 21. Diagnostics and metrics
 
 1. Runtime or client emits safe diagnostics or performance metrics.
 2. UI keeps them in diagnostics surfaces or trace views.

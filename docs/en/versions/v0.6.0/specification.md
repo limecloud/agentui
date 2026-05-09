@@ -9,7 +9,7 @@ Agent UI v0.6 is a runtime-first standard for agent interaction surfaces. The co
 
 Agent UI defines how runtime, tool, workflow, context, permission, artifact, evidence, session, task, and team facts become visible, controllable, resumable, editable, and auditable without turning the UI into the authority for those facts.
 
-See [Flow and taxonomy](./reference/flow-and-taxonomy) for the complete lifecycle, event envelope, owner/scope/phase/surface taxonomy, and validation checklist. See [Source index](./reference/source-index) for traceable citations.
+See [Flow and taxonomy](../../reference/flow-and-taxonomy) for the complete lifecycle, event envelope, owner/scope/phase/surface taxonomy, and validation checklist. See [Source index](../../reference/source-index) for traceable citations.
 
 ## Scope
 

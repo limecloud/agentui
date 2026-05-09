@@ -1,8 +1,8 @@
 :root {
   color-scheme: light;
-  --canvas: #e9eee5;
+  --canvas: #e7ece4;
   --paper: #fffaf0;
-  --paper-soft: rgba(255, 250, 240, 0.78);
+  --paper-soft: rgba(255, 250, 240, 0.82);
   --ink: #172421;
   --muted: #68756f;
   --line: rgba(23, 36, 33, 0.14);
@@ -16,7 +16,7 @@
   --red-soft: rgba(167, 56, 37, 0.12);
   --blueprint: #13231f;
   --shadow: 0 24px 70px rgba(24, 36, 32, 0.14);
-  --radius-lg: 30px;
+  --radius-lg: 28px;
   --radius-md: 20px;
   --radius-sm: 14px;
   font-family: "Avenir Next", "Gill Sans", "Segoe UI", sans-serif;
@@ -39,6 +39,7 @@ body {
     linear-gradient(0deg, rgba(23, 36, 33, 0.035) 1px, transparent 1px) 0 0 / 44px 44px,
     radial-gradient(circle at 12% 10%, rgba(15, 111, 100, 0.20), transparent 30rem),
     radial-gradient(circle at 86% 2%, rgba(198, 107, 44, 0.18), transparent 28rem),
+    radial-gradient(circle at 52% 38%, rgba(19, 35, 31, 0.08), transparent 36rem),
     linear-gradient(135deg, #f5eedf 0%, var(--canvas) 48%, #f7eddd 100%);
 }
 
@@ -154,9 +155,15 @@ button.primary {
   gap: 0.56rem;
 }
 
+.home-link {
+  color: var(--paper);
+  border-color: var(--green-deep);
+  background: var(--green-deep);
+}
+
 .run-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) 380px;
   gap: 1rem;
   align-items: stretch;
   margin-top: 1rem;
@@ -192,9 +199,9 @@ h1 {
   max-width: 860px;
   margin: 0;
   font-family: "Iowan Old Style", "Baskerville", Georgia, serif;
-  font-size: clamp(3rem, 6vw, 6.6rem);
-  line-height: 0.88;
-  letter-spacing: -0.075em;
+  font-size: clamp(2.9rem, 5.2vw, 5.8rem);
+  line-height: 0.9;
+  letter-spacing: -0.065em;
   overflow-wrap: normal;
   text-wrap: balance;
   word-break: keep-all;
@@ -290,7 +297,7 @@ h1 {
   justify-items: start;
   min-width: 0;
   gap: 0.32rem;
-  min-height: 7rem;
+  min-height: 6.4rem;
   padding: 0.92rem;
   text-align: left;
   border-radius: 20px;
@@ -360,7 +367,7 @@ h1 {
 
 .studio-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 330px) minmax(460px, 1fr) minmax(360px, 460px);
+  grid-template-columns: minmax(280px, 340px) minmax(420px, 0.92fr) minmax(400px, 1.08fr);
   gap: 1rem;
   align-items: start;
   margin-top: 1rem;
@@ -589,6 +596,14 @@ code,
   background: rgba(15, 111, 100, 0.08);
 }
 
+.bubble.worker {
+  margin-left: 1.4rem;
+  border-color: rgba(19, 35, 31, 0.22);
+  background:
+    linear-gradient(135deg, rgba(15, 111, 100, 0.10), rgba(198, 107, 44, 0.10)),
+    rgba(255, 250, 240, 0.76);
+}
+
 .composer {
   padding-bottom: 1rem;
 }
@@ -715,6 +730,171 @@ pre {
     var(--blueprint);
 }
 
+.team-section {
+  margin-top: 1rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.2rem 0 0.7rem;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-family: "Iowan Old Style", "Baskerville", Georgia, serif;
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.25fr 1fr;
+  gap: 1rem;
+}
+
+.team-panel {
+  min-height: 13rem;
+}
+
+.team-roster,
+.work-board {
+  min-height: 20rem;
+}
+
+.mini-stack,
+.work-stack {
+  display: grid;
+  gap: 0.72rem;
+  padding: 0.86rem;
+}
+
+.mini-card,
+.work-card,
+.status-object {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.84rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.50);
+}
+
+.mini-card > div,
+.work-card > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.mini-card b,
+.work-card b {
+  color: var(--green-deep);
+}
+
+.mini-card small,
+.work-card small,
+.mini-card p,
+.work-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.36;
+}
+
+.mini-card i,
+.work-card i {
+  justify-self: start;
+  padding: 0.24rem 0.55rem;
+  color: var(--green-deep);
+  border-radius: 999px;
+  background: var(--green-soft);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mini-card i[data-status="failed"],
+.mini-card i[data-status="blocked"],
+.mini-card i[data-status="killed"] {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.mini-card code {
+  white-space: normal;
+}
+
+.work-card progress {
+  width: 100%;
+  height: 0.55rem;
+  accent-color: var(--green);
+}
+
+.delegation-list,
+.fact-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.86rem;
+  list-style: none;
+}
+
+.delegation-list li {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.68rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.delegation-list span {
+  color: var(--ochre);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.delegation-list small {
+  color: var(--muted);
+}
+
+.fact-list li,
+.status-object {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.fact-list li {
+  display: grid;
+  gap: 0.42rem;
+  padding: 0.68rem;
+}
+
+.fact-list span,
+.status-object span {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 0.62rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.32;
+}
+
+.fact-list b,
+.status-object b {
+  color: var(--ink);
+}
+
+.compact {
+  margin: 0.86rem;
+}
+
 @media (max-width: 1320px) {
   .scenario-strip {
     grid-auto-columns: minmax(250px, 1fr);
@@ -725,7 +905,8 @@ pre {
 
   .run-header,
   .studio-grid,
-  .control-deck {
+  .control-deck,
+  .team-grid {
     grid-template-columns: 1fr;
   }
 
@@ -800,7 +981,10 @@ pre {
   .part,
   .surface-chip,
   .projection-list span,
-  .event-list li {
+  .event-list li,
+  .delegation-list li,
+  .fact-list span,
+  .status-object span {
     grid-template-columns: 1fr;
   }
 

@@ -16,6 +16,7 @@ Examples are complete runnable demo applications, not components embedded inside
 - Session/thread shell, composer, runtime status, ordered message parts, and inline process.
 - Tool lifecycle, human-in-the-loop controls, task state, artifact workspace, and evidence/replay.
 - Context, memory compaction, permission/policy, diagnostics, metrics, and timeline archive.
+- Team workbench scenarios: coordinator teams, parallel workers, specialist handoffs, review teams, human/agent boards, background teammates, and remote teammates.
 
 ## Related pages
 

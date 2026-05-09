@@ -20,6 +20,7 @@ The interactive workbench is no longer embedded in this documentation page. Open
 - HITL uses an explicit `action.required` -> `action.resolved` control path.
 - Artifact and evidence facts route outside the final answer body.
 - The ordered event stream remains visible for debugging and conformance checks.
+- Team scenarios show roster, work board, delegation graph, handoff lane, worker notifications, review lane, teammate transcript, background teammate, and remote teammate surfaces.
 
 ## Related pages
 

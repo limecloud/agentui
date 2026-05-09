@@ -1,6 +1,6 @@
 # Agent UI
 
-> Agent UI is a portable, runtime-first standard for agent interaction surfaces. It defines how clients project runtime facts into composer, message parts, status, tool UI, task capsules, human-in-the-loop controls, artifact workspaces, timeline evidence, and session surfaces without becoming the execution authority.
+> Agent UI is a portable, runtime-first standard for agent interaction surfaces. It defines how clients project runtime facts into composer, message parts, status, tool UI, task capsules, human-in-the-loop controls, artifact workspaces, timeline evidence, session surfaces, and team workbench surfaces without becoming the execution authority.
 
 Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when a single prompt needs the current core documentation in one markdown file.
 
@@ -44,6 +44,7 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 
 - [Glossary](https://limecloud.github.io/agentui/en/reference/glossary): Terms used by the standard.
 - [Flow and taxonomy](https://limecloud.github.io/agentui/en/reference/flow-and-taxonomy): Complete lifecycle, event envelope, taxonomy, and validation checklist.
+- [Team/workbench runtime alignment](https://limecloud.github.io/agentui/en/reference/flow-and-taxonomy#runtime-execution-alignment): Mapping for agent turns, child teammate turns, automation jobs, remote tasks, board items, and queue/parallelism facts.
 - [Source index](https://limecloud.github.io/agentui/en/reference/source-index): Traceable source register for requirements and citations.
 - [Ecosystem boundaries](https://limecloud.github.io/agentui/en/reference/ecosystem-boundaries): Boundaries with adjacent systems.
 - [Research sources](https://limecloud.github.io/agentui/en/reference/research-sources): External sources used to shape the standard.
@@ -58,9 +59,11 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 
 ## Examples and versions
 
-- [Standalone Agent UI Workbench demo](https://limecloud.github.io/agentui/examples/agent-workbench/): Complete runnable demo application outside the documentation shell.
-- [v0.5.0 overview](https://limecloud.github.io/agentui/en/versions/v0.5.0/overview): Latest released version overview.
-- [v0.5.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.5.0/specification): Latest released specification snapshot.
+- [Standalone Agent UI Workbench demo](https://limecloud.github.io/agentui/examples/agent-workbench/): Complete runnable demo application outside the documentation shell with core and team scenarios.
+- [v0.6.0 overview](https://limecloud.github.io/agentui/en/versions/v0.6.0/overview): Latest released version overview.
+- [v0.6.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.6.0/specification): Latest released specification snapshot.
+- [v0.5.0 overview](https://limecloud.github.io/agentui/en/versions/v0.5.0/overview): Previous released version overview.
+- [v0.5.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.5.0/specification): Previous released specification snapshot.
 - [v0.4.8 overview](https://limecloud.github.io/agentui/en/versions/v0.4.8/overview): Previous released version overview.
 - [v0.4.8 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.4.8/specification): Previous released specification snapshot.
 - [v0.4.7 overview](https://limecloud.github.io/agentui/en/versions/v0.4.7/overview): Previous released version overview.

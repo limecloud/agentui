@@ -1,19 +1,21 @@
-# Agent UI v0.5.0
+# Agent UI v0.6.0
 
-Agent UI v0.5.0 promotes the full Agent UI lifecycle and taxonomy into the current standard. It aligns the standard with Agent Skills-style specification writing and adds a traceable source index for future requirement changes.
+Agent UI v0.6.0 standardizes team-style multi-agent UI. It keeps the v0.5 runtime projection rules, then adds the missing workbench layer for coordinator teams, parallel workers, specialist handoffs, review teams, human/agent boards, background teammates, and remote teammates.
 
 ## Highlights
 
-- Adds `Flow and taxonomy` as the complete lifecycle, event envelope, classification, and validation reference.
-- Adds `Source index` as a dedicated citation register for Agent Skills, AG-UI, AI SDK, assistant-ui, LangGraph, OpenAI ChatKit/Apps SDK, Codex, Claude Code, and Lime roadmap research.
-- Extends `agentui-event.schema.json` with taxonomy fields and broader event classes for session, plan, tool, task, agent, context, permission, diagnostics, and metrics.
-- Refreshes runtime projection, runtime standard, message parts, progressive rendering, timeline/evidence, and acceptance scenarios around ordered active-run parts and process archiving.
-- Publishes v0.5.0 English and Simplified Chinese version snapshots.
+- Adds Team Workbench surfaces: team roster, work board, delegation graph, handoff lane, worker notifications, review lane, teammate transcript, background teammate, remote teammate, and team policy.
+- Reframes multi-agent UI around teams and teammates, not a hierarchy-first model.
+- Adds explicit rules for worker notifications: worker results are internal task/agent facts, not real user messages and not coordinator final prose.
+- Adds parent/child lineage, delegated approvals, teammate identity, per-teammate policy, transcript refs, `runtimeEntity`, queue/parallelism facts, and remote/background teammate mapping to the taxonomy and schema.
+- Expands the standalone runnable demo at `/examples/agent-workbench/` into a scenario matrix covering core Agent UI and team workbench scenarios.
+- Updates traceability sources for Claude Code team/coordinator behavior, Codex collaborative agent tools, Lime Team Runtime, A2A remote tasks, Paperclip background wakes, and VitePress standalone demo publishing.
 
 ## Links
 
 - Documentation: https://limecloud.github.io/agentui/
 - Flow and taxonomy: https://limecloud.github.io/agentui/en/reference/flow-and-taxonomy
 - Source index: https://limecloud.github.io/agentui/en/reference/source-index
+- Team workbench demo: https://limecloud.github.io/agentui/examples/agent-workbench/?lang=zh
 - Event schema: https://limecloud.github.io/agentui/schemas/agentui-event.schema.json
 - LLM context: https://limecloud.github.io/agentui/llms-full.txt
