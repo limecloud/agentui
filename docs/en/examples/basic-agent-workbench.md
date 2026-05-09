@@ -8,7 +8,7 @@ description: Standalone runtime-first Agent UI workbench demo.
 The workbench demo now lives outside the documentation shell. It is a complete standalone page that owns its layout, reducer, scenario library, controls, and projected surfaces.
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/">Open standalone Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/" target="_self">Open standalone Agent UI Workbench demo</a>
 </p>
 
 ## Architecture boundary

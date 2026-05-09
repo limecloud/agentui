@@ -8,7 +8,7 @@ description: 独立 Agent UI workbench demo 说明。
 交互式工作台不再嵌入在这个文档页面中。打开独立 demo 后，可以运行 event stream、切换场景、审批 HITL actions、编辑/导出 artifacts，并检查 projected state。
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh">打开独立 Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh" target="_self">打开独立 Agent UI Workbench demo</a>
 </p>
 
 ## Demo 展示内容

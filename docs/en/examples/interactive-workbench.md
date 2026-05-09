@@ -8,7 +8,7 @@ description: Notes for the standalone Agent UI workbench demo.
 The interactive workbench is no longer embedded in this documentation page. Open the standalone demo to run the event stream, switch scenarios, approve HITL actions, edit/export artifacts, and inspect projected state.
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/">Open standalone Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/" target="_self">Open standalone Agent UI Workbench demo</a>
 </p>
 
 ## What the demo demonstrates

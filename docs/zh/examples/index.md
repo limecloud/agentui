@@ -8,7 +8,7 @@ description: 独立可运行的 Agent UI demo 应用。
 Examples 应该是完整可运行的 demo 应用，而不是嵌入在文档页面里的组件。文档负责解释标准；demo 作为独立 workbench surface 运行。
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh">打开独立 Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh" target="_self">打开独立 Agent UI Workbench demo</a>
 </p>
 
 ## 独立 demo 覆盖内容

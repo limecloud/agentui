@@ -8,7 +8,7 @@ description: Standalone runnable Agent UI demo applications.
 Examples are complete runnable demo applications, not components embedded inside the documentation page. The docs explain the standard; the demo runs as its own workbench surface.
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/">Open standalone Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/" target="_self">Open standalone Agent UI Workbench demo</a>
 </p>
 
 ## What the standalone demo covers

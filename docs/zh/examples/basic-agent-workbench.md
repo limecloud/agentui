@@ -8,7 +8,7 @@ description: 独立 Runtime-first Agent UI 工作台 demo。
 Workbench demo 已经移出文档壳。它是完整独立页面，自己拥有 layout、reducer、scenario library、controls 与 projected surfaces。
 
 <p>
-  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh">打开独立 Agent UI Workbench demo</a>
+  <a class="VPButton medium brand" href="../../examples/agent-workbench/?lang=zh" target="_self">打开独立 Agent UI Workbench demo</a>
 </p>
 
 ## 架构边界
