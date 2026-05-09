@@ -95,3 +95,7 @@ The workbench is acceptable when:
 6. Pending approval has an explicit controlled response path.
 7. Old sessions render recent messages before timeline details.
 8. Evidence export is linked to the same run/session facts.
+
+## Live demo
+
+- [Interactive workbench demo](./interactive-workbench.md)

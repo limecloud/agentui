@@ -95,3 +95,7 @@ sequenceDiagram
 6. Pending approval 有明确受控 response path。
 7. 旧 sessions 先渲染 recent messages，再加载 timeline details。
 8. Evidence export 链接回同一 run/session facts。
+
+## Live demo
+
+- [交互式工作台演示](./interactive-workbench.md)
