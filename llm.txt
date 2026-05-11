@@ -14,6 +14,7 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 - [Specification](https://limecloud.github.io/agentui/en/specification): Latest portable Agent UI specification.
 - [Quickstart](https://limecloud.github.io/agentui/en/authoring/quickstart): Implementation quickstart.
 - [Acceptance scenarios](https://limecloud.github.io/agentui/en/authoring/acceptance-scenarios): Behavior-level validation scenarios.
+- [Runtime profile test cases](https://limecloud.github.io/agentui/en/authoring/runtime-profile-test-cases): Agent Runtime-style projection test matrix.
 
 ## Surfaces
 
@@ -60,8 +61,10 @@ Use this file as the concise navigation index for LLMs. Use `llms-full.txt` when
 ## Examples and versions
 
 - [Standalone Agent UI Workbench demo](https://limecloud.github.io/agentui/examples/agent-workbench/): Complete runnable demo application outside the documentation shell with core and team scenarios.
-- [v0.6.0 overview](https://limecloud.github.io/agentui/en/versions/v0.6.0/overview): Latest released version overview.
-- [v0.6.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.6.0/specification): Latest released specification snapshot.
+- [v0.6.1 overview](https://limecloud.github.io/agentui/en/versions/v0.6.1/overview): Latest released version overview.
+- [v0.6.1 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.6.1/specification): Latest released specification snapshot.
+- [v0.6.0 overview](https://limecloud.github.io/agentui/en/versions/v0.6.0/overview): Previous released version overview.
+- [v0.6.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.6.0/specification): Previous released specification snapshot.
 - [v0.5.0 overview](https://limecloud.github.io/agentui/en/versions/v0.5.0/overview): Previous released version overview.
 - [v0.5.0 specification snapshot](https://limecloud.github.io/agentui/en/versions/v0.5.0/specification): Previous released specification snapshot.
 - [v0.4.8 overview](https://limecloud.github.io/agentui/en/versions/v0.4.8/overview): Previous released version overview.

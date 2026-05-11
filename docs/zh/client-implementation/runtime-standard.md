@@ -28,6 +28,7 @@ runtime facts
 | --- | --- | --- |
 | Event stream | lifecycle、text、reasoning、tool、action、queue、artifact、evidence events | submit work 前先注册 listener。 |
 | Session snapshot | recent messages、thread/run status、queue、pending requests、history cursor | 用于旧 session 恢复和 stream repair。 |
+| Agent Runtime profile | `RuntimeEvent`、`ThreadReadModel`、`TaskSnapshot`、`EvidencePack` | Runtime 暴露 Agent Runtime 兼容 facts 时的优先来源形状。 |
 | Artifact service | artifact id、kind、preview、read ref、version、diff、save/export/handoff status | Full content 按需加载。 |
 | Evidence service | trace、source/citation、verification、review、replay、handoff | Evidence 应 durable 且可审计。 |
 | Application state | selected workspace、active tab、file attachments、model/mode selections | 与 runtime facts 分离。 |

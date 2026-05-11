@@ -55,6 +55,7 @@ features:
 - [什么是 Agent UI？](./what-is-agent-ui.md)
 - [最新规范](./specification.md)
 - [实现快速开始](./authoring/quickstart.md)
+- [Runtime Profile 测试用例](./authoring/runtime-profile-test-cases.md)
 - [可运行示例](./examples/index.md)
 - [交互式工作台演示](./examples/interactive-workbench.md)
 - [Runtime event projection](./contracts/runtime-event-projection.md)

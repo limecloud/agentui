@@ -7,7 +7,7 @@ description: Agent UI requirements 的可追溯来源登记。
 
 本页是 Agent UI 的 traceability register。修改规范、验收场景或 schema 时，使用下列 source id 追溯依据。标准可以吸收这些来源的稳定模式，但不复制它们的 API。
 
-最后复核日期：2026-05-09。
+最后复核日期：2026-05-11。
 
 ## 引用格式
 
@@ -55,6 +55,7 @@ description: Agent UI requirements 的可追溯来源登记。
 | `SRC-CLAUDECODE-TEAM` | 本地 Claude Code checkout：`src/Task.ts`、`src/coordinator/coordinatorMode.ts`、`src/tasks/InProcessTeammateTask/types.ts`、`src/tasks/LocalAgentTask/LocalAgentTask.tsx`、`src/tasks/RemoteAgentTask/RemoteAgentTask.tsx`、SDK hook schemas。 | Task types 包含 local/remote agents 与 in-process teammates；coordinator mode 把 worker results 视为内部通知；teammate identity 携带 `agentId`、`agentName`、`teamName`、color、parent session、plan approval、permission、recent messages、pending user messages、idle/shutdown/progress。 | Agent UI v0.6 标准化 team roster、worker notifications、teammate transcript zoom、delegated plan/permission prompts、parent/child lineage，以及 coordinator synthesis 与 worker result 分离。 |
 | `SRC-CODEX-COLLAB` | 本地 Codex checkout：`codex-rs/tui/src/multi_agents.rs`、`codex-rs/protocol/src/protocol.rs`、`codex-rs/app-server-protocol/src/protocol/event_mapping.rs`、`codex-rs/analytics/src/*`。 | Collaborative tools 包含 spawn/send/resume/wait/close；TUI 渲染 spawned/sent/waiting/closed history rows；subagents 跟踪 source、parent thread id、nickname、role、depth；delegated approvals 与 subagent tool-call counts 被追踪。 | Agent UI v0.6 新增 delegate/continue/wait/stop/close controls、parent/child thread metadata、delegated approval source 与 parallel worker fanout/fanin surfaces。 |
 | `SRC-LIME-TEAM-RUNTIME` | Lime checkout：`docs/aiprompts/task-agent-taxonomy.md`、`docs/aiprompts/state-history-telemetry.md`、`src-tauri/src/commands/aster_agent_cmd/subagent_runtime.rs`、`src-tauri/crates/agent/src/session_store.rs`、`src/components/agent/chat/teamWorkspaceRuntime.ts`、`src/lib/teamMemorySync.ts`。 | Lime 将执行分类收敛为 `agent turn`、`subagent turn` 与 `automation job`；child subagent sessions 暴露 role、profile、team preset、runtime status、queue 与 team phase；request telemetry 通过 session/thread/turn/pending/queued/subagent keys 关联；team memory 使用 repo-scoped `team.selection`、`team.subagents`、`team.parent_context`。 | Agent UI v0.6 与 Lime 对齐：把 teammates 视为 child sessions/workbench facts，保留 request/session lineage，携带 `runtimeEntity`/queue/parallelism facts，并把 background work 收敛在 agent/subagent/automation 边界内，而不是创造第四类 runtime taxonomy。 |
+| `SRC-LIME-AGENTRUNTIME-PROFILE` | AgentRuntime project：`docs/zh/profiles/lime.md`、`docs/public/schemas/agentruntime-lime-profile-*.schema.json` 与 `docs/public/fixtures/lime-profile/`。 | Lime AgentRuntime Profile 把执行事实主链固定为 `RuntimeEvent`、`ThreadReadModel`、`TaskSnapshot`、evidence export、runtime ids、tool approval、task retry、routing 与 known-gap evidence behavior。 | Agent UI 必须投影 Agent Runtime facts，而不能成为 UI-owned truth source；runtime profile 测试用例验证 id preservation、read model projection、action controls、evidence/replay/review consistency 与 hydration。 |
 
 ## Requirement traceability
 
@@ -66,7 +67,8 @@ description: Agent UI requirements 的可追溯来源登记。
 | Human-in-the-loop actions | `SRC-LANGGRAPH-INTERRUPTS`、`SRC-CODEX-PROTOCOL`、`SRC-COPILOTKIT` |
 | Session/thread hydration | `SRC-OPENAI-CHATKIT-THREAD-EVENTS`、`SRC-LIME-ROADMAP-AGENTUI`、`SRC-CODEX-PROTOCOL` |
 | Artifact workspace | `SRC-CLAUDE-ARTIFACTS`、`SRC-OPENAI-APPS-SDK`、`SRC-LIME-ROADMAP-AGENTUI` |
-| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`、`SRC-CODEX-PROTOCOL` |
+| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`、`SRC-CODEX-PROTOCOL`、`SRC-LIME-AGENTRUNTIME-PROFILE` |
+| Runtime profile projection tests | `SRC-LIME-AGENTRUNTIME-PROFILE`、`SRC-LIME-TEAM-RUNTIME`、`SRC-LIME-ROADMAP-AGENTUI` |
 | Spec writing style | `SRC-AGENTSKILLS-SPEC` |
 | Team workbench 与 teammate identity | `SRC-CLAUDECODE-TEAM`、`SRC-CODEX-COLLAB`、`SRC-LIME-TEAM-RUNTIME` |
 | Remote teammate mapping | `SRC-A2A-PROTOCOL`、`SRC-CLAUDECODE-TEAM` |

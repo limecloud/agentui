@@ -24,6 +24,32 @@ The adapter MUST:
 
 The adapter SHOULD NOT spread provider-specific parsing into message, tool, artifact, or timeline components.
 
+## Agent Runtime profile alignment
+
+When the source system implements Agent Runtime, Lime AgentRuntime Profile, or an equivalent runtime spine, the adapter SHOULD consume these source facts directly:
+
+```text
+RuntimeEvent
+  + ThreadReadModel
+  + TaskSnapshot
+  + EvidencePack
+  -> Agent UI projection state
+```
+
+Agent UI remains a projection layer. It does not define runtime execution, retry policy, model routing, permission decisions, evidence verdicts, or recovery semantics.
+
+| Agent Runtime source fact | Agent UI projection |
+| --- | --- |
+| `turn.submitted`, `turn.started`, `turn.completed`, `turn.failed` | `run.started`, `run.status`, `run.finished`, `run.failed`, runtime status surface. |
+| `tool.started`, `tool.result`, `tool.failed` | Tool UI rows, inline process, and timeline entries keyed by `toolCallId`. |
+| `permission.evaluated`, `action.required`, `action.resolved` | Permission status and human-in-the-loop surfaces keyed by `actionId`. |
+| `task.created`, `task.attempt.failed`, `task.retrying`, `task.completed` | Task capsule, work board, and timeline state keyed by `taskId/runId/attemptId`. |
+| `task.profile.resolved`, `routing.single_candidate`, `routing.decided` | Runtime/model status, model chips, diagnostics, and cost/limit summaries. |
+| `evidence.changed`, exported evidence pack refs | Timeline/evidence, review lane, replay lane, and audit entrypoints. |
+| `snapshot.updated`, `ThreadReadModel`, `TaskSnapshot` | `state.snapshot`, session hydration, task restoration, and stale/repair UI. |
+
+The adapter MUST preserve correlation ids when the source provides them. A missing runtime fact should render as `unknown`, `unavailable`, `stale`, or safe diagnostics; it should not be replaced with a fabricated UI fact.
+
 ## Event class mapping
 
 | Source idea | Agent UI class |
@@ -78,10 +104,14 @@ Runtime facts SHOULD carry stable identifiers:
 - thread or conversation id
 - run id
 - turn id
+- runtime id
+- step id
+- attempt id
 - message id
 - content part id
 - task id
 - agent id
+- subagent id
 - team id or team name
 - runtime entity kind
 - runtime status and latest turn status
@@ -94,6 +124,8 @@ Runtime facts SHOULD carry stable identifiers:
 - tool call id
 - artifact id
 - evidence id
+- evidence pack, replay, or review ref
+- trace id
 
 The UI may generate temporary optimistic ids, but it must reconcile them with runtime ids when available.
 

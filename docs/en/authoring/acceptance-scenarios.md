@@ -201,3 +201,12 @@ Pass condition: context and memory changes are explicit facts, not hidden text m
 4. Metrics can explain submit-to-status, first-text, paint, hydration, and detail-load latency.
 
 Pass condition: debugging remains traceable without polluting the user-facing transcript.
+
+## 22. Agent Runtime profile projection
+
+1. Runtime provides `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, or `EvidencePack` facts.
+2. UI preserves runtime correlation ids such as `sessionId`, `threadId`, `turnId`, `taskId`, `runId`, `toolCallId`, `actionId`, and `evidenceId`.
+3. Status, task capsules, HITL controls, timeline/evidence, replay, and review surfaces are projected from those facts.
+4. UI renders missing facts as `unknown`, `unavailable`, or `stale` instead of creating local runtime truth.
+
+Pass condition: Agent UI can project an Agent Runtime-compatible source without becoming the owner of execution, approval, routing, task, or evidence facts. See [Runtime profile test cases](./runtime-profile-test-cases).

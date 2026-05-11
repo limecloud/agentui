@@ -73,6 +73,10 @@
       "type": "string",
       "minLength": 1
     },
+    "runtimeId": {
+      "type": "string",
+      "minLength": 1
+    },
     "messageId": {
       "type": "string",
       "minLength": 1
@@ -94,6 +98,22 @@
       "minLength": 1
     },
     "evidenceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidencePackRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "replayRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traceId": {
       "type": "string",
       "minLength": 1
     },
@@ -164,7 +184,19 @@
       "type": "string",
       "minLength": 1
     },
+    "attemptId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stepId": {
+      "type": "string",
+      "minLength": 1
+    },
     "agentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subagentId": {
       "type": "string",
       "minLength": 1
     },

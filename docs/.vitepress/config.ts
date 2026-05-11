@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 const base = process.env.VITEPRESS_BASE || '/'
 
-const versions = ['0.6.0', '0.5.0', '0.4.8', '0.4.7', '0.4.6', '0.4.5', '0.4.4', '0.4.3', '0.4.2', '0.4.1', '0.4.0', '0.3.0', '0.2.0', '0.1.0']
+const versions = ['0.6.1', '0.6.0', '0.5.0', '0.4.8', '0.4.7', '0.4.6', '0.4.5', '0.4.4', '0.4.3', '0.4.2', '0.4.1', '0.4.0', '0.3.0', '0.2.0', '0.1.0']
 
 const enVersionItems = versions.flatMap((version) => [
   { text: `v${version} overview`, link: `/en/versions/v${version}/overview` },
@@ -58,7 +58,8 @@ const enSidebar = [
     items: [
       { text: 'Implementation quickstart', link: '/en/authoring/quickstart' },
       { text: 'Best practices', link: '/en/authoring/best-practices' },
-      { text: 'Acceptance scenarios', link: '/en/authoring/acceptance-scenarios' }
+      { text: 'Acceptance scenarios', link: '/en/authoring/acceptance-scenarios' },
+      { text: 'Runtime profile test cases', link: '/en/authoring/runtime-profile-test-cases' }
     ]
   },
   {
@@ -131,7 +132,8 @@ const zhSidebar = [
     items: [
       { text: '快速开始', link: '/zh/authoring/quickstart' },
       { text: '最佳实践', link: '/zh/authoring/best-practices' },
-      { text: '验收场景', link: '/zh/authoring/acceptance-scenarios' }
+      { text: '验收场景', link: '/zh/authoring/acceptance-scenarios' },
+      { text: 'Runtime Profile 测试用例', link: '/zh/authoring/runtime-profile-test-cases' }
     ]
   },
   {

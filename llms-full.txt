@@ -10,6 +10,7 @@ This file concatenates the current English documentation most useful for model c
 # What Is Agent Ui
 
 
+
 Source: https://limecloud.github.io/agentui/en/what-is-agent-ui
 
 
@@ -61,6 +62,7 @@ Agent UI gives product teams and client implementors a small vocabulary for thos
 
 
 # Specification
+
 
 
 Source: https://limecloud.github.io/agentui/en/specification
@@ -280,10 +282,12 @@ A validator SHOULD check behavior and contracts, not only files:
 - User actions write through controlled runtime/artifact/evidence APIs.
 - Team controls write through controlled runtime/team/work-board/review APIs.
 - Old sessions hydrate progressively with bounded history and on-demand details.
-- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, old-session recovery, coordinator teams, parallel workers, specialist handoff, review teams, human/agent boards, background teammates, and remote teammates.
+- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, old-session recovery, coordinator teams, parallel workers, specialist handoff, review teams, human/agent boards, background teammates, remote teammates, and Agent Runtime profile projection.
+- Runtime profile test cases validate that `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, and `EvidencePack` facts project into UI without becoming UI-owned truth.
 
 
 # Quickstart
+
 
 
 Source: https://limecloud.github.io/agentui/en/authoring/quickstart
@@ -437,6 +441,7 @@ A minimal implementation is acceptable when:
 
 
 # Acceptance Scenarios
+
 
 
 Source: https://limecloud.github.io/agentui/en/authoring/acceptance-scenarios
@@ -641,8 +646,138 @@ Pass condition: context and memory changes are explicit facts, not hidden text m
 
 Pass condition: debugging remains traceable without polluting the user-facing transcript.
 
+## 22. Agent Runtime profile projection
+
+1. Runtime provides `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, or `EvidencePack` facts.
+2. UI preserves runtime correlation ids such as `sessionId`, `threadId`, `turnId`, `taskId`, `runId`, `toolCallId`, `actionId`, and `evidenceId`.
+3. Status, task capsules, HITL controls, timeline/evidence, replay, and review surfaces are projected from those facts.
+4. UI renders missing facts as `unknown`, `unavailable`, or `stale` instead of creating local runtime truth.
+
+Pass condition: Agent UI can project an Agent Runtime-compatible source without becoming the owner of execution, approval, routing, task, or evidence facts. See [Runtime profile test cases](./runtime-profile-test-cases).
+
+
+# Runtime Profile Test Cases
+
+
+
+Source: https://limecloud.github.io/agentui/en/authoring/runtime-profile-test-cases
+
+
+# Runtime profile test cases
+
+Use these cases when a product source is compatible with Agent Runtime, Lime AgentRuntime Profile, or an equivalent runtime spine. The goal is not to test the runtime implementation itself; the goal is to prove that Agent UI projects runtime facts without creating a second source of truth.
+
+## Canonical projection chain
+
+```text
+RuntimeEvent / ThreadReadModel / TaskSnapshot / EvidencePack
+  -> Agent UI adapter
+  -> projection store
+  -> status, task, tool, HITL, timeline, evidence, review, replay, and team surfaces
+  -> controlled writes back to runtime, artifact, policy, or evidence owners
+```
+
+Agent UI tests fail when UI state invents status, approval, tool success, evidence verdict, known gaps, or task completion that cannot be traced back to runtime, artifact, policy, or evidence facts.
+
+## Source fixtures
+
+When Agent Runtime fixtures are available, map them into Agent UI projection assertions:
+
+| Runtime fixture | UI surfaces to verify | Required projection outcome |
+| --- | --- | --- |
+| `submit-turn-event.json` | Runtime status, message shell, task capsule | Accepted work appears before first text and preserves `sessionId/threadId/turnId`. |
+| `tool-approval-action-required-event.json` | Human-in-the-loop, task attention, tool UI | Approval card uses `actionId/toolCallId`; UI does not run the tool optimistically. |
+| `task-retry-attempt-failed-event.json` | Task capsule, timeline evidence | Failed attempt remains visible and retry state does not overwrite history. |
+| `routing-single-candidate-event.json` | Runtime status, model chip, diagnostics | Single-candidate routing is explained as runtime fact, not final answer prose. |
+| `evidence-export-event.json` | Timeline/evidence, review, replay | Evidence, replay, and review refs point to the same fact source. |
+| `thread-read-snapshot.json` | Session hydration, status, task capsule | The UI can hydrate directly from snapshot without recomputing runtime truth. |
+
+## Identity preservation
+
+| ID | Case | Input | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-ID-001 | Preserve runtime spine ids | Source event carries `runtimeId/sessionId/threadId/turnId` | Projection keeps these ids on status, task, and timeline records. |
+| AUI-AR-ID-002 | Preserve task/run/attempt ids | Source event carries `taskId/runId/attemptId` | Task capsule and timeline can link the active attempt and prior attempts. |
+| AUI-AR-ID-003 | Preserve tool/action ids | Source event carries `toolCallId/actionId` | Tool row, approval card, and evidence timeline join through the same ids. |
+| AUI-AR-ID-004 | Preserve evidence trace ids | Source event carries `evidenceId/traceId/evidencePackRef` | Evidence surface links to durable details without copying the full payload. |
+| AUI-AR-ID-005 | Preserve parent/child lineage | Source event carries `parentSessionId/parentThreadId/subagentId` | Delegation graph and teammate transcript retain lineage after hydration. |
+
+## Status and read model projection
+
+| ID | Case | Source facts | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-READ-001 | Accepted before first text | `turn.submitted` or accepted read model | Runtime status shows accepted/preparing before `text.delta`. |
+| AUI-AR-READ-002 | Running turn | `turn.started` / active turn in read model | Status and task capsule show running; no final answer is fabricated. |
+| AUI-AR-READ-003 | Waiting on permission | `action.required` in read model | HITL surface appears and task attention state becomes waiting/needs-input. |
+| AUI-AR-READ-004 | Completed turn | `turn.completed` plus snapshot update | Status reconciles to completed and process details archive to timeline. |
+| AUI-AR-READ-005 | Failed turn | `turn.failed` with failure category | Failure is visible in status, task capsule, and timeline; final answer does not claim success. |
+| AUI-AR-READ-006 | Missing source field | Snapshot lacks optional routing or evidence summary | UI renders unknown/unavailable and keeps diagnostics safe. |
+
+## Tool approval and controlled write cases
+
+| ID | Case | User action | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-ACTION-001 | Approval request appears | Runtime emits `action.required` | UI shows approve/reject/respond controls with stable `actionId`. |
+| AUI-AR-ACTION-002 | Approval write is controlled | User clicks approve | UI calls runtime action response API and waits for `action.resolved`. |
+| AUI-AR-ACTION-003 | Denial does not execute tool | User clicks reject | UI waits for runtime denial/tool failure fact; no optimistic `tool.result` appears. |
+| AUI-AR-ACTION-004 | Duplicate response is safe | User repeats response | UI remains idempotent and does not create a second resolved fact. |
+| AUI-AR-ACTION-005 | Tool output is offloaded | Tool result includes large output ref | UI shows summary/ref and loads detail on demand. |
+
+## Task, routing, and limit cases
+
+| ID | Case | Source facts | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-TASK-001 | Retry keeps history | `task.attempt.failed -> task.retrying -> task.attempt.started` | Task capsule shows retrying/current attempt while timeline keeps failed attempt. |
+| AUI-AR-TASK-002 | Blocked task is visible | `quota.blocked` or `routing.not_possible` | Task capsule shows blocked/failed with reason, not infinite running. |
+| AUI-AR-TASK-003 | Single model candidate | `routing.single_candidate` | Runtime status/model chip explains selected model and decision source. |
+| AUI-AR-TASK-004 | Cost/limit state | `cost.estimated`, `rate_limit.hit`, or limit summary | UI shows cost/limit state as diagnostics or status, not final prose. |
+| AUI-AR-TASK-005 | Subagent lineage | `subagent.spawned` or parent/child task snapshot | Team/delegation surfaces show child owner and parent task. |
+
+## Evidence, replay, and review cases
+
+| ID | Case | Source facts | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-EVID-001 | Evidence export progress | `evidence.changed` with pending/exporting status | Timeline/evidence surface shows progress without blocking text streaming. |
+| AUI-AR-EVID-002 | Evidence pack ready | `evidence.changed` with `evidencePackRef` | Evidence surface links durable pack details. |
+| AUI-AR-EVID-003 | Replay and review share source | `replayRef` and `reviewRef` reference same pack/source ids | Replay/review lanes do not recompute their own status truth. |
+| AUI-AR-EVID-004 | Known gaps are not guessed | Runtime has no matching telemetry | UI shows unavailable/empty summary, not a fabricated `unlinked` gap. |
+| AUI-AR-EVID-005 | Failed tool is auditable | Tool failure has `toolCallId` and evidence ref | Timeline links failure to tool row and evidence detail. |
+
+## Session hydration cases
+
+| ID | Case | Input | Expected result |
+| --- | --- | --- | --- |
+| AUI-AR-HYDRATE-001 | Hydrate from thread snapshot | `ThreadReadModel` snapshot | Shell, status, pending actions, queued turns, and recent messages render without replaying all events. |
+| AUI-AR-HYDRATE-002 | Repair from event stream | Snapshot stale, event stream available | Projection rebuilds read model state and marks stale sections until repaired. |
+| AUI-AR-HYDRATE-003 | Evidence lazy load | Evidence refs exist but payload is not loaded | Timeline shows refs; payload loads only when requested. |
+| AUI-AR-HYDRATE-004 | Parent/child ids survive | Old session has subagent lineage | Delegation graph and teammate transcript can still resolve parent/child ids. |
+
+## Governance failure cases
+
+These are explicit failures for compatible Agent UI implementations:
+
+1. UI parses assistant prose to infer tool success, approval state, model routing, or task completion.
+2. UI projection store becomes the owner of `runtimeStatus`, evidence verdict, permission grant, or artifact contents.
+3. Evidence, replay, and review lanes display contradictory status because each rebuilt facts separately.
+4. A missing runtime field is silently replaced with a fabricated value instead of `unknown`, `unavailable`, `stale`, or safe diagnostics.
+5. Action controls mark success before runtime confirmation.
+6. Background, subagent, or remote work is flattened into one assistant transcript when runtime exposes ownership and lineage.
+
+## Minimum validation set
+
+For an Agent Runtime-compatible source, run at least:
+
+1. Identity preservation: AUI-AR-ID-001 through AUI-AR-ID-004.
+2. Status/read model projection: AUI-AR-READ-001 through AUI-AR-READ-006.
+3. HITL controlled writes: AUI-AR-ACTION-001 through AUI-AR-ACTION-004.
+4. Evidence consistency: AUI-AR-EVID-001 through AUI-AR-EVID-004.
+5. Hydration: AUI-AR-HYDRATE-001 and AUI-AR-HYDRATE-003.
+
+These cases are the Agent UI counterpart to AgentRuntime profile tests: Runtime proves the facts exist; UI proves those facts are projected honestly.
+
 
 # Best Practices
+
 
 
 Source: https://limecloud.github.io/agentui/en/authoring/best-practices
@@ -795,6 +930,7 @@ Bad guidance:
 # Composer
 
 
+
 Source: https://limecloud.github.io/agentui/en/surfaces/composer
 
 
@@ -872,6 +1008,7 @@ At minimum, switching sessions or opening an artifact SHOULD NOT discard a draft
 
 
 # Message Parts
+
 
 
 Source: https://limecloud.github.io/agentui/en/surfaces/message-parts
@@ -966,6 +1103,7 @@ If a client supports retry, regenerate, or branch:
 # Runtime Status
 
 
+
 Source: https://limecloud.github.io/agentui/en/surfaces/runtime-status
 
 
@@ -1044,6 +1182,7 @@ Diagnostics can be hidden in normal UI, but they should be available to develope
 
 
 # Tool Ui
+
 
 
 Source: https://limecloud.github.io/agentui/en/surfaces/tool-ui
@@ -1125,6 +1264,7 @@ If retry is supported:
 # Task Capsule
 
 
+
 Source: https://limecloud.github.io/agentui/en/surfaces/task-capsule
 
 
@@ -1189,6 +1329,7 @@ This makes task state visible without forcing every session to hydrate full hist
 
 
 # Human In The Loop
+
 
 
 Source: https://limecloud.github.io/agentui/en/surfaces/human-in-the-loop
@@ -1259,6 +1400,7 @@ After a request is resolved:
 
 
 # Artifact Canvas
+
 
 
 Source: https://limecloud.github.io/agentui/en/surfaces/artifact-canvas
@@ -1408,6 +1550,7 @@ Anti-patterns:
 # Timeline Evidence
 
 
+
 Source: https://limecloud.github.io/agentui/en/surfaces/timeline-evidence
 
 
@@ -1493,6 +1636,7 @@ This lets users move from answer to source, from artifact to generating turn, an
 # Session Tabs
 
 
+
 Source: https://limecloud.github.io/agentui/en/surfaces/session-tabs
 
 
@@ -1572,6 +1716,7 @@ Inactive sessions should not continuously rebuild large timelines or parse large
 # Runtime Event Projection
 
 
+
 Source: https://limecloud.github.io/agentui/en/contracts/runtime-event-projection
 
 
@@ -1595,6 +1740,32 @@ The adapter MUST:
 - Keep raw or secret-bearing payloads out of normal projection state; store only safe summaries or refs.
 
 The adapter SHOULD NOT spread provider-specific parsing into message, tool, artifact, or timeline components.
+
+## Agent Runtime profile alignment
+
+When the source system implements Agent Runtime, Lime AgentRuntime Profile, or an equivalent runtime spine, the adapter SHOULD consume these source facts directly:
+
+```text
+RuntimeEvent
+  + ThreadReadModel
+  + TaskSnapshot
+  + EvidencePack
+  -> Agent UI projection state
+```
+
+Agent UI remains a projection layer. It does not define runtime execution, retry policy, model routing, permission decisions, evidence verdicts, or recovery semantics.
+
+| Agent Runtime source fact | Agent UI projection |
+| --- | --- |
+| `turn.submitted`, `turn.started`, `turn.completed`, `turn.failed` | `run.started`, `run.status`, `run.finished`, `run.failed`, runtime status surface. |
+| `tool.started`, `tool.result`, `tool.failed` | Tool UI rows, inline process, and timeline entries keyed by `toolCallId`. |
+| `permission.evaluated`, `action.required`, `action.resolved` | Permission status and human-in-the-loop surfaces keyed by `actionId`. |
+| `task.created`, `task.attempt.failed`, `task.retrying`, `task.completed` | Task capsule, work board, and timeline state keyed by `taskId/runId/attemptId`. |
+| `task.profile.resolved`, `routing.single_candidate`, `routing.decided` | Runtime/model status, model chips, diagnostics, and cost/limit summaries. |
+| `evidence.changed`, exported evidence pack refs | Timeline/evidence, review lane, replay lane, and audit entrypoints. |
+| `snapshot.updated`, `ThreadReadModel`, `TaskSnapshot` | `state.snapshot`, session hydration, task restoration, and stale/repair UI. |
+
+The adapter MUST preserve correlation ids when the source provides them. A missing runtime fact should render as `unknown`, `unavailable`, `stale`, or safe diagnostics; it should not be replaced with a fabricated UI fact.
 
 ## Event class mapping
 
@@ -1650,10 +1821,14 @@ Runtime facts SHOULD carry stable identifiers:
 - thread or conversation id
 - run id
 - turn id
+- runtime id
+- step id
+- attempt id
 - message id
 - content part id
 - task id
 - agent id
+- subagent id
 - team id or team name
 - runtime entity kind
 - runtime status and latest turn status
@@ -1666,6 +1841,8 @@ Runtime facts SHOULD carry stable identifiers:
 - tool call id
 - artifact id
 - evidence id
+- evidence pack, replay, or review ref
+- trace id
 
 The UI may generate temporary optimistic ids, but it must reconcile them with runtime ids when available.
 
@@ -1696,6 +1873,7 @@ If an event lacks required fields, the UI SHOULD:
 
 
 # Backend Coordination
+
 
 
 Source: https://limecloud.github.io/agentui/en/contracts/backend-coordination
@@ -1761,6 +1939,7 @@ Prefer small summaries and explicit detail APIs.
 
 
 # Performance Metrics
+
 
 
 Source: https://limecloud.github.io/agentui/en/contracts/performance-metrics
@@ -1843,6 +2022,7 @@ Targets should be tested with representative histories and tool outputs, not onl
 # Runtime Standard
 
 
+
 Source: https://limecloud.github.io/agentui/en/client-implementation/runtime-standard
 
 
@@ -1871,6 +2051,7 @@ Start from real product/runtime facts, not from a standalone manifest file.
 | --- | --- | --- |
 | Event stream | lifecycle, text, reasoning, tool, action, queue, artifact, evidence events | Register listeners before submitting work. |
 | Session snapshot | recent messages, thread/run status, queue, pending requests, history cursor | Used for old-session recovery and stream repair. |
+| Agent Runtime profile | `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, `EvidencePack` | Preferred source shape when the runtime exposes Agent Runtime-compatible facts. |
 | Artifact service | artifact id, kind, preview, read ref, version, diff, save/export/handoff status | Full content loads on demand. |
 | Evidence service | trace, source/citation, verification, review, replay, handoff | Evidence should be durable and auditable. |
 | Application state | selected workspace, active tab, file attachments, model/mode selections | Keep separate from runtime facts. |
@@ -1988,6 +2169,7 @@ These metrics are part of the UI contract because they determine whether the int
 
 
 # Progressive Rendering
+
 
 
 Source: https://limecloud.github.io/agentui/en/client-implementation/progressive-rendering
@@ -2120,6 +2302,7 @@ A basic progressive rendering implementation should pass these scenarios:
 # Session Hydration
 
 
+
 Source: https://limecloud.github.io/agentui/en/client-implementation/session-hydration
 
 
@@ -2189,6 +2372,7 @@ They SHOULD release heavy message windows, parsed Markdown, mounted timeline ite
 # Queue And Steer
 
 
+
 Source: https://limecloud.github.io/agentui/en/client-implementation/queue-and-steer
 
 
@@ -2254,6 +2438,7 @@ If the runtime cannot apply a steer:
 # Glossary
 
 
+
 Source: https://limecloud.github.io/agentui/en/reference/glossary
 
 
@@ -2309,6 +2494,7 @@ Trace, citation, verification, replay, review, or audit information that support
 
 
 # Flow And Taxonomy
+
 
 
 Source: https://limecloud.github.io/agentui/en/reference/flow-and-taxonomy
@@ -2794,6 +2980,7 @@ A compatible implementation SHOULD pass these checks:
 # Source Index
 
 
+
 Source: https://limecloud.github.io/agentui/en/reference/source-index
 
 
@@ -2801,7 +2988,7 @@ Source: https://limecloud.github.io/agentui/en/reference/source-index
 
 This page is the traceability register for Agent UI. Use the source ids below when changing the specification, acceptance scenarios, or schemas. The standard may adapt ideas from these sources, but it does not copy their APIs.
 
-Last reviewed: 2026-05-09.
+Last reviewed: 2026-05-11.
 
 ## Citation format
 
@@ -2849,6 +3036,7 @@ These local sources were used as implementation references while drafting the fl
 | `SRC-CLAUDECODE-TEAM` | Local Claude Code checkout: `src/Task.ts`, `src/coordinator/coordinatorMode.ts`, `src/tasks/InProcessTeammateTask/types.ts`, `src/tasks/LocalAgentTask/LocalAgentTask.tsx`, `src/tasks/RemoteAgentTask/RemoteAgentTask.tsx`, SDK hook schemas. | Task types include local/remote agents and in-process teammates; coordinator mode treats worker results as internal notifications; teammate identity carries `agentId`, `agentName`, `teamName`, color, parent session, plan approval, permission, recent messages, pending user messages, idle/shutdown/progress. | Agent UI v0.6 standardizes team roster, worker notifications, teammate transcript zoom, delegated plan/permission prompts, parent/child lineage, and coordinator synthesis vs worker result separation. |
 | `SRC-CODEX-COLLAB` | Local Codex checkout: `codex-rs/tui/src/multi_agents.rs`, `codex-rs/protocol/src/protocol.rs`, `codex-rs/app-server-protocol/src/protocol/event_mapping.rs`, `codex-rs/analytics/src/*`. | Collaborative tools include spawn/send/resume/wait/close; TUI renders spawned/sent/waiting/closed history rows; subagents track source, parent thread id, nickname, role, depth; delegated approvals and subagent tool-call counts are tracked. | Agent UI v0.6 adds controls for delegate/continue/wait/stop/close, parent/child thread metadata, delegated approval source, and parallel worker fanout/fanin surfaces. |
 | `SRC-LIME-TEAM-RUNTIME` | Lime checkout: `docs/aiprompts/task-agent-taxonomy.md`, `docs/aiprompts/state-history-telemetry.md`, `src-tauri/src/commands/aster_agent_cmd/subagent_runtime.rs`, `src-tauri/crates/agent/src/session_store.rs`, `src/components/agent/chat/teamWorkspaceRuntime.ts`, `src/lib/teamMemorySync.ts`. | Lime classifies execution into `agent turn`, `subagent turn`, and `automation job`; child subagent sessions expose role, profile, team preset, runtime status, queue and team phase; request telemetry joins session/thread/turn/pending/queued/subagent keys; team memory uses repo-scoped `team.selection`, `team.subagents`, and `team.parent_context`. | Agent UI v0.6 aligns with Lime by treating teammates as child sessions/workbench facts, preserving request/session lineage, carrying `runtimeEntity`/queue/parallelism facts, and keeping background work within agent/subagent/automation boundaries instead of adding a fourth runtime taxonomy. |
+| `SRC-LIME-AGENTRUNTIME-PROFILE` | AgentRuntime project: `docs/en/profiles/lime.md`, `docs/public/schemas/agentruntime-lime-profile-*.schema.json`, and `docs/public/fixtures/lime-profile/`. | Lime AgentRuntime Profile fixes the execution fact spine around `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, evidence export, runtime ids, tool approval, task retry, routing, and known-gap evidence behavior. | Agent UI must project Agent Runtime facts without becoming a UI-owned truth source; runtime profile test cases verify id preservation, read model projection, action controls, evidence/replay/review consistency, and hydration. |
 
 ## Requirement traceability
 
@@ -2860,7 +3048,8 @@ These local sources were used as implementation references while drafting the fl
 | Human-in-the-loop actions | `SRC-LANGGRAPH-INTERRUPTS`, `SRC-CODEX-PROTOCOL`, `SRC-COPILOTKIT` |
 | Session/thread hydration | `SRC-OPENAI-CHATKIT-THREAD-EVENTS`, `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL` |
 | Artifact workspace | `SRC-CLAUDE-ARTIFACTS`, `SRC-OPENAI-APPS-SDK`, `SRC-LIME-ROADMAP-AGENTUI` |
-| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL` |
+| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL`, `SRC-LIME-AGENTRUNTIME-PROFILE` |
+| Runtime profile projection tests | `SRC-LIME-AGENTRUNTIME-PROFILE`, `SRC-LIME-TEAM-RUNTIME`, `SRC-LIME-ROADMAP-AGENTUI` |
 | Spec writing style | `SRC-AGENTSKILLS-SPEC` |
 | Team workbench and teammate identity | `SRC-CLAUDECODE-TEAM`, `SRC-CODEX-COLLAB`, `SRC-LIME-TEAM-RUNTIME` |
 | Remote teammate mapping | `SRC-A2A-PROTOCOL`, `SRC-CLAUDECODE-TEAM` |
@@ -2869,6 +3058,7 @@ These local sources were used as implementation references while drafting the fl
 
 
 # Research Sources
+
 
 
 Source: https://limecloud.github.io/agentui/en/reference/research-sources
@@ -2928,6 +3118,7 @@ A compatible client may use any of the referenced systems if it preserves the pr
 
 
 # Ecosystem Boundaries
+
 
 
 Source: https://limecloud.github.io/agentui/en/reference/ecosystem-boundaries
@@ -3002,6 +3193,7 @@ Agent UI does not own a full agent runtime, model protocol, tool registry, memor
 # Agent Ecosystem
 
 
+
 Source: https://limecloud.github.io/agentui/en/reference/agent-ecosystem
 
 
@@ -3069,7 +3261,8 @@ These candidates should remain design notes until they can be specified without 
 External protocols are references, not ownership transfers. The Agent standards should preserve their native ids and semantics while defining agent-specific relationships.
 
 
-# Examples
+# Index
+
 
 
 Source: https://limecloud.github.io/agentui/en/examples
@@ -3099,6 +3292,7 @@ Examples are complete runnable demo applications, not components embedded inside
 
 
 # Interactive Workbench
+
 
 
 Source: https://limecloud.github.io/agentui/en/examples/interactive-workbench
@@ -3133,6 +3327,7 @@ The interactive workbench is no longer embedded in this documentation page. Open
 # Basic Agent Workbench
 
 
+
 Source: https://limecloud.github.io/agentui/en/examples/basic-agent-workbench
 
 
@@ -3158,30 +3353,32 @@ The workbench demo now lives outside the documentation shell. It is a complete s
 - [Timeline and evidence](../surfaces/timeline-evidence.md)
 
 
-# Overview
 
 
-Source: https://limecloud.github.io/agentui/en/versions/v0.6.0/overview
+# V0.6.1 overview
 
 
-# Agent UI v0.6.0
 
-Agent UI v0.6.0 adds the Team Workbench layer to the runtime projection standard. The release keeps ordered parts, tool lifecycle, artifacts, evidence, context, and hydration rules from v0.5, then standardizes how team-style multi-agent work should appear in product UI.
+Source: https://limecloud.github.io/agentui/en/versions/v0.6.1/overview
+
+
+# Agent UI v0.6.1
+
+Agent UI v0.6.1 is a patch release that aligns UI projection with the Agent Runtime profile without moving runtime ownership into the UI standard.
 
 ## Highlights
 
-- Adds Team Workbench surfaces: Team Roster, Work Board, Delegation Graph, Handoff Lane, Worker Notifications, Review Lane, Teammate Transcript, Background Teammate, Remote Teammate, and Team Policy.
-- Adds team topology taxonomy for coordinator teams, parallel workers, specialist handoffs, review teams, human/agent boards, background teammates, and remote teammates.
-- Clarifies that worker notifications are internal task/agent facts, not real user messages and not coordinator final prose.
-- Extends the event schema with team/agent/review event classes, team surfaces, team controls, parent/child ids, topology fields, `runtimeEntity`, runtime status, and queue/parallelism fields.
-- Expands the standalone runnable workbench demo into a core + team scenario matrix.
-- Updates traceability with Claude Code, Codex, Lime Team Runtime, A2A, Paperclip, VitePress, and Agent Skills references.
+- Adds runtime profile projection test cases for runtime ids, read model projection, tool approval, task retry, routing, evidence, replay, review, hydration, and governance failures.
+- Aligns the runtime event projection contract with Agent Runtime-style events, thread read models, task snapshots, and evidence packs.
+- Adds optional runtime profile correlation fields to the public event schema.
+- Refreshes README, navigation, LLM entrypoints, release notes, package metadata, and version snapshots for v0.6.1.
 
 
-# Specification
+# V0.6.1 specification
 
 
-Source: https://limecloud.github.io/agentui/en/versions/v0.6.0/specification
+
+Source: https://limecloud.github.io/agentui/en/versions/v0.6.1/specification
 
 
 # Specification
@@ -3398,27 +3595,24 @@ A validator SHOULD check behavior and contracts, not only files:
 - User actions write through controlled runtime/artifact/evidence APIs.
 - Team controls write through controlled runtime/team/work-board/review APIs.
 - Old sessions hydrate progressively with bounded history and on-demand details.
-- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, old-session recovery, coordinator teams, parallel workers, specialist handoff, review teams, human/agent boards, background teammates, and remote teammates.
+- Acceptance scenarios cover send, first status, tool call, action request, queue/steer, artifact handoff, evidence export, failure, old-session recovery, coordinator teams, parallel workers, specialist handoff, review teams, human/agent boards, background teammates, remote teammates, and Agent Runtime profile projection.
+- Runtime profile test cases validate that `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, and `EvidencePack` facts project into UI without becoming UI-owned truth.
 
 
-# Changelog
+# V0.6.1 changelog
 
 
-Source: https://limecloud.github.io/agentui/en/versions/v0.6.0/changelog
+
+Source: https://limecloud.github.io/agentui/en/versions/v0.6.1/changelog
 
 
-# v0.6.0 Changelog
+# v0.6.1 Changelog
 
-## Added
+### Added
 
-- Added Team Workbench surfaces for roster, work board, delegation, handoff, worker notifications, review, teammate transcript, background teammate, remote teammate, and team policy.
-- Added team topology taxonomy for coordinator teams, parallel workers, specialist handoffs, review teams, human/agent boards, background teammates, and remote teammates.
-- Added schema support for team/agent/review events, team surfaces, team controls, parent/child ids, and topology fields.
-- Added runtime execution alignment fields for `runtimeEntity`, runtime status, team phase, queue counts, and provider/team parallelism.
-- Added a runnable team scenario matrix to the standalone workbench demo.
+- Adds Agent Runtime profile projection test cases in English and Simplified Chinese, covering runtime ids, read model projection, tool approval, task retry, routing, evidence, replay, review, hydration, and governance failures.
 
-## Changed
+### Changed
 
-- Reframed multi-agent UI around team/teammate/workbench behavior rather than hierarchy-first models.
-- Clarified worker notification, coordinator synthesis, delegated approval, teammate transcript, background teammate, and remote teammate projection rules.
-- Updated source traceability for Claude Code, Codex, Lime Team Runtime, A2A, Paperclip, VitePress, and Agent Skills.
+- Aligns the runtime event projection contract with Agent Runtime-style `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, and `EvidencePack` sources.
+- Extends the public Agent UI event schema with optional runtime profile correlation fields such as `runtimeId`, `attemptId`, `stepId`, `subagentId`, `traceId`, `evidencePackRef`, `replayRef`, and `reviewRef`.

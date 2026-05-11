@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.6.1 - 2026-05-11
+
+### Added
+
+- Adds Agent Runtime profile projection test cases in English and Simplified Chinese, covering runtime ids, read model projection, tool approval, task retry, routing, evidence, replay, review, hydration, and governance failures.
+
+### Changed
+
+- Aligns the runtime event projection contract with Agent Runtime-style `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, and `EvidencePack` sources.
+- Extends the public Agent UI event schema with optional runtime profile correlation fields such as `runtimeId`, `attemptId`, `stepId`, `subagentId`, `traceId`, `evidencePackRef`, `replayRef`, and `reviewRef`.
+
+
 ## v0.6.0 - 2026-05-09
 
 ### Added

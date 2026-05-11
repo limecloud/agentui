@@ -22,6 +22,7 @@ Agent UI sits between runtime facts and product interaction. It does not own exe
 - Team Workbench surfaces: Team Roster, Work Board, Delegation Graph, Handoff Lane, Worker Notifications, Review Lane, Teammate Transcript, Background Teammate, Remote Teammate, and Team Policy.
 - Runtime execution alignment for foreground agent turns, child subagent/teammate turns, automation jobs, external remote tasks, board work items, and queue/parallelism facts.
 - A client implementation model for session hydration, progressive rendering, queue vs steer, durable snapshots, and controlled writes.
+- Runtime profile test cases that verify Agent Runtime-style events, read models, task snapshots, and evidence packs project into UI without becoming UI-owned truth.
 - Performance metrics for first status, first text, delta backlog, history hydration, timeline load, and artifact/evidence offload.
 - Acceptance scenarios that prove behavior instead of checking whether a component or file exists, including coordinator teams, parallel workers, handoffs, review teams, human/agent boards, background teammates, and remote teammates.
 
@@ -53,6 +54,7 @@ Key pages:
 - [Specification](docs/en/specification.md)
 - [Runtime standard](docs/en/client-implementation/runtime-standard.md)
 - [Runtime event projection](docs/en/contracts/runtime-event-projection.md)
+- [Runtime profile test cases](docs/en/authoring/runtime-profile-test-cases.md)
 - [Flow and taxonomy](docs/en/reference/flow-and-taxonomy.md)
 - [Source index](docs/en/reference/source-index.md)
 - [Session hydration](docs/en/client-implementation/session-hydration.md)

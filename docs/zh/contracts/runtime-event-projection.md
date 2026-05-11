@@ -24,6 +24,32 @@ Adapter MUST：
 
 Adapter SHOULD NOT 把 provider-specific parsing 散落进 message、tool、artifact 或 timeline components。
 
+## Agent Runtime profile alignment
+
+当来源系统实现 Agent Runtime、Lime AgentRuntime Profile 或等价 runtime 主链时，adapter SHOULD 直接消费这些来源事实：
+
+```text
+RuntimeEvent
+  + ThreadReadModel
+  + TaskSnapshot
+  + EvidencePack
+  -> Agent UI projection state
+```
+
+Agent UI 仍然只是投影层。它不定义 runtime 执行、重试策略、模型路由、权限决策、evidence verdict 或恢复语义。
+
+| Agent Runtime 来源事实 | Agent UI 投影 |
+| --- | --- |
+| `turn.submitted`、`turn.started`、`turn.completed`、`turn.failed` | `run.started`、`run.status`、`run.finished`、`run.failed` 与 runtime status surface。 |
+| `tool.started`、`tool.result`、`tool.failed` | 以 `toolCallId` 为键的 Tool UI row、inline process 与 timeline entry。 |
+| `permission.evaluated`、`action.required`、`action.resolved` | 以 `actionId` 为键的 permission status 与 human-in-the-loop surface。 |
+| `task.created`、`task.attempt.failed`、`task.retrying`、`task.completed` | 以 `taskId/runId/attemptId` 为键的 task capsule、work board 与 timeline state。 |
+| `task.profile.resolved`、`routing.single_candidate`、`routing.decided` | Runtime/model status、model chip、diagnostics 与 cost/limit summary。 |
+| `evidence.changed`、导出的 evidence pack refs | Timeline/evidence、review lane、replay lane 与 audit entrypoints。 |
+| `snapshot.updated`、`ThreadReadModel`、`TaskSnapshot` | `state.snapshot`、session hydration、task restoration 与 stale/repair UI。 |
+
+来源提供 correlation ids 时，adapter MUST 保留这些 ids。缺失 runtime fact 时，应渲染为 `unknown`、`unavailable`、`stale` 或安全 diagnostics；不能用伪造 UI fact 替代。
+
 ## Event class mapping
 
 | Source idea | Agent UI class |
@@ -78,10 +104,14 @@ Runtime facts SHOULD 携带稳定 identifiers：
 - thread or conversation id
 - run id
 - turn id
+- runtime id
+- step id
+- attempt id
 - message id
 - content part id
 - task id
 - agent id
+- subagent id
 - team id 或 team name
 - runtime entity kind
 - runtime status 与 latest turn status
@@ -94,6 +124,8 @@ Runtime facts SHOULD 携带稳定 identifiers：
 - tool call id
 - artifact id
 - evidence id
+- evidence pack、replay 或 review ref
+- trace id
 
 UI 可以生成临时 optimistic ids，但必须在 runtime ids 可用时 reconcile。
 

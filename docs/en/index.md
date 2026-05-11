@@ -55,6 +55,7 @@ features:
 - [What is Agent UI?](./what-is-agent-ui.md)
 - [Latest specification](./specification.md)
 - [Implementation quickstart](./authoring/quickstart.md)
+- [Runtime profile test cases](./authoring/runtime-profile-test-cases.md)
 - [Runnable examples](./examples/index.md)
 - [Interactive workbench demo](./examples/interactive-workbench.md)
 - [Runtime event projection](./contracts/runtime-event-projection.md)

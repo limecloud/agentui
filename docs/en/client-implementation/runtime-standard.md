@@ -28,6 +28,7 @@ Start from real product/runtime facts, not from a standalone manifest file.
 | --- | --- | --- |
 | Event stream | lifecycle, text, reasoning, tool, action, queue, artifact, evidence events | Register listeners before submitting work. |
 | Session snapshot | recent messages, thread/run status, queue, pending requests, history cursor | Used for old-session recovery and stream repair. |
+| Agent Runtime profile | `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, `EvidencePack` | Preferred source shape when the runtime exposes Agent Runtime-compatible facts. |
 | Artifact service | artifact id, kind, preview, read ref, version, diff, save/export/handoff status | Full content loads on demand. |
 | Evidence service | trace, source/citation, verification, review, replay, handoff | Evidence should be durable and auditable. |
 | Application state | selected workspace, active tab, file attachments, model/mode selections | Keep separate from runtime facts. |

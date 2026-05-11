@@ -7,7 +7,7 @@ description: Traceable source register for Agent UI requirements.
 
 This page is the traceability register for Agent UI. Use the source ids below when changing the specification, acceptance scenarios, or schemas. The standard may adapt ideas from these sources, but it does not copy their APIs.
 
-Last reviewed: 2026-05-09.
+Last reviewed: 2026-05-11.
 
 ## Citation format
 
@@ -55,6 +55,7 @@ These local sources were used as implementation references while drafting the fl
 | `SRC-CLAUDECODE-TEAM` | Local Claude Code checkout: `src/Task.ts`, `src/coordinator/coordinatorMode.ts`, `src/tasks/InProcessTeammateTask/types.ts`, `src/tasks/LocalAgentTask/LocalAgentTask.tsx`, `src/tasks/RemoteAgentTask/RemoteAgentTask.tsx`, SDK hook schemas. | Task types include local/remote agents and in-process teammates; coordinator mode treats worker results as internal notifications; teammate identity carries `agentId`, `agentName`, `teamName`, color, parent session, plan approval, permission, recent messages, pending user messages, idle/shutdown/progress. | Agent UI v0.6 standardizes team roster, worker notifications, teammate transcript zoom, delegated plan/permission prompts, parent/child lineage, and coordinator synthesis vs worker result separation. |
 | `SRC-CODEX-COLLAB` | Local Codex checkout: `codex-rs/tui/src/multi_agents.rs`, `codex-rs/protocol/src/protocol.rs`, `codex-rs/app-server-protocol/src/protocol/event_mapping.rs`, `codex-rs/analytics/src/*`. | Collaborative tools include spawn/send/resume/wait/close; TUI renders spawned/sent/waiting/closed history rows; subagents track source, parent thread id, nickname, role, depth; delegated approvals and subagent tool-call counts are tracked. | Agent UI v0.6 adds controls for delegate/continue/wait/stop/close, parent/child thread metadata, delegated approval source, and parallel worker fanout/fanin surfaces. |
 | `SRC-LIME-TEAM-RUNTIME` | Lime checkout: `docs/aiprompts/task-agent-taxonomy.md`, `docs/aiprompts/state-history-telemetry.md`, `src-tauri/src/commands/aster_agent_cmd/subagent_runtime.rs`, `src-tauri/crates/agent/src/session_store.rs`, `src/components/agent/chat/teamWorkspaceRuntime.ts`, `src/lib/teamMemorySync.ts`. | Lime classifies execution into `agent turn`, `subagent turn`, and `automation job`; child subagent sessions expose role, profile, team preset, runtime status, queue and team phase; request telemetry joins session/thread/turn/pending/queued/subagent keys; team memory uses repo-scoped `team.selection`, `team.subagents`, and `team.parent_context`. | Agent UI v0.6 aligns with Lime by treating teammates as child sessions/workbench facts, preserving request/session lineage, carrying `runtimeEntity`/queue/parallelism facts, and keeping background work within agent/subagent/automation boundaries instead of adding a fourth runtime taxonomy. |
+| `SRC-LIME-AGENTRUNTIME-PROFILE` | AgentRuntime project: `docs/en/profiles/lime.md`, `docs/public/schemas/agentruntime-lime-profile-*.schema.json`, and `docs/public/fixtures/lime-profile/`. | Lime AgentRuntime Profile fixes the execution fact spine around `RuntimeEvent`, `ThreadReadModel`, `TaskSnapshot`, evidence export, runtime ids, tool approval, task retry, routing, and known-gap evidence behavior. | Agent UI must project Agent Runtime facts without becoming a UI-owned truth source; runtime profile test cases verify id preservation, read model projection, action controls, evidence/replay/review consistency, and hydration. |
 
 ## Requirement traceability
 
@@ -66,7 +67,8 @@ These local sources were used as implementation references while drafting the fl
 | Human-in-the-loop actions | `SRC-LANGGRAPH-INTERRUPTS`, `SRC-CODEX-PROTOCOL`, `SRC-COPILOTKIT` |
 | Session/thread hydration | `SRC-OPENAI-CHATKIT-THREAD-EVENTS`, `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL` |
 | Artifact workspace | `SRC-CLAUDE-ARTIFACTS`, `SRC-OPENAI-APPS-SDK`, `SRC-LIME-ROADMAP-AGENTUI` |
-| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL` |
+| Evidence/timeline/replay | `SRC-LIME-ROADMAP-AGENTUI`, `SRC-CODEX-PROTOCOL`, `SRC-LIME-AGENTRUNTIME-PROFILE` |
+| Runtime profile projection tests | `SRC-LIME-AGENTRUNTIME-PROFILE`, `SRC-LIME-TEAM-RUNTIME`, `SRC-LIME-ROADMAP-AGENTUI` |
 | Spec writing style | `SRC-AGENTSKILLS-SPEC` |
 | Team workbench and teammate identity | `SRC-CLAUDECODE-TEAM`, `SRC-CODEX-COLLAB`, `SRC-LIME-TEAM-RUNTIME` |
 | Remote teammate mapping | `SRC-A2A-PROTOCOL`, `SRC-CLAUDECODE-TEAM` |
